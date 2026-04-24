@@ -11,6 +11,15 @@ Referências principais:
 - [infra/nginx/grom.seg.br.conf.example](infra/nginx/grom.seg.br.conf.example)
 - [scripts/load-test.ps1](scripts/load-test.ps1)
 
+## Status desta execução (24/04/2026)
+
+- [x] Baseline Git criado com `.gitignore` de produção/segurança.
+- [x] `php artisan migrate --force` executado com sucesso.
+- [x] Teste focal de RH (`RhAccessTest`) aprovado.
+- [x] Quality gate executado e aprovado (`101 passed`, `composer audit` sem vulnerabilidades).
+- [ ] Rodar carga curta em `https://grom.seg.br` após publicação externa.
+- [ ] Fechar evidências finais de homologação e assinatura de go-live.
+
 ## 1. Pré-deploy
 
 - [ ] VPS Linux acessível via SSH e com horário correto.
