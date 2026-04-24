@@ -23,6 +23,20 @@ Referências principais:
 - [ ] Rodar carga curta em `https://grom.seg.br` após publicação externa.
 - [ ] Fechar evidências finais de homologação e assinatura de go-live.
 
+## Comando único de Go-Live Check (servidor)
+
+Executar no servidor, na raiz do projeto:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-GoLiveCheck.ps1 -Build -BaseUrl http://127.0.0.1:8080 -ExternalLoginUrl https://grom.seg.br/login -FailOnThreshold
+```
+
+Notas:
+
+- O script detecta automaticamente `docker compose` (v2) ou `docker-compose` (legacy).
+- Se o PHP no host estiver indisponível, o fluxo continua usando `php` dentro do container `app`.
+- Para tornar a validação externa obrigatória, acrescente `-RequireExternalProbe`.
+
 ## 1. Pré-deploy
 
 - [ ] VPS Linux acessível via SSH e com horário correto.
