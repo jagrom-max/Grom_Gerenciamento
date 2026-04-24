@@ -17,6 +17,9 @@ Referências principais:
 - [x] `php artisan migrate --force` executado com sucesso.
 - [x] Teste focal de RH (`RhAccessTest`) aprovado.
 - [x] Quality gate executado e aprovado (`101 passed`, `composer audit` sem vulnerabilidades).
+- [x] Plano de carga gerado em `scripts/load-test.ps1 -DryRun` para `https://grom.seg.br`.
+- [ ] DNS público ainda não resolve `grom.seg.br` a partir desta estação (bloqueio para smoke/load externos).
+- [ ] Docker/Docker Compose não disponível nesta estação (bloqueio para smoke/load locais em containers).
 - [ ] Rodar carga curta em `https://grom.seg.br` após publicação externa.
 - [ ] Fechar evidências finais de homologação e assinatura de go-live.
 
