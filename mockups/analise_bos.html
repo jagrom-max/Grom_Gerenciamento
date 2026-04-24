@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GROM Web — Análise de BOs</title>
+  <style>
+    :root {
+      --bg:        #f5f7fa;
+      --panel:     #ffffff;
+      --ink:       #2c3e50;
+      --ink-soft:  #708090;
+      --line:      #d8dee7;
+      --primary:   #2c3e50;
+      --primary-2: #34495e;
+      --accent:    #d9e3ee;
+      --danger:    #c0392b;
+      --danger-bg: #fdf3f2;
+      --danger-bd: #e8c5c1;
+      --warn:      #e67e22;
+      --warn-bg:   #fef9f0;
+      --ok:        #27ae60;
+      --ok-bg:     #f0faf4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #eef2f7 0%, var(--bg) 100%);
+    }
+    .layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    aside {
+      background: linear-gradient(180deg, #253647 0%, #2c3e50 100%);
+      color: #fff;
+      padding: 26px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .brand-logo {
+      width: 58px; height: 58px;
+      background: rgba(255,255,255,.08);
+      border-radius: 14px;
+      display: grid; place-items: center;
+      font-size: 22px;
+    }
+    .brand strong { display: block; font-size: 18px; }
+    .brand span   { display: block; font-size: 12px; opacity: .76; }
+    nav { display: grid; gap: 6px; }
+    .nav-item {
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .nav-item.active { background: rgba(255,255,255,.16); }
+    .nav-foot {
+      margin-top: auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    main { padding: 28px; display: grid; gap: 20px; align-content: start; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .topbar h1 { margin: 0 0 5px; font-size: 28px; }
+    .topbar p  { margin: 0; color: var(--ink-soft); font-size: 14px; }
+    .pill {
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+
+    /* ---- Cards de resumo ---- */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px 18px;
+      box-shadow: 0 8px 22px rgba(44,62,80,.06);
+    }
+    .card small {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+    .card strong { font-size: 28px; line-height: 1; }
+    .card span   { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 12px; }
+    .card.danger { border-color: var(--danger-bd); background: var(--danger-bg); }
+    .card.danger strong { color: var(--danger); }
+    .card.warn  { border-color: #f5cba7; background: var(--warn-bg); }
+    .card.warn  strong { color: var(--warn); }
+
+    /* ---- Seção crítica MPU ---- */
+    .critical-banner {
+      background: var(--danger-bg);
+      border: 2px solid var(--danger-bd);
+      border-radius: 16px;
+      padding: 18px 22px;
+    }
+    .critical-banner-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .critical-banner-head .badge {
+      background: var(--danger);
+      color: #fff;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .critical-banner-head h2 { margin: 0; font-size: 18px; color: var(--danger); }
+    .critical-banner-head p  { margin: 0; font-size: 13px; color: #922b21; }
+
+    /* ---- Painéis de conteúdo ---- */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 22px rgba(44,62,80,.06);
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    .panel-head h2 { margin: 0; font-size: 18px; }
+    .panel-head p  { margin: 0; font-size: 13px; color: var(--ink-soft); }
+
+    /* ---- Filtros ---- */
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .filters select, .filters input {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--ink);
+      background: #fff;
+    }
+    .btn {
+      padding: 9px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+    .btn-danger { background: var(--danger); color: #fff; }
+
+    /* ---- Tabelas ---- */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+      text-align: left;
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      background: #edf2f7;
+      color: var(--ink);
+      font-size: 11px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    tr:hover td { background: #f8fafd; }
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .tag-flagrante  { background: #d5e8f7; color: #1a5276; }
+    .tag-nao-flag   { background: #d5f5e3; color: #1e8449; }
+    .tag-tc         { background: #f9ebea; color: #922b21; }
+    .tag-aberto     { background: #fdebd0; color: #784212; }
+    .tag-convertido { background: #d5f5e3; color: #1e8449; }
+    .tag-arquivado  { background: #eaecee; color: #5d6d7e; }
+    .tag-critico    { background: var(--danger); color: #fff; }
+    .tag-mpu-def    { background: #f5cba7; color: #6e2f0e; }
+    .tag-mpu-pend   { background: #fdebd0; color: #7d6608; }
+
+    /* Dias — destaque para mais urgentes */
+    .dias-critico { color: var(--danger); font-weight: 700; }
+    .dias-alerta  { color: var(--warn);   font-weight: 600; }
+
+    /* ---- Grid duplo ---- */
+    .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+
+    /* ---- Responsivo ---- */
+    @media (max-width: 1200px) { .cards { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 1080px) {
+      .cards { grid-template-columns: repeat(2,1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      aside   { padding: 20px; }
+      main    { padding: 18px; }
+      .cards  { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <!-- ===== Sidebar ===== -->
+  <aside>
+    <div class="brand">
+      <div class="brand-logo">⚖️</div>
+      <div>
+        <strong>GROM Web</strong>
+        <span>DDM Rio Claro</span>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-item">Início</div>
+      <div class="nav-item">Produtividade</div>
+      <div class="nav-item">RH</div>
+      <div class="nav-item">Escalas</div>
+      <div class="nav-item active">Análise de Dados</div>
+      <div class="nav-item">Operacional</div>
+      <div class="nav-item">Relatórios</div>
+      <div class="nav-item">Usuários e Perfis</div>
+    </nav>
+    <div class="nav-foot">
+      Módulo de Análise · Boletins de Ocorrência<br>
+      Acesso restrito a gestores e auditores.
+    </div>
+  </aside>
+
+  <!-- ===== Conteúdo ===== -->
+  <main>
+    <!-- Topo -->
+    <section class="topbar">
+      <div>
+        <h1>Boletins de Ocorrência</h1>
+        <p>Tabela unificada de BOs · flagrantes, não-flagrantes, termos circunstanciados e pendências críticas de MPU.</p>
+      </div>
+      <div class="pill">Período: Março 2026 · Todos os cartórios</div>
+    </section>
+
+    <!-- Cards de resumo -->
+    <section class="cards">
+      <article class="card">
+        <small>BOs Total</small>
+        <strong>312</strong>
+        <span>Março 2026</span>
+      </article>
+      <article class="card">
+        <small>Flagrantes</small>
+        <strong>124</strong>
+        <span>DDM 77 · Outras 47</span>
+      </article>
+      <article class="card">
+        <small>Não-flagrantes</small>
+        <strong>171</strong>
+        <span>108 com IP instaurado</span>
+      </article>
+      <article class="card warn">
+        <small>Com MPU</small>
+        <strong>38</strong>
+        <span>22 deferidas no mês</span>
+      </article>
+      <article class="card danger">
+        <small>⚠ MPU sem IP</small>
+        <strong>09</strong>
+        <span>Pendência crítica</span>
+      </article>
+    </section>
+
+    <!-- =========================================================
+         SEÇÃO CRÍTICA: MPU sem Inquérito Policial
+         ========================================================= -->
+    <section class="critical-banner">
+      <div class="critical-banner-head">
+        <span class="badge">⚠ Pendência Crítica</span>
+        <div>
+          <h2>MPU Deferida sem Inquérito Policial</h2>
+          <p>Os casos abaixo possuem Medida Protetiva de Urgência deferida, mas ainda não têm IP instaurado. Exigem acompanhamento imediato.</p>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Cartório</th>
+            <th>Nº BO</th>
+            <th>Natureza</th>
+            <th>Data Fato</th>
+            <th>Nº MPU</th>
+            <th>Status MPU</th>
+            <th>Dias sem IP</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1º DDM</td>
+            <td>BO-2026-00147</td>
+            <td>Violência Doméstica</td>
+            <td>02/02/2026</td>
+            <td>MPU-2026-0031</td>
+            <td><span class="tag tag-mpu-def">Deferida</span></td>
+            <td><span class="dias-critico">79 dias</span></td>
+            <td><button class="btn btn-danger" style="padding:5px 12px;font-size:12px;">Resolver</button></td>
+          </tr>
+          <tr>
+            <td>2º DDM</td>
+            <td>BO-2026-00203</td>
+            <td>Ameaça / VD</td>
+            <td>14/02/2026</td>
+            <td>MPU-2026-0044</td>
+            <td><span class="tag tag-mpu-def">Deferida</span></td>
+            <td><span class="dias-critico">67 dias</span></td>
+            <td><button class="btn btn-danger" style="padding:5px 12px;font-size:12px;">Resolver</button></td>
+          </tr>
+          <tr>
+            <td>1º DDM</td>
+            <td>BO-2026-00289</td>
+            <td>Lesão Corporal VD</td>
+            <td>01/03/2026</td>
+            <td>MPU-2026-0061</td>
+            <td><span class="tag tag-mpu-def">Deferida</span></td>
+            <td><span class="dias-alerta">52 dias</span></td>
+            <td><button class="btn btn-danger" style="padding:5px 12px;font-size:12px;">Resolver</button></td>
+          </tr>
+          <tr>
+            <td>3º DDM</td>
+            <td>BO-2026-00318</td>
+            <td>Violência Doméstica</td>
+            <td>08/03/2026</td>
+            <td>MPU-2026-0074</td>
+            <td><span class="tag tag-mpu-pend">Pendente</span></td>
+            <td><span class="dias-alerta">45 dias</span></td>
+            <td><button class="btn btn-danger" style="padding:5px 12px;font-size:12px;">Resolver</button></td>
+          </tr>
+          <tr>
+            <td>2º DDM</td>
+            <td>BO-2026-00401</td>
+            <td>Stalking / VD</td>
+            <td>15/03/2026</td>
+            <td>MPU-2026-0089</td>
+            <td><span class="tag tag-mpu-def">Deferida</span></td>
+            <td><span class="dias-alerta">38 dias</span></td>
+            <td><button class="btn btn-danger" style="padding:5px 12px;font-size:12px;">Resolver</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:14px;display:flex;gap:10px;">
+        <button class="btn btn-outline">📄 Exportar lista crítica</button>
+        <button class="btn btn-outline">📋 Gerar relatório MPU</button>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         Grade inferior: Tabela unificada + Resumo por cartório
+         ========================================================= -->
+    <div class="grid-2">
+
+      <!-- Tabela unificada de BOs -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Tabela Unificada de BOs</h2>
+            <p>Flagrantes · Não-flagrantes · Termos Circunstanciados</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline">⬇ Exportar</button>
+            <button class="btn btn-primary">+ Incluir BO</button>
+          </div>
+        </div>
+        <div class="filters">
+          <select>
+            <option>Todos os cartórios</option>
+            <option>1º DDM</option>
+            <option>2º DDM</option>
+            <option>3º DDM</option>
+          </select>
+          <select>
+            <option>Todos os tipos</option>
+            <option>Flagrante</option>
+            <option>Não-flagrante</option>
+            <option>Termo Circunstanciado</option>
+          </select>
+          <select>
+            <option>Todos os status</option>
+            <option>Aberto</option>
+            <option>Convertido em IP</option>
+            <option>Arquivado</option>
+          </select>
+          <select>
+            <option>Mês: Março 2026</option>
+            <option>Fevereiro 2026</option>
+            <option>Janeiro 2026</option>
+          </select>
+          <button class="btn btn-primary">Filtrar</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nº BO</th>
+              <th>Tipo</th>
+              <th>Cartório</th>
+              <th>Natureza</th>
+              <th>Data</th>
+              <th>MPU</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>BO-2026-00601</td>
+              <td><span class="tag tag-flagrante">Flagrante</span></td>
+              <td>1º DDM</td>
+              <td>Roubo</td>
+              <td>22/03/2026</td>
+              <td>—</td>
+              <td><span class="tag tag-convertido">IP Aberto</span></td>
+            </tr>
+            <tr>
+              <td>BO-2026-00598</td>
+              <td><span class="tag tag-nao-flag">Não-flag.</span></td>
+              <td>2º DDM</td>
+              <td>Violência Dom.</td>
+              <td>21/03/2026</td>
+              <td><span class="tag tag-mpu-def">MPU</span></td>
+              <td><span class="tag tag-aberto">Aberto</span></td>
+            </tr>
+            <tr>
+              <td>BO-2026-00595</td>
+              <td><span class="tag tag-flagrante">Flagrante</span></td>
+              <td>1º DDM</td>
+              <td>Tráfico</td>
+              <td>20/03/2026</td>
+              <td>—</td>
+              <td><span class="tag tag-convertido">IP Aberto</span></td>
+            </tr>
+            <tr>
+              <td>BO-2026-00590</td>
+              <td><span class="tag tag-nao-flag">Não-flag.</span></td>
+              <td>3º DDM</td>
+              <td>Furto</td>
+              <td>19/03/2026</td>
+              <td>—</td>
+              <td><span class="tag tag-aberto">Aberto</span></td>
+            </tr>
+            <tr>
+              <td>BO-2026-00582</td>
+              <td><span class="tag tag-tc">T. Circunst.</span></td>
+              <td>2º DDM</td>
+              <td>Perturbação</td>
+              <td>18/03/2026</td>
+              <td>—</td>
+              <td><span class="tag tag-arquivado">Arquivado</span></td>
+            </tr>
+            <tr>
+              <td>BO-2026-00401</td>
+              <td><span class="tag tag-nao-flag">Não-flag.</span></td>
+              <td>2º DDM</td>
+              <td>Stalking / VD</td>
+              <td>15/03/2026</td>
+              <td><span class="tag tag-critico">⚠ SEM IP</span></td>
+              <td><span class="tag tag-aberto">Aberto</span></td>
+            </tr>
+            <tr>
+              <td>BO-2026-00376</td>
+              <td><span class="tag tag-flagrante">Flagrante</span></td>
+              <td>1º DDM</td>
+              <td>Lesão Corporal</td>
+              <td>12/03/2026</td>
+              <td>—</td>
+              <td><span class="tag tag-convertido">IP Aberto</span></td>
+            </tr>
+            <tr>
+              <td>BO-2026-00310</td>
+              <td><span class="tag tag-nao-flag">Não-flag.</span></td>
+              <td>1º DDM</td>
+              <td>Ameaça</td>
+              <td>08/03/2026</td>
+              <td>—</td>
+              <td><span class="tag tag-arquivado">Arquivado</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:var(--ink-soft);">Exibindo 8 de 312 registros</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline">← Anterior</button>
+            <button class="btn btn-outline">Próximo →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumo por cartório -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Resumo por Cartório</h2>
+            <p>BOs, MPU e pendências — mês corrente</p>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Cartório</th>
+              <th>BOs</th>
+              <th>Flag.</th>
+              <th>Não-flag.</th>
+              <th>MPU ⚠</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1º DDM</strong></td>
+              <td>142</td>
+              <td>58</td>
+              <td>78</td>
+              <td><span class="tag tag-critico">4</span></td>
+            </tr>
+            <tr>
+              <td><strong>2º DDM</strong></td>
+              <td>97</td>
+              <td>41</td>
+              <td>52</td>
+              <td><span class="tag tag-critico">3</span></td>
+            </tr>
+            <tr>
+              <td><strong>3º DDM</strong></td>
+              <td>73</td>
+              <td>25</td>
+              <td>41</td>
+              <td><span class="tag tag-critico">2</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:22px;">
+          <h3 style="margin:0 0 12px;font-size:15px;">Distribuição por tipo</h3>
+          <!-- Barra visual simples -->
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+              <span>Flagrantes</span><span>124 (39,7%)</span>
+            </div>
+            <div style="height:10px;border-radius:6px;background:#eef2f7;overflow:hidden;">
+              <div style="height:100%;width:39.7%;background:#2c3e50;border-radius:6px;"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+              <span>Não-flagrantes</span><span>171 (54,8%)</span>
+            </div>
+            <div style="height:10px;border-radius:6px;background:#eef2f7;overflow:hidden;">
+              <div style="height:100%;width:54.8%;background:#27ae60;border-radius:6px;"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+              <span>Termos Circunst.</span><span>17 (5,5%)</span>
+            </div>
+            <div style="height:10px;border-radius:6px;background:#eef2f7;overflow:hidden;">
+              <div style="height:100%;width:5.5%;background:#e74c3c;border-radius:6px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:8px;flex-direction:column;">
+          <button class="btn btn-primary" style="width:100%;">📊 Relatório A4 — BOs do período</button>
+          <button class="btn btn-outline" style="width:100%;">📋 Exportar planilha completa</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

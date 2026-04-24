@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Folha Única de Implantação - GROM Web</title>
+  <style>
+    :root {
+      --ink: #162033;
+      --muted: #566273;
+      --line: #cfd7e3;
+      --soft: #f5f8fc;
+      --accent: #0c4a78;
+      --accent-soft: #e8f2fb;
+    }
+
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font: 10pt/1.32 Arial, Helvetica, sans-serif;
+    }
+
+    .sheet {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-soft) 100%);
+      margin-bottom: 10px;
+    }
+
+    .kicker {
+      margin: 0 0 4px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-size: 8.5pt;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18pt;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 9pt;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 8.6pt;
+    }
+
+    .meta div {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 7px 8px;
+      background: rgba(255,255,255,.75);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 10px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--soft);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    h2 {
+      margin: 0 0 7px;
+      color: var(--accent);
+      font-size: 11.5pt;
+    }
+
+    ol {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    li {
+      margin: 0 0 5px;
+    }
+
+    .command {
+      margin: 6px 0 8px;
+      border: 1px solid #c7d3e0;
+      border-radius: 9px;
+      background: #fff;
+      padding: 8px 9px;
+      font: 8.6pt/1.35 "Cascadia Mono", Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .check {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .check li {
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .check li::before {
+      content: "[ ]";
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 8.5pt;
+    }
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding-top: 7px;
+      color: var(--muted);
+      font-size: 8.4pt;
+    }
+
+    @media print {
+      .sheet { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <section class="hero">
+      <p class="kicker">GROM Web</p>
+      <h1>Folha Única de Implantação VPS</h1>
+      <p class="subtitle">Objetivo: hospedar o sistema em grom.seg.br com o menor número possível de decisões durante a execução.</p>
+      <div class="meta">
+        <div><strong>Domínio</strong><br>grom.seg.br</div>
+        <div><strong>Diretório</strong><br>/opt/grom/grom_web_php</div>
+        <div><strong>Comando principal</strong><br>deploy-prod.sh</div>
+        <div><strong>Plano B</strong><br>docs/10_rollback_oracle_vps.md</div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section>
+        <section class="panel">
+          <h2>1. Preparar a VPS</h2>
+          <div class="command">sudo apt update
+sudo apt install -y ca-certificates curl gnupg nginx certbot python3-certbot-nginx git ufw
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+newgrp docker
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw enable</div>
+        </section>
+
+        <section class="panel">
+          <h2>2. Publicar o código</h2>
+          <div class="command">sudo mkdir -p /opt/grom
+sudo chown $USER:$USER /opt/grom
+git clone &lt;REPOSITORIO&gt; /opt/grom/grom_web_php
+cd /opt/grom/grom_web_php/infra
+cp .env.production.example .env.production</div>
+          <ul class="check">
+            <li>Preencher APP_KEY</li>
+            <li>Preencher DB_PASSWORD</li>
+            <li>Preencher GROM_BOOTSTRAP_ADMIN_PASSWORD</li>
+            <li>Conferir APP_URL=https://grom.seg.br</li>
+          </ul>
+          <div class="command">docker run --rm -v /opt/grom/grom_web_php/runtime:/app -w /app php:8.4-cli-alpine php artisan key:generate --show</div>
+        </section>
+
+        <section class="panel">
+          <h2>3. Implantar a stack</h2>
+          <div class="command">cd /opt/grom/grom_web_php/infra
+bash ./scripts/deploy-prod.sh</div>
+          <p class="small">Esse script sobe os containers, espera o banco, aplica migration, roda seed estrutural, limpa cache e valida /login local.</p>
+        </section>
+
+        <section class="panel">
+          <h2>4. Ativar HTTPS</h2>
+          <div class="command">sudo cp /opt/grom/grom_web_php/infra/nginx/grom.seg.br.conf.example /etc/nginx/sites-available/grom.seg.br.conf
+sudo ln -s /etc/nginx/sites-available/grom.seg.br.conf /etc/nginx/sites-enabled/grom.seg.br.conf
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot --nginx -d grom.seg.br
+sudo nginx -t
+sudo systemctl reload nginx</div>
+        </section>
+      </section>
+
+      <section>
+        <section class="panel">
+          <h2>5. Verificar saúde</h2>
+          <div class="command">cd /opt/grom/grom_web_php/infra
+bash ./scripts/healthcheck-prod.sh</div>
+          <ul class="check">
+            <li>docker compose ps sem unhealthy</li>
+            <li>HTTP interno responde</li>
+            <li>HTTPS público responde</li>
+            <li>app, worker e scheduler sem erro repetitivo</li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <h2>6. Fazer backup inicial</h2>
+          <div class="command">cd /opt/grom/grom_web_php/infra
+bash ./scripts/backup-prod.sh</div>
+        </section>
+
+        <section class="panel">
+          <h2>7. Validar funcional</h2>
+          <ol>
+            <li>Abrir https://grom.seg.br/login</li>
+            <li>Entrar com o admin bootstrap</li>
+            <li>Confirmar Dashboard</li>
+            <li>Confirmar RH/Admin</li>
+            <li>Confirmar Escalas</li>
+            <li>Confirmar PDF de produtividade</li>
+          </ol>
+        </section>
+
+        <section class="panel">
+          <h2>8. Carga curta</h2>
+          <div class="command">powershell -ExecutionPolicy Bypass -File .\scripts\load-test.ps1 -BaseUrl https://grom.seg.br -FailOnThreshold</div>
+          <ul class="check">
+            <li>Sem HTTP 500</li>
+            <li>Login estável</li>
+            <li>Dashboard estável</li>
+            <li>PDF estável</li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <h2>9. Critério final</h2>
+          <ul class="check">
+            <li>APP_DEBUG=false</li>
+            <li>GROM_PILOT_DEMO_SEED_ENABLED=false</li>
+            <li>GROM_LEGACY_ANALISE_SYNC_ENABLED=false</li>
+            <li>backup executado</li>
+            <li>healthcheck ok</li>
+            <li>carga curta ok</li>
+          </ul>
+        </section>
+      </section>
+    </div>
+
+    <p class="footer">Fluxo mínimo: preencher .env.production, executar deploy-prod.sh, ativar HTTPS, executar healthcheck-prod.sh, executar backup-prod.sh e rodar a carga curta. Em caso de falha, usar docs/10_rollback_oracle_vps.md.</p>
+  </main>
+</body>
+</html>

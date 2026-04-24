@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GROM Web — RH</title>
+  <style>
+    :root {
+      --bg:        #f5f7fa;
+      --panel:     #ffffff;
+      --ink:       #2c3e50;
+      --ink-soft:  #708090;
+      --line:      #d8dee7;
+      --primary:   #2c3e50;
+      --accent:    #d9e3ee;
+      --ok:        #27ae60;
+      --ok-bg:     #edfaf1;
+      --warn:      #e67e22;
+      --warn-bg:   #fef9f0;
+      --info:      #2980b9;
+      --info-bg:   #eaf4fb;
+      --muted:     #95a5a6;
+      --muted-bg:  #f2f3f4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #eef2f7 0%, var(--bg) 100%);
+    }
+    .layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    aside {
+      background: linear-gradient(180deg, #253647 0%, #2c3e50 100%);
+      color: #fff;
+      padding: 26px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .brand-logo {
+      width: 58px; height: 58px;
+      background: rgba(255,255,255,.08);
+      border-radius: 14px;
+      display: grid; place-items: center;
+      font-size: 22px;
+    }
+    .brand strong { display: block; font-size: 18px; }
+    .brand span   { display: block; font-size: 12px; opacity: .76; }
+    nav { display: grid; gap: 6px; }
+    .nav-item {
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .nav-item.active { background: rgba(255,255,255,.16); }
+    .nav-section {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      opacity: .5;
+      padding: 6px 4px 2px;
+    }
+    .nav-foot {
+      margin-top: auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    main { padding: 28px; display: grid; gap: 20px; align-content: start; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .topbar h1 { margin: 0 0 5px; font-size: 28px; }
+    .topbar p  { margin: 0; color: var(--ink-soft); font-size: 14px; }
+
+    /* Abas */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 0;
+    }
+    .tab {
+      padding: 10px 20px;
+      border-radius: 10px 10px 0 0;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      color: var(--ink-soft);
+    }
+    .tab.active {
+      background: var(--panel);
+      border-color: var(--line);
+      color: var(--ink);
+      margin-bottom: -2px;
+    }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px 18px;
+      box-shadow: 0 8px 22px rgba(44,62,80,.06);
+    }
+    .card small {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+    .card strong { font-size: 28px; line-height: 1; }
+    .card span   { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 12px; }
+    .card.ok   { border-color: #a9dfbf; background: var(--ok-bg); }
+    .card.ok   strong { color: var(--ok); }
+    .card.warn { border-color: #f5cba7; background: var(--warn-bg); }
+    .card.warn strong { color: var(--warn); }
+    .card.info { border-color: #aed6f1; background: var(--info-bg); }
+    .card.info strong { color: var(--info); }
+
+    /* Painéis */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 8px 22px rgba(44,62,80,.06);
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+    .panel-head h2 { margin: 0; font-size: 18px; }
+    .panel-head p  { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); }
+
+    /* Botões */
+    .btn {
+      padding: 9px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+
+    /* Filtros */
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      align-items: center;
+    }
+    .filters select, .filters input {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    /* Tabelas */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); }
+    th {
+      background: #edf2f7;
+      font-size: 11px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    tr:hover td { background: #f8fafd; }
+
+    /* Tags / badges */
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .tag-ativo    { background: var(--ok-bg);   color: var(--ok); }
+    .tag-afastado { background: var(--warn-bg);  color: var(--warn); }
+    .tag-cedido   { background: var(--info-bg);  color: var(--info); }
+    .tag-inativo  { background: var(--muted-bg); color: var(--muted); }
+
+    /* Foto / avatar */
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    /* Linha de afastamento em andamento */
+    .afas-row-ativo { background: #fffde7; }
+    .afas-row-ativo td { border-left: 3px solid var(--warn); }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+
+    /* Quadro de pessoal — mini tabela */
+    .quadro-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+    .quadro-item:last-child { border-bottom: none; }
+
+    /* Barra de progresso */
+    .prog-bar {
+      height: 8px;
+      border-radius: 6px;
+      background: #eef2f7;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .prog-bar-fill { height: 100%; border-radius: 6px; }
+
+    @media (max-width: 1200px) { .cards { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 1080px) {
+      .cards { grid-template-columns: repeat(2,1fr); }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      aside  { padding: 20px; }
+      main   { padding: 18px; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ===== Sidebar ===== -->
+  <aside>
+    <div class="brand">
+      <div class="brand-logo">👥</div>
+      <div>
+        <strong>GROM Web</strong>
+        <span>DDM Rio Claro</span>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-item">Início</div>
+      <div class="nav-item">Produtividade</div>
+      <div class="nav-item active">RH</div>
+      <div class="nav-item">Escalas</div>
+      <div class="nav-item">Análise de Dados</div>
+      <div class="nav-item">Operacional</div>
+      <div class="nav-item">Relatórios</div>
+      <div class="nav-item">Usuários e Perfis</div>
+    </nav>
+    <div class="nav-foot">
+      Módulo de Recursos Humanos<br>
+      Quadro, afastamentos e delegados externos.
+    </div>
+  </aside>
+
+  <!-- ===== Conteúdo ===== -->
+  <main>
+
+    <!-- Topo -->
+    <section class="topbar">
+      <div>
+        <h1>Recursos Humanos</h1>
+        <p>Quadro de pessoal · afastamentos em andamento · delegados externos · relatórios administrativos.</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline">📊 Relatório A4</button>
+        <button class="btn btn-primary">+ Cadastrar Funcionário</button>
+      </div>
+    </section>
+
+    <!-- Abas de navegação interna -->
+    <div class="tabs">
+      <div class="tab active">Quadro de Pessoal</div>
+      <div class="tab">Afastamentos</div>
+      <div class="tab">Delegados Externos</div>
+      <div class="tab">Relatórios</div>
+    </div>
+
+    <!-- Cards de resumo -->
+    <section class="cards">
+      <article class="card ok">
+        <small>Ativos</small>
+        <strong>47</strong>
+        <span>Em serviço</span>
+      </article>
+      <article class="card warn">
+        <small>Afastados</small>
+        <strong>08</strong>
+        <span>4 médico · 2 férias · 2 outros</span>
+      </article>
+      <article class="card info">
+        <small>Cedidos</small>
+        <strong>03</strong>
+        <span>Para outros órgãos</span>
+      </article>
+      <article class="card">
+        <small>Delegados Ext.</small>
+        <strong>02</strong>
+        <span>Em exercício na unidade</span>
+      </article>
+      <article class="card">
+        <small>Quadro total</small>
+        <strong>60</strong>
+        <span>Autorizado: 65</span>
+      </article>
+    </section>
+
+    <!-- Grade principal -->
+    <div class="grid-2">
+
+      <!-- Quadro de pessoal -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Funcionários</h2>
+            <p>Lista completa do quadro funcional</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline">⬇ Exportar</button>
+          </div>
+        </div>
+
+        <div class="filters">
+          <select>
+            <option>Todos os cartórios</option>
+            <option>1º DDM</option>
+            <option>2º DDM</option>
+            <option>3º DDM</option>
+          </select>
+          <select>
+            <option>Todas as situações</option>
+            <option>Ativo</option>
+            <option>Afastado</option>
+            <option>Cedido</option>
+          </select>
+          <input type="text" placeholder="Buscar nome ou matrícula…" style="flex:1;min-width:160px;">
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Funcionário</th>
+              <th>Cargo</th>
+              <th>Cartório</th>
+              <th>Turno</th>
+              <th>Situação</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="avatar">AM</span>Ana Martins</td>
+              <td>Delegada</td>
+              <td>1º DDM</td>
+              <td>Administrativo</td>
+              <td><span class="tag tag-ativo">Ativa</span></td>
+              <td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">Ver</button></td>
+            </tr>
+            <tr>
+              <td><span class="avatar">CS</span>Carlos Silva</td>
+              <td>Investigador</td>
+              <td>1º DDM</td>
+              <td>Diurno</td>
+              <td><span class="tag tag-ativo">Ativo</span></td>
+              <td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">Ver</button></td>
+            </tr>
+            <tr style="background:#fffde7;">
+              <td><span class="avatar">MR</span>Marcia Ramos</td>
+              <td>Escrivã</td>
+              <td>2º DDM</td>
+              <td>Diurno</td>
+              <td><span class="tag tag-afastado">Afastada</span></td>
+              <td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">Ver</button></td>
+            </tr>
+            <tr>
+              <td><span class="avatar">JP</span>João Pereira</td>
+              <td>Agente</td>
+              <td>2º DDM</td>
+              <td>Noturno</td>
+              <td><span class="tag tag-ativo">Ativo</span></td>
+              <td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">Ver</button></td>
+            </tr>
+            <tr>
+              <td><span class="avatar">LF</span>Lúcia Ferreira</td>
+              <td>Investigadora</td>
+              <td>3º DDM</td>
+              <td>Diurno</td>
+              <td><span class="tag tag-ativo">Ativa</span></td>
+              <td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">Ver</button></td>
+            </tr>
+            <tr>
+              <td><span class="avatar">RT</span>Roberto Torres</td>
+              <td>Investigador</td>
+              <td>1º DDM</td>
+              <td>Noturno</td>
+              <td><span class="tag tag-cedido">Cedido</span></td>
+              <td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">Ver</button></td>
+            </tr>
+            <tr>
+              <td><span class="avatar">SP</span>Sandra Pinto</td>
+              <td>Escrivã</td>
+              <td>3º DDM</td>
+              <td>Administrativo</td>
+              <td><span class="tag tag-ativo">Ativa</span></td>
+              <td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">Ver</button></td>
+            </tr>
+            <tr style="background:#fffde7;">
+              <td><span class="avatar">PL</span>Paulo Lima</td>
+              <td>Agente</td>
+              <td>2º DDM</td>
+              <td>Diurno</td>
+              <td><span class="tag tag-afastado">Afastado</span></td>
+              <td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">Ver</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:var(--ink-soft);">Exibindo 8 de 60 registros</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline">← Anterior</button>
+            <button class="btn btn-outline">Próximo →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel direito: afastamentos + quadro por cartório -->
+      <div style="display:grid;gap:18px;align-content:start;">
+
+        <!-- Afastamentos em andamento -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Afastamentos em Andamento</h2>
+              <p>Data de retorno prevista</p>
+            </div>
+            <button class="btn btn-outline" style="font-size:12px;">+ Registrar</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Funcionário</th>
+                <th>Tipo</th>
+                <th>Início</th>
+                <th>Retorno prev.</th>
+                <th>Fundamentação</th>
+                <th>Dias</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="afas-row-ativo">
+                <td>Marcia Ramos</td>
+                <td>Lic. Saúde</td>
+                <td>03/03/2026</td>
+                <td>30/04/2026</td>
+                <td style="color:var(--ink-soft);">—</td>
+                <td>58</td>
+              </tr>
+              <tr class="afas-row-ativo">
+                <td>Paulo Lima</td>
+                <td>Férias</td>
+                <td>15/03/2026</td>
+                <td>13/04/2026</td>
+                <td style="color:var(--ink-soft);">—</td>
+                <td>30</td>
+              </tr>
+              <tr class="afas-row-ativo">
+                <td>Fernanda Cruz</td>
+                <td>Lic. Prêmio</td>
+                <td>01/02/2026</td>
+                <td>31/07/2026</td>
+                <td style="color:var(--ink-soft);">—</td>
+                <td>82</td>
+              </tr>
+              <tr class="afas-row-ativo">
+                <td>Eduardo Nunes</td>
+                <td>Folga</td>
+                <td>10/03/2026</td>
+                <td>11/03/2026</td>
+                <td style="font-size:12px;">Compensação plantão 28/02</td>
+                <td>2</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Quadro por cartório -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Quadro por Cartório</h2>
+              <p>Pessoal disponível vs. autorizado</p>
+            </div>
+          </div>
+          <div>
+            <div class="quadro-item">
+              <span><strong>1º DDM</strong></span>
+              <span style="font-size:13px;color:var(--ink-soft);">20 / 22</span>
+            </div>
+            <div class="prog-bar"><div class="prog-bar-fill" style="width:90.9%;background:#27ae60;"></div></div>
+
+            <div class="quadro-item" style="margin-top:12px;">
+              <span><strong>2º DDM</strong></span>
+              <span style="font-size:13px;color:var(--ink-soft);">17 / 22</span>
+            </div>
+            <div class="prog-bar"><div class="prog-bar-fill" style="width:77.3%;background:#e67e22;"></div></div>
+
+            <div class="quadro-item" style="margin-top:12px;">
+              <span><strong>3º DDM</strong></span>
+              <span style="font-size:13px;color:var(--ink-soft);">10 / 21</span>
+            </div>
+            <div class="prog-bar"><div class="prog-bar-fill" style="width:47.6%;background:#c0392b;"></div></div>
+          </div>
+          <div style="margin-top:18px;">
+            <button class="btn btn-primary" style="width:100%;">📄 Relatório de Quadro</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- =========================================================
+         Relatório de Afastamentos — Painel completo por período
+         ========================================================= -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Relatório de Afastamentos por Período</h2>
+          <p>Consolidado por tipo, funcionário e cartório</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline">📊 Relatório A4</button>
+          <button class="btn btn-outline">⬇ Exportar XLSX</button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <select>
+          <option>Ano: 2026</option>
+          <option>Ano: 2025</option>
+        </select>
+        <select>
+          <option>Todos os meses</option>
+          <option>Janeiro</option><option>Fevereiro</option>
+          <option>Março</option><option>Abril</option>
+        </select>
+        <select>
+          <option>Todos os cartórios</option>
+          <option>1º DDM</option>
+          <option>2º DDM</option>
+          <option>3º DDM</option>
+        </select>
+        <select>
+          <option>Todos os tipos</option>
+          <option>Férias</option>
+          <option>Licença Prêmio</option>
+          <option>Licença Saúde</option>
+          <option>Curso</option>
+          <option>Folga</option>
+          <option>Outros</option>
+        </select>
+        <button class="btn btn-primary">Gerar</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Funcionário</th>
+            <th>Matrícula</th>
+            <th>Cartório</th>
+            <th>Tipo de Afastamento</th>
+            <th>Início</th>
+            <th>Fim</th>
+            <th>Dias</th>
+            <th>Fundamentação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="avatar" style="width:26px;height:26px;font-size:11px;">FC</span>Fernanda Cruz</td>
+            <td>INV-00412</td>
+            <td>1º DDM</td>
+            <td>Licença Prêmio</td>
+            <td>01/02/2026</td>
+            <td>31/07/2026</td>
+            <td><strong>180</strong></td>
+            <td style="color:var(--ink-soft);">—</td>
+          </tr>
+          <tr>
+            <td><span class="avatar" style="width:26px;height:26px;font-size:11px;">MR</span>Marcia Ramos</td>
+            <td>ESC-00189</td>
+            <td>2º DDM</td>
+            <td>Licença Saúde</td>
+            <td>03/03/2026</td>
+            <td>30/04/2026</td>
+            <td><strong>58</strong></td>
+            <td style="color:var(--ink-soft);">—</td>
+          </tr>
+          <tr>
+            <td><span class="avatar" style="width:26px;height:26px;font-size:11px;">EN</span>Eduardo Nunes</td>
+            <td>AGP-00302</td>
+            <td>1º DDM</td>
+            <td>Folga</td>
+            <td>10/03/2026</td>
+            <td>11/03/2026</td>
+            <td><strong>2</strong></td>
+            <td style="font-size:12px;">Compensação plantão 28/02</td>
+          </tr>
+          <tr>
+            <td><span class="avatar" style="width:26px;height:26px;font-size:11px;">PL</span>Paulo Lima</td>
+            <td>AGP-00277</td>
+            <td>2º DDM</td>
+            <td>Férias</td>
+            <td>15/03/2026</td>
+            <td>13/04/2026</td>
+            <td><strong>30</strong></td>
+            <td style="color:var(--ink-soft);">—</td>
+          </tr>
+          <tr>
+            <td><span class="avatar" style="width:26px;height:26px;font-size:11px;">RT</span>Roberto Torres</td>
+            <td>INV-00221</td>
+            <td>1º DDM</td>
+            <td>Curso</td>
+            <td>02/01/2026</td>
+            <td>28/03/2026</td>
+            <td><strong>85</strong></td>
+            <td style="font-size:12px;">Curso de Investigação Criminal — ACADEPOL</td>
+          </tr>
+          <tr>
+            <td><span class="avatar" style="width:26px;height:26px;font-size:11px;">BF</span>Beatriz Fontes</td>
+            <td>ESC-00144</td>
+            <td>3º DDM</td>
+            <td>Outros</td>
+            <td>05/01/2026</td>
+            <td>20/01/2026</td>
+            <td><strong>15</strong></td>
+            <td style="font-size:12px;">Acompanhamento de familiar — art. 473 CLT</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Totalizadores -->
+      <div style="margin-top:18px;padding:14px 18px;background:#f8fafd;border-radius:12px;border:1px solid var(--line);display:flex;gap:32px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:4px;">Total de afastamentos</div>
+          <strong style="font-size:20px;">6</strong>
+        </div>
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:4px;">Total de dias</div>
+          <strong style="font-size:20px;">439+</strong>
+        </div>
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:4px;">Em andamento</div>
+          <strong style="font-size:20px;">4</strong>
+        </div>
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:4px;">Afetam escala</div>
+          <strong style="font-size:20px;">6</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         Delegados Externos — pool de cobertura da Delegada(o)
+         ========================================================= -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Pool de Delegados Externos</h2>
+          <p>Delegados(as) credenciados(as) para cobrir impedimentos do(a) titular da DDM · atribuição feita dia a dia na escala mensal</p>
+        </div>
+        <button class="btn btn-primary">+ Cadastrar Delegado(a) Externo(a)</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Órgão de Origem</th>
+            <th>Cartório / DDM</th>
+            <th>Ato Legal</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Dr. Ricardo Almeida</strong></td>
+            <td>2ª Delegacia Seccional</td>
+            <td>1º DDM</td>
+            <td>Port. 014/2026-DDM</td>
+            <td><span class="tag tag-ativo">Ativo</span></td>
+          </tr>
+          <tr>
+            <td><strong>Dra. Sandra Vieira</strong></td>
+            <td>Delegacia de Homicídios</td>
+            <td>1º DDM</td>
+            <td>Port. 021/2026-DDM</td>
+            <td><span class="tag tag-ativo">Ativo</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin:14px 0 0;padding:12px 14px;background:#f0f4ff;border-radius:8px;font-size:13px;color:#3b4a6b;line-height:1.6;">
+        <strong>ℹ️ Como funciona na escala mensal — exclusivo para cargo Delegado(a):</strong><br>
+        Nos dias em que o(a) Delegado(a) titular (cargo DEL) estiver impedido(a), o campo de delegado(a) na grade da escala exibirá um <em>combobox</em> com os nomes deste pool.
+        O operador seleciona o substituto <strong>manualmente, dia a dia</strong> — sem atribuição automática e sem necessidade de fundamentação.<br><br>
+        As <strong>observações do mês</strong> recebem automaticamente o texto: <em>"De DD/MM a DD/MM, [Nome] estará de [Tipo de Afastamento]."</em><br>
+        Para impedimentos sem afastamento formal (ex.: plantão noturno em outra unidade), a observação é inserida manualmente.<br><br>
+        <strong>⚠️ Esta regra não se aplica a outros cargos</strong> (Investigador, Escrivão, Agente, etc.).
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

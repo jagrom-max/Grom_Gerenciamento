@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Runbook de Implantacao - GROM Web</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5c667a;
+      --line: #d8dde6;
+      --soft: #f7f9fc;
+      --accent: #0e4a7b;
+      --accent-soft: #eaf3fb;
+    }
+
+    @page {
+      size: A4;
+      margin: 12mm;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font: 11pt/1.45 Arial, Helvetica, sans-serif;
+    }
+
+    .page {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 6mm 0;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent-soft) 100%);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      break-inside: avoid;
+    }
+
+    .kicker {
+      margin: 0 0 6px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 9pt;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22pt;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 10pt;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+      font-size: 9.5pt;
+    }
+
+    .meta div, .panel, .command, .check {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--soft);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 13pt;
+      color: var(--accent);
+    }
+
+    p {
+      margin: 0 0 8px;
+    }
+
+    .command {
+      border: 1px solid #c8d3e0;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px 12px;
+      margin: 10px 0;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 9.5pt;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .check {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .check li {
+      position: relative;
+      padding-left: 22px;
+      margin: 0 0 7px;
+    }
+
+    .check li::before {
+      content: "[ ]";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 9pt;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .footer {
+      margin-top: 16px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9pt;
+    }
+
+    @media print {
+      .page { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="kicker">GROM Web</p>
+      <h1>Runbook de Implantacao Oracle VPS</h1>
+      <p class="subtitle">Objetivo: reduzir a hospedagem a preencher o arquivo de ambiente, executar scripts prontos e validar um conjunto curto de checks.</p>
+      <div class="meta">
+        <div><strong>Dominio:</strong> grom.seg.br</div>
+        <div><strong>Stack:</strong> Nginx + Docker + PostgreSQL + Redis</div>
+        <div><strong>Modo:</strong> baixa interferencia humana</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <span class="badge">Arquivos que ja existem no repositorio</span>
+      <ul class="check">
+        <li>infra/.env.production.example</li>
+        <li>infra/docker-compose.prod.yml</li>
+        <li>infra/nginx/grom.seg.br.conf.example</li>
+        <li>infra/scripts/deploy-prod.sh</li>
+        <li>infra/scripts/healthcheck-prod.sh</li>
+        <li>infra/scripts/backup-prod.sh</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>1. Preparar a VPS</h2>
+      <div class="command">sudo apt update
+sudo apt install -y ca-certificates curl gnupg nginx certbot python3-certbot-nginx git ufw
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+newgrp docker
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw enable</div>
+      <ul class="check">
+        <li>Docker responde com versao valida</li>
+        <li>Nginx instalado no host</li>
+        <li>DNS de grom.seg.br apontado para a VPS</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>2. Publicar o codigo</h2>
+      <div class="command">sudo mkdir -p /opt/grom
+sudo chown $USER:$USER /opt/grom
+git clone &lt;REPOSITORIO&gt; /opt/grom/grom_web_php
+cd /opt/grom/grom_web_php/infra
+cp .env.production.example .env.production</div>
+      <p>Preencher somente estes campos obrigatorios em <strong>.env.production</strong>:</p>
+      <ul class="check">
+        <li>APP_KEY</li>
+        <li>DB_PASSWORD</li>
+        <li>GROM_BOOTSTRAP_ADMIN_PASSWORD</li>
+        <li>MAIL_FROM_ADDRESS, se necessario</li>
+      </ul>
+      <div class="command">docker run --rm -v /opt/grom/grom_web_php/runtime:/app -w /app php:8.4-cli-alpine php artisan key:generate --show</div>
+    </section>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>3. Subir a aplicacao</h2>
+        <div class="command">cd /opt/grom/grom_web_php/infra
+bash ./scripts/deploy-prod.sh</div>
+        <ul class="check">
+          <li>stack sobe sem erro</li>
+          <li>migrations aplicadas</li>
+          <li>seed estrutural aplicada</li>
+          <li>login interno responde</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>4. Configurar HTTPS</h2>
+        <div class="command">sudo cp /opt/grom/grom_web_php/infra/nginx/grom.seg.br.conf.example /etc/nginx/sites-available/grom.seg.br.conf
+sudo ln -s /etc/nginx/sites-available/grom.seg.br.conf /etc/nginx/sites-enabled/grom.seg.br.conf
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot --nginx -d grom.seg.br
+sudo nginx -t
+sudo systemctl reload nginx</div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>5. Validar tudo</h2>
+      <div class="command">cd /opt/grom/grom_web_php/infra
+bash ./scripts/healthcheck-prod.sh</div>
+      <p>Depois, rodar uma carga curta a partir de uma maquina autorizada:</p>
+      <div class="command">powershell -ExecutionPolicy Bypass -File .\scripts\load-test.ps1 -BaseUrl https://grom.seg.br -FailOnThreshold</div>
+      <ul class="check">
+        <li>login abre em HTTPS</li>
+        <li>dashboard abre sem erro 500</li>
+        <li>RH e escalas abrem</li>
+        <li>PDF responde</li>
+        <li>sem servico unhealthy</li>
+      </ul>
+    </section>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>6. Backup operacional</h2>
+        <div class="command">cd /opt/grom/grom_web_php/infra
+bash ./scripts/backup-prod.sh</div>
+        <p>O backup SQL sera gravado em <strong>/opt/grom/backups</strong> por padrao.</p>
+      </section>
+
+      <section class="panel">
+        <h2>7. Regra de corte</h2>
+        <ul class="check">
+          <li>APP_DEBUG continua false</li>
+          <li>seed demo continua desabilitada</li>
+          <li>sync legado continua desabilitado</li>
+          <li>backup validado</li>
+          <li>carga curta sem HTTP 500</li>
+        </ul>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>8. Plano B imediato</h2>
+      <p>Se a publicacao falhar, usar o roteiro de rollback ja preparado em <strong>docs/10_rollback_oracle_vps.md</strong>.</p>
+    </section>
+
+    <footer class="footer">
+      Documento de mesa para impressao. Fluxo minimo: preencher .env.production, executar deploy-prod.sh, configurar HTTPS, executar healthcheck-prod.sh, rodar backup e validar carga curta.
+    </footer>
+  </main>
+</body>
+</html>

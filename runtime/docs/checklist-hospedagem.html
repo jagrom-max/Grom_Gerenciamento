@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checklist de Hospedagem - GROM Web</title>
+  <style>
+    :root {
+      --ink: #1f2937;
+      --muted: #4b5563;
+      --line: #d1d5db;
+      --soft: #f9fafb;
+      --accent: #0f4c81;
+    }
+
+    @page {
+      size: A4;
+      margin: 14mm 12mm 16mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: #fff;
+      font-size: 11pt;
+      line-height: 1.45;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 4mm 0 0;
+    }
+
+    .header {
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+
+    .kicker {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 9.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 0 0 4px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22pt;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 10pt;
+    }
+
+    .meta {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 18px;
+      font-size: 9.5pt;
+      color: var(--muted);
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 14px 12px;
+      margin: 0 0 14px;
+      background: var(--soft);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .box h2 {
+      margin: 0 0 8px;
+      font-size: 13pt;
+      color: var(--accent);
+    }
+
+    ul.checklist {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    ul.checklist li {
+      margin: 0 0 7px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    ul.checklist li::before {
+      content: "[ ]";
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      padding: 10px 12px;
+      background: #eef6ff;
+      color: #0f172a;
+      margin: 0 0 14px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .footer {
+      margin-top: 18px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9pt;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .page {
+        max-width: none;
+        padding: 0;
+      }
+
+      .box, .note, .header {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <p class="kicker">GROM Web</p>
+      <h1>Checklist de Hospedagem</h1>
+      <p class="subtitle">Itens que precisam estar prontos antes de colocar o sistema no ar.</p>
+      <div class="meta">
+        <div><strong>Foco:</strong> estabilidade, acesso, impressao e operacao</div>
+        <div><strong>Estado dos cadastros faltantes:</strong> podem ficar para depois da hospedagem</div>
+      </div>
+    </header>
+
+    <section class="note">
+      A regra de ouro dos relatorios e timbrados ja esta consolidada. Antes da hospedagem, o mais importante e garantir ambiente, seguranca, build e validacao final.
+    </section>
+
+    <div class="two-col">
+      <section class="box">
+        <h2>1. Infraestrutura</h2>
+        <ul class="checklist">
+          <li>Servidor ou VPS com PHP 8.3 ou superior.</li>
+          <li>Banco de dados de producao definido e acessivel.</li>
+          <li>Redis habilitado, se a fila, cache e sessao continuarem nele.</li>
+          <li>Dominio ou subdominio apontando para a pasta <code>public/</code>.</li>
+          <li>HTTPS ativo com certificado valido.</li>
+        </ul>
+      </section>
+
+      <section class="box">
+        <h2>2. Ambiente (.env)</h2>
+        <ul class="checklist">
+          <li><code>APP_ENV=production</code>.</li>
+          <li><code>APP_DEBUG=false</code>.</li>
+          <li><code>APP_URL</code> correto para o endereco publico.</li>
+          <li><code>DB_*</code> apontando para a base real.</li>
+          <li><code>MAIL_*</code> configurado se houver envio de e-mail.</li>
+          <li><code>GROM_REQUIRE_PASSWORD_CHANGE=true</code> no go-live.</li>
+          <li><code>GROM_BOOTSTRAP_ADMIN_*</code> preenchido para o admin inicial.</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="two-col">
+      <section class="box">
+        <h2>3. Deploy</h2>
+        <ul class="checklist">
+          <li><code>composer install --no-dev</code>.</li>
+          <li><code>npm install</code>.</li>
+          <li><code>npm run build</code>.</li>
+          <li><code>php artisan key:generate</code> se a chave ainda nao existir.</li>
+          <li><code>php artisan migrate --force</code>.</li>
+          <li><code>php artisan storage:link</code>.</li>
+        </ul>
+      </section>
+
+      <section class="box">
+        <h2>4. Cache e Performance</h2>
+        <ul class="checklist">
+          <li><code>php artisan config:cache</code>.</li>
+          <li><code>php artisan route:cache</code>.</li>
+          <li><code>php artisan view:cache</code>.</li>
+          <li>Autoload otimizado e dependencias de producao limpas.</li>
+          <li>Arquivos de storage e cache com permissao de escrita.</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="two-col">
+      <section class="box">
+        <h2>5. Operacao Continua</h2>
+        <ul class="checklist">
+          <li>Worker de fila configurado e monitorado.</li>
+          <li>Scheduler do Laravel ativo no servidor.</li>
+          <li>Backup automatico da base antes do uso real.</li>
+          <li>Log e rotacao de logs conferidos.</li>
+          <li>Espaco em disco suficiente para PDF, relatarios e anexos.</li>
+        </ul>
+      </section>
+
+      <section class="box">
+        <h2>6. Validacao Pos-Subida</h2>
+        <ul class="checklist">
+          <li>Login e acesso por perfil.</li>
+          <li>Modulo RH.</li>
+          <li>Escala mensal e plantoes externos.</li>
+          <li>Mandados e relatorios PDF.</li>
+          <li>Timbrado consolidado em todas as impressoes.</li>
+          <li>Impressao sem sobrepor cabecalho ou rodape.</li>
+        </ul>
+      </section>
+    </div>
+
+    <section class="box">
+      <h2>7. Pendencias Aceitas Depois da Hospedagem</h2>
+      <ul class="checklist">
+        <li>Cadastro manual das funcionarias faltantes no RH: Lara, Larissa e Emanuelle.</li>
+        <li>Ajustes finos de diagrama somente se surgir algum caso real em producao.</li>
+        <li>Eventual revisao dos acessos por perfil conforme o uso do dia a dia.</li>
+      </ul>
+    </section>
+
+    <section class="box">
+      <h2>8. Decisao Sobre o Legado</h2>
+      <ul class="checklist">
+        <li>Definir se a sincronizacao legada continua ativa em producao.</li>
+        <li>Se continuar, garantir acesso ao arquivo legado usado pelo sincronizador.</li>
+        <li>Se nao continuar, trabalhar apenas com os cadastros do PHP.</li>
+      </ul>
+    </section>
+
+    <div class="footer">
+      Documento de apoio operacional do GROM Web. Versao para impressao A4.
+    </div>
+  </main>
+</body>
+</html>

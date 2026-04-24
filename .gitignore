@@ -1,0 +1,40 @@
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# Ferramental local (não versionar binários/cache locais)
+_toolchain/
+composer-cache/
+composer-home/
+
+# Dependências geradas
+vendor/
+node_modules/
+
+# Laravel runtime
+runtime/vendor/
+runtime/node_modules/
+runtime/storage/*.key
+runtime/storage/logs/
+runtime/storage/framework/cache/
+runtime/storage/framework/sessions/
+runtime/storage/framework/testing/
+runtime/storage/framework/views/
+runtime/bootstrap/cache/*.php
+runtime/public/build/
+
+# Testes e relatórios locais
+coverage/
+*.coverage

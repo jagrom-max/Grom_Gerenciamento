@@ -1,0 +1,82 @@
+﻿{
+    "generatedAt":  "2026-04-17T15:42:21",
+    "settings":  {
+                     "baseUrl":  "http://127.0.0.1:8088",
+                     "username":  "josuel.grom",
+                     "durationSec":  2,
+                     "loginConcurrency":  2,
+                     "appRps":  2,
+                     "pdfRps":  1,
+                     "sessionPoolSize":  2,
+                     "maxParallelism":  2,
+                     "outputPath":  "C:\\grom_gerenciamento_final\\grom_web_php\\scripts\\load-test-report-20260417-154209.json",
+                     "scenarios":  [
+                                       "/login (burst simultaneo)",
+                                       "/dashboard",
+                                       "/funcionarios",
+                                       "/relatorios/produtividade/a4/pdf?year=2026\u0026month=3"
+                                   ]
+                 },
+    "thresholds":  {
+                       "p95Ms":  500,
+                       "http500":  0
+                   },
+    "scenarios":  [
+                      {
+                          "name":  "login_burst",
+                          "total":  2,
+                          "success":  2,
+                          "errors":  0,
+                          "http500":  0,
+                          "elapsedSec":  2.16,
+                          "throughputRps":  0.93,
+                          "avgMs":  1067.58,
+                          "medianMs":  1067.58,
+                          "p95Ms":  1093.71,
+                          "maxMs":  1093.71,
+                          "thresholdOk":  false
+                      },
+                      {
+                          "name":  "dashboard",
+                          "total":  4,
+                          "success":  4,
+                          "errors":  0,
+                          "http500":  0,
+                          "elapsedSec":  1.7,
+                          "throughputRps":  2.35,
+                          "avgMs":  178.33,
+                          "medianMs":  180.83,
+                          "p95Ms":  188.75,
+                          "maxMs":  188.75,
+                          "thresholdOk":  true
+                      },
+                      {
+                          "name":  "funcionarios",
+                          "total":  4,
+                          "success":  4,
+                          "errors":  0,
+                          "http500":  0,
+                          "elapsedSec":  1.69,
+                          "throughputRps":  2.37,
+                          "avgMs":  412.52,
+                          "medianMs":  168.08,
+                          "p95Ms":  1152.88,
+                          "maxMs":  1152.88,
+                          "thresholdOk":  false
+                      },
+                      {
+                          "name":  "relatorio_pdf",
+                          "total":  2,
+                          "success":  2,
+                          "errors":  0,
+                          "http500":  0,
+                          "elapsedSec":  4.47,
+                          "throughputRps":  0.45,
+                          "avgMs":  2229.9,
+                          "medianMs":  2229.9,
+                          "p95Ms":  2327.12,
+                          "maxMs":  2327.12,
+                          "thresholdOk":  false
+                      }
+                  ]
+}

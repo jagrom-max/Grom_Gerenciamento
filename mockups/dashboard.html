@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GROM Web - Dashboard</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --ink: #2c3e50;
+      --ink-soft: #708090;
+      --line: #d8dee7;
+      --primary: #2c3e50;
+      --primary-2: #34495e;
+      --accent: #d9e3ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #eef2f7 0%, var(--bg) 100%);
+    }
+    .layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    aside {
+      background: linear-gradient(180deg, #253647 0%, #2c3e50 100%);
+      color: #fff;
+      padding: 26px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .brand img {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      background: rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 6px;
+    }
+    .brand strong {
+      display: block;
+      font-size: 18px;
+    }
+    .brand span {
+      display: block;
+      font-size: 12px;
+      opacity: .76;
+    }
+    nav {
+      display: grid;
+      gap: 10px;
+    }
+    .nav-item {
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      font-weight: 600;
+    }
+    .nav-item.active {
+      background: rgba(255,255,255,.16);
+    }
+    .nav-foot {
+      margin-top: auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    main {
+      padding: 28px;
+      display: grid;
+      gap: 18px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .topbar h1 {
+      margin: 0 0 6px;
+      font-size: 30px;
+    }
+    .topbar p {
+      margin: 0;
+      color: var(--ink-soft);
+    }
+    .pill {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(44,62,80,.06);
+    }
+    .card small {
+      display: block;
+      color: var(--ink-soft);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .card strong {
+      font-size: 30px;
+      line-height: 1;
+    }
+    .card span {
+      display: block;
+      margin-top: 10px;
+      color: var(--ink-soft);
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 28px rgba(44,62,80,.06);
+    }
+    .panel h2 {
+      margin: 0 0 6px;
+      font-size: 20px;
+    }
+    .panel p {
+      margin: 0 0 16px;
+      color: var(--ink-soft);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      background: #edf2f7;
+      color: var(--ink);
+      font-size: 12px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    tr:nth-child(even) td {
+      background: #fbfcfe;
+    }
+    .tag {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    @media (max-width: 1080px) {
+      .cards { grid-template-columns: repeat(2, 1fr); }
+      .grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { padding: 20px; }
+      main { padding: 18px; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">
+        <img src="../../assets/logo_grom.png" alt="Logo GROM">
+        <div>
+          <strong>GROM Web</strong>
+          <span>DDM Rio Claro</span>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-item">Inicio</div>
+        <div class="nav-item active">Produtividade</div>
+        <div class="nav-item">RH</div>
+        <div class="nav-item">Escalas</div>
+        <div class="nav-item">Analise de Dados</div>
+        <div class="nav-item">Operacional</div>
+        <div class="nav-item">Relatorios</div>
+        <div class="nav-item">Usuarios e Perfis</div>
+      </nav>
+      <div class="nav-foot">
+        Usuario autenticado com escopo administrativo.<br>
+        Ambiente projetado para auditoria, fila e acesso remoto seguro.
+      </div>
+    </aside>
+    <main>
+      <section class="topbar">
+        <div>
+          <h1>Painel de Produtividade</h1>
+          <p>Visao consolidada de cartorios, estatisticas mensais, pendencias e confirmacoes de flagrantes.</p>
+        </div>
+        <div class="pill">Periodo fechado: Marco 2026</div>
+      </section>
+      <section class="cards">
+        <article class="card">
+          <small>Flagrantes total</small>
+          <strong>124</strong>
+          <span>DDM 77 | Outras unidades 47</span>
+        </article>
+        <article class="card">
+          <small>Cartorios ativos</small>
+          <strong>06</strong>
+          <span>1 com pendencia critica</span>
+        </article>
+        <article class="card">
+          <small>Importacoes</small>
+          <strong>03</strong>
+          <span>ultima consolidacao 08:15</span>
+        </article>
+        <article class="card">
+          <small>Confirmacoes pendentes</small>
+          <strong>09</strong>
+          <span>aguardando validacao manual</span>
+        </article>
+      </section>
+      <section class="grid">
+        <article class="panel">
+          <h2>Fechamento por cartorio</h2>
+          <p>Total, percentual e origem dos flagrantes no periodo selecionado.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Cartorio</th>
+                <th>Total</th>
+                <th>DDM</th>
+                <th>Outras</th>
+                <th>%</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cartorio 1</td>
+                <td>31</td>
+                <td>19</td>
+                <td>12</td>
+                <td>25.0%</td>
+              </tr>
+              <tr>
+                <td>Cartorio 2</td>
+                <td>24</td>
+                <td>13</td>
+                <td>11</td>
+                <td>19.4%</td>
+              </tr>
+              <tr>
+                <td>Cartorio 3</td>
+                <td>19</td>
+                <td>11</td>
+                <td>8</td>
+                <td>15.3%</td>
+              </tr>
+              <tr>
+                <td>Cartorio 4</td>
+                <td>18</td>
+                <td>12</td>
+                <td>6</td>
+                <td>14.5%</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+        <article class="panel">
+          <h2>Fila de confirmacao</h2>
+          <p>Sugestoes vindas da consolidacao externa, aguardando acao do cartorio.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>SPJ</th>
+                <th>Cartorio</th>
+                <th>Lavrado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SPJ-1044/2026</td>
+                <td>Cartorio 2</td>
+                <td><span class="tag">DDM</span></td>
+              </tr>
+              <tr>
+                <td>SPJ-1050/2026</td>
+                <td>Cartorio 1</td>
+                <td><span class="tag">Outras</span></td>
+              </tr>
+              <tr>
+                <td>SPJ-1058/2026</td>
+                <td>Cartorio 4</td>
+                <td><span class="tag">DDM</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
+

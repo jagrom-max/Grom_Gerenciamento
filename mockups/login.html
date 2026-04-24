@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GROM Web - Login</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --ink: #2c3e50;
+      --ink-soft: #5d6d7e;
+      --line: #d7dde5;
+      --primary: #2c3e50;
+      --primary-hover: #34495e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(44,62,80,.10), transparent 35%),
+        linear-gradient(180deg, #eef2f7 0%, var(--bg) 100%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .shell {
+      width: min(1060px, 100%);
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(255,255,255,.6);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(44,62,80,.16);
+      backdrop-filter: blur(16px);
+    }
+    .hero {
+      padding: 48px;
+      background:
+        linear-gradient(135deg, rgba(44,62,80,.95), rgba(52,73,94,.88)),
+        var(--primary);
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -80px auto;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+    }
+    .hero-top {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 40px;
+    }
+    .hero-top img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      background: rgba(255,255,255,.10);
+      border-radius: 18px;
+      padding: 8px;
+    }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 12px;
+      opacity: .78;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1.08;
+    }
+    .hero p {
+      max-width: 560px;
+      margin: 0 0 22px;
+      color: rgba(255,255,255,.84);
+      line-height: 1.6;
+    }
+    .points {
+      display: grid;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .point {
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      font-size: 14px;
+    }
+    .card {
+      padding: 40px 34px;
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+    .card p {
+      margin: 0 0 26px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+    .field { margin-bottom: 18px; }
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 15px;
+      font: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+      background: #fff;
+    }
+    input:focus {
+      border-color: rgba(44,62,80,.55);
+      box-shadow: 0 0 0 4px rgba(44,62,80,.10);
+      transform: translateY(-1px);
+    }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 6px 0 24px;
+      color: var(--ink-soft);
+      font-size: 13px;
+    }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 700;
+      color: #fff;
+      background: var(--primary);
+      cursor: pointer;
+      transition: transform .2s, background .2s, box-shadow .2s;
+      box-shadow: 0 14px 28px rgba(44,62,80,.14);
+    }
+    button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .footer {
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--ink-soft);
+      text-align: center;
+    }
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; }
+      .hero, .card { padding: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <img src="../../assets/brasao.png" alt="Brasao institucional">
+        <div>
+          <div class="eyebrow">DDM Rio Claro</div>
+          <strong>Plataforma GROM Web</strong>
+        </div>
+      </div>
+      <h1>Seguranca, continuidade e acesso remoto com controle real.</h1>
+      <p>
+        Esta proposta transfere o GROM do ambiente local para uma plataforma web auditavel,
+        com acesso controlado por perfil, trilha de operacoes e padrao institucional unico.
+      </p>
+      <div class="points">
+        <div class="point">RBAC por usuario, modulo, unidade e cartorio.</div>
+        <div class="point">Logs, auditoria e fila de importacao desde o inicio.</div>
+        <div class="point">Relatorios A4 com timbrado consolidado e padrao unico.</div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Acesso ao sistema</h2>
+      <p>Login controlado pelo administrador, com trilha de autenticacao e futuras politicas de MFA.</p>
+      <div class="field">
+        <label for="user">Usuario</label>
+        <input id="user" type="text" placeholder="matricula ou usuario">
+      </div>
+      <div class="field">
+        <label for="pass">Senha</label>
+        <input id="pass" type="password" placeholder="senha segura">
+      </div>
+      <div class="meta">
+        <span>Ambiente homologacao</span>
+        <span>HTTPS obrigatorio</span>
+      </div>
+      <button type="button">Entrar no GROM Web</button>
+      <div class="footer">GROM Web | Plataforma administrativa e operacional</div>
+    </section>
+  </main>
+</body>
+</html>
+

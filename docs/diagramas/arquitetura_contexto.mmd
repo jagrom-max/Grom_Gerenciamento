@@ -1,0 +1,20 @@
+flowchart LR
+    Browser[Browser HTTPS] --> Nginx[Nginx]
+    Nginx --> App[Laravel App]
+    App --> Access[Access]
+    App --> Rh[Rh]
+    App --> Escalas[Escalas]
+    App --> Prod[Produtividade]
+    App --> Analise[Analise]
+    App --> Oper[Operacional]
+    App --> Rel[Relatorios]
+    App --> Queue[Worker e Scheduler]
+    Access --> Pg[(PostgreSQL)]
+    Rh --> Pg
+    Escalas --> Pg
+    Prod --> Pg
+    Analise --> Pg
+    Oper --> Pg
+    Queue --> Redis[(Redis)]
+    Rel --> Storage[(Storage privado)]
+

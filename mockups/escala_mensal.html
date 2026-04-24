@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GROM Web — Escalas</title>
+  <style>
+    :root {
+      --bg:        #f5f7fa;
+      --panel:     #ffffff;
+      --ink:       #2c3e50;
+      --ink-soft:  #708090;
+      --line:      #d8dee7;
+      --primary:   #2c3e50;
+      --accent:    #d9e3ee;
+      --ok:        #27ae60;
+      --ok-bg:     #edfaf1;
+      --warn:      #e67e22;
+      --warn-bg:   #fef9f0;
+      --info:      #2980b9;
+      --info-bg:   #eaf4fb;
+      --danger:    #c0392b;
+      --danger-bg: #fdf0ef;
+      --muted:     #95a5a6;
+      --muted-bg:  #f2f3f4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #eef2f7 0%, var(--bg) 100%);
+    }
+    .layout {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    aside {
+      background: linear-gradient(180deg, #253647 0%, #2c3e50 100%);
+      color: #fff;
+      padding: 26px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .brand-logo {
+      width: 58px; height: 58px;
+      background: rgba(255,255,255,.08);
+      border-radius: 14px;
+      display: grid; place-items: center;
+      font-size: 22px;
+    }
+    .brand strong { display: block; font-size: 18px; }
+    .brand span   { display: block; font-size: 12px; opacity: .76; }
+    nav { display: grid; gap: 6px; }
+    .nav-item {
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .nav-item.active { background: rgba(255,255,255,.16); }
+    .nav-section {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      opacity: .5;
+      padding: 6px 4px 2px;
+    }
+    .nav-foot {
+      margin-top: auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    main { padding: 28px; display: grid; gap: 20px; align-content: start; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .topbar h1 { margin: 0 0 5px; font-size: 28px; }
+    .topbar p  { margin: 0; color: var(--ink-soft); font-size: 14px; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--line);
+    }
+    .tab {
+      padding: 10px 20px;
+      border-radius: 10px 10px 0 0;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      color: var(--ink-soft);
+    }
+    .tab.active {
+      background: var(--panel);
+      border-color: var(--line);
+      color: var(--ink);
+      margin-bottom: -2px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 8px 22px rgba(44,62,80,.06);
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+    .panel-head h2 { margin: 0; font-size: 18px; }
+    .panel-head p  { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary  { background: var(--primary); color: #fff; }
+    .btn-outline  { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+    .btn-ok       { background: var(--ok); color: #fff; }
+    .btn-warn     { background: var(--warn); color: #fff; }
+    .btn-print    { background: #f0f4ff; border: 1px solid #c5d3e8; color: #3b4a6b; }
+    .btn-row      { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      align-items: center;
+    }
+    .filters select, .filters input {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--ink-soft);
+      border-bottom: 2px solid var(--line);
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+    .tag-ok      { background: var(--ok-bg);     color: var(--ok); }
+    .tag-warn    { background: var(--warn-bg);    color: var(--warn); }
+    .tag-info    { background: var(--info-bg);    color: var(--info); }
+    .tag-muted   { background: var(--muted-bg);   color: var(--muted); }
+    .tag-danger  { background: var(--danger-bg);  color: var(--danger); }
+    .tag-rascunho{ background: #fff8e6;            color: #b7860b; }
+    .tag-def     { background: var(--ok-bg);      color: var(--ok); }
+
+    /* ── Escala mensal 7 colunas ─────────────────────────────────────── */
+    .escala-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .escala-table th {
+      background: #f0f4f8;
+      text-align: center;
+      padding: 9px 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--ink-soft);
+      border-bottom: 2px solid var(--line);
+      white-space: nowrap;
+    }
+    .escala-table td {
+      text-align: center;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      vertical-align: middle;
+      min-width: 90px;
+    }
+    .escala-table td:first-child,
+    .escala-table td:nth-child(2) { min-width: 52px; }
+    .escala-table tr:last-child td { border-bottom: none; }
+
+    /* Final de semana */
+    .row-fds td { background: #f2f3f4; color: var(--muted); font-size: 12px; }
+
+    /* Feriado */
+    .row-feriado td:nth-child(4) { color: var(--danger); font-weight: 700; }
+
+    /* Delegado bloqueado: combobox */
+    .del-combo {
+      width: 100%;
+      border: 1px solid #f0c060;
+      border-radius: 6px;
+      background: #fffbea;
+      font-size: 12px;
+      font-weight: 600;
+      color: #b7860b;
+      padding: 4px 6px;
+      cursor: pointer;
+    }
+
+    /* Observacoes do mes */
+    .obs-box {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--ink);
+      margin-top: 20px;
+    }
+    .obs-box strong {
+      color: var(--ink-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    /* Formulario de lancamento */
+    .lancamento-form {
+      display: flex;
+      gap: 14px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .lancamento-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .lancamento-form select,
+    .lancamento-form input {
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 13px;
+      min-width: 160px;
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="brand">
+      <div class="brand-logo">&#9878;</div>
+      <div>
+        <strong>GROM Web</strong>
+        <span>DDM Rio Claro</span>
+      </div>
+    </div>
+    <div class="nav-section">Principal</div>
+    <nav>
+      <div class="nav-item">&#127968; Dashboard</div>
+      <div class="nav-section">Gestao</div>
+      <div class="nav-item active">&#128197; Escalas</div>
+      <div class="nav-item">&#128101; RH</div>
+      <div class="nav-item">&#128202; Produtividade</div>
+      <div class="nav-item">&#128269; Analise de Dados</div>
+      <div class="nav-section">Sistema</div>
+      <div class="nav-item">&#9881;&#65039; Configuracoes</div>
+    </nav>
+    <div class="nav-foot">
+      <strong>Usuario Demo</strong><br>
+      Gestor &middot; DDM<br>
+      <span style="color:rgba(255,255,255,.45);font-size:11px;">v1.0 &middot; GROM Web</span>
+    </div>
+  </aside>
+
+  <!-- Conteudo Principal -->
+  <main>
+
+    <div class="topbar">
+      <div>
+        <h1>&#128197; Escalas</h1>
+        <p>Lancamento de plantoes externos &middot; geracao e conferencia da escala mensal &middot; confirmacao definitiva</p>
+      </div>
+    </div>
+
+    <!-- Abas -->
+    <div class="tabs">
+      <div class="tab">Lancar Plantoes Externos</div>
+      <div class="tab active">Escala Mensal</div>
+    </div>
+
+    <!-- ABA: Lancar Plantoes Externos -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Lan&ccedil;ar Plant&otilde;es Externos</h2>
+          <p>Registre os plant&otilde;es externos de cada funcion&aacute;rio antes de gerar a escala &mdash; o sistema usar&aacute; esses dados para montar os bloqueios</p>
+        </div>
+      </div>
+
+      <div class="lancamento-form">
+        <label>
+          M&ecirc;s / Ano
+          <input type="month" value="2026-03">
+        </label>
+        <label>
+          Funcion&aacute;rio
+          <select>
+            <option>&#8212; selecionar &#8212;</option>
+            <option>Dra. Laura Mendes (DEL)</option>
+            <option>Marina Torres (ESC)</option>
+            <option>Carlos Pinto (AGP)</option>
+            <option>Beatriz Souza (ESC)</option>
+          </select>
+        </label>
+        <label>
+          Tipo de Plant&atilde;o
+          <select>
+            <option>&#8212; selecionar &#8212;</option>
+            <option>CADD &mdash; Cart&oacute;rio Adicional de Dia</option>
+            <option>CADN &mdash; Cart&oacute;rio Adicional de Noite</option>
+            <option>DDM24H &mdash; DDM 24 horas</option>
+            <option>ESCOLTA &mdash; Escolta</option>
+            <option>PLD &mdash; Plant&atilde;o de Dia</option>
+            <option>PLN &mdash; Plant&atilde;o de Noite</option>
+            <option>RD &mdash; Regime de Dia</option>
+            <option>RN &mdash; Regime de Noite</option>
+          </select>
+        </label>
+        <label>
+          Data
+          <input type="date" value="2026-03-05">
+        </label>
+        <button class="btn btn-primary" style="margin-bottom:0;">+ Registrar</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Funcion&aacute;rio</th>
+            <th>Tipo / Sigla</th>
+            <th>Regra de bloqueio</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>03/03/2026</td>
+            <td>Marina Torres <span style="font-size:11px;color:var(--ink-soft);">ESC</span></td>
+            <td><span class="tag tag-warn">PLN</span> Plant&atilde;o de Noite</td>
+            <td>Bloqueia: dia do plant&atilde;o + dia seguinte</td>
+            <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;">&#10005;</button></td>
+          </tr>
+          <tr>
+            <td>10/03/2026</td>
+            <td>Carlos Pinto <span style="font-size:11px;color:var(--ink-soft);">AGP</span></td>
+            <td><span class="tag tag-info">PLD</span> Plant&atilde;o de Dia</td>
+            <td>Bloqueia: apenas o dia do plant&atilde;o (n&atilde;o afeta cargo DEL)</td>
+            <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;">&#10005;</button></td>
+          </tr>
+          <tr>
+            <td>25/03/2026</td>
+            <td>Beatriz Souza <span style="font-size:11px;color:var(--ink-soft);">ESC</span></td>
+            <td><span class="tag tag-warn">CADN</span> Cart&oacute;rio Adicional de Noite</td>
+            <td>Bloqueia: dia do plant&atilde;o + dia seguinte</td>
+            <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;">&#10005;</button></td>
+          </tr>
+          <tr>
+            <td>31/03/2026</td>
+            <td>Marina Torres <span style="font-size:11px;color:var(--ink-soft);">ESC</span></td>
+            <td><span class="tag tag-warn">PLN</span> Plant&atilde;o de Noite</td>
+            <td>Bloqueia: dia do plant&atilde;o + dia seguinte (afeta 01/abr)</td>
+            <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;">&#10005;</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:10px;">
+        O sistema considera automaticamente plant&otilde;es do &uacute;ltimo dia do m&ecirc;s anterior ao calcular bloqueios do dia 1.
+      </p>
+    </div>
+
+    <!-- ABA ATIVA: Escala Mensal -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Escala Mensal &mdash; DDM de Rio Claro</h2>
+          <p>Gere a escala provis&oacute;ria, confira na tela e/ou imprima, fa&ccedil;a ajustes pontuais e grave a definitiva</p>
+        </div>
+        <div class="btn-row">
+          <input type="month" value="2026-03"
+            style="padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;">
+        </div>
+      </div>
+
+      <!-- Barra de acoes -->
+      <div class="btn-row" style="margin-bottom:18px;">
+        <button class="btn btn-outline">&#128194; Carregar Escala Salva</button>
+        <button class="btn btn-warn">&#9881;&#65039; Gerar Escala Provis&oacute;ria</button>
+        <button class="btn btn-ok">&#128190; Gerar Escala Definitiva (Salvar)</button>
+        <button class="btn btn-print">&#128424; Imprimir (PDF)</button>
+      </div>
+
+      <!-- Grade 7 colunas conforme sistema legado Python -->
+      <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--line);">
+        <table class="escala-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Dia</th>
+              <th>Escrivao</th>
+              <th>Operacional</th>
+              <th>Fechar</th>
+              <th>Delegada(o)</th>
+              <th>Plantoes Externos</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- 01 Sab: fim de semana, todos os campos vazios, linha visivel -->
+            <tr class="row-fds">
+              <td>01/03</td><td>S&aacute;b</td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+
+            <!-- 02 Dom: fim de semana -->
+            <tr class="row-fds">
+              <td>02/03</td><td>Dom</td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+
+            <!-- 03 Seg: Marina bloqueada PLN 03/03 bloqueia dia 03 e 04 -->
+            <tr>
+              <td>03/03</td><td>Seg</td>
+              <td>Beatriz Souza</td>
+              <td>Carlos Pinto</td>
+              <td>Beatriz Souza</td>
+              <td>Dra. Laura Mendes</td>
+              <td>Marina Torres (PLN)</td>
+            </tr>
+
+            <!-- 04 Ter: Marina ainda bloqueada dia seguinte ao PLN -->
+            <tr>
+              <td>04/03</td><td>Ter</td>
+              <td>Marina Torres</td>
+              <td>Carlos Pinto</td>
+              <td>Marina Torres</td>
+              <td>Dra. Laura Mendes</td>
+              <td></td>
+            </tr>
+
+            <!-- 05 Qua -->
+            <tr>
+              <td>05/03</td><td>Qua</td>
+              <td>Beatriz Souza</td>
+              <td>Carlos Pinto</td>
+              <td>Beatriz Souza</td>
+              <td>Dra. Laura Mendes</td>
+              <td></td>
+            </tr>
+
+            <!-- 06 Qui -->
+            <tr>
+              <td>06/03</td><td>Qui</td>
+              <td>Marina Torres</td>
+              <td>Carlos Pinto</td>
+              <td>Marina Torres</td>
+              <td>Dra. Laura Mendes</td>
+              <td></td>
+            </tr>
+
+            <!-- 07 Sex -->
+            <tr>
+              <td>07/03</td><td>Sex</td>
+              <td>Beatriz Souza</td>
+              <td>Carlos Pinto</td>
+              <td>Beatriz Souza</td>
+              <td>Dra. Laura Mendes</td>
+              <td></td>
+            </tr>
+
+            <!-- 08 Sab -->
+            <tr class="row-fds">
+              <td>08/03</td><td>S&aacute;b</td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+
+            <!-- 09 Dom -->
+            <tr class="row-fds">
+              <td>09/03</td><td>Dom</td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+
+            <!-- 10 Seg: Carlos bloqueado PLD; PLD nao bloqueia cargo DEL -->
+            <tr>
+              <td>10/03</td><td>Seg</td>
+              <td>Marina Torres</td>
+              <td></td>
+              <td>Marina Torres</td>
+              <td>Dra. Laura Mendes</td>
+              <td>Carlos Pinto (PLD)</td>
+            </tr>
+
+            <!-- 11 Ter -->
+            <tr>
+              <td>11/03</td><td>Ter</td>
+              <td>Beatriz Souza</td>
+              <td>Carlos Pinto</td>
+              <td>Beatriz Souza</td>
+              <td>Dra. Laura Mendes</td>
+              <td></td>
+            </tr>
+
+            <!-- 12 Qua: Feriado: operacional = FERIADO, demais vazios -->
+            <tr class="row-feriado">
+              <td>12/03</td><td>Qua</td>
+              <td></td>
+              <td><strong>FERIADO</strong></td>
+              <td></td><td></td><td></td>
+            </tr>
+
+            <!-- 13 Qui -->
+            <tr>
+              <td>13/03</td><td>Qui</td>
+              <td>Marina Torres</td>
+              <td>Carlos Pinto</td>
+              <td>Marina Torres</td>
+              <td>Dra. Laura Mendes</td>
+              <td></td>
+            </tr>
+
+            <!-- 14 Sex -->
+            <tr>
+              <td>14/03</td><td>Sex</td>
+              <td>Beatriz Souza</td>
+              <td>Carlos Pinto</td>
+              <td>Beatriz Souza</td>
+              <td>Dra. Laura Mendes</td>
+              <td></td>
+            </tr>
+
+            <!-- 15 Sab: inicio ferias Delegada -->
+            <tr class="row-fds">
+              <td>15/03</td><td>S&aacute;b</td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+
+            <!-- dias 16 a 24 gerados pelo sistema -->
+            <tr style="background:#fafbfc;">
+              <td colspan="7" style="text-align:center;color:var(--muted);font-size:12px;padding:10px;">
+                &middot;&middot;&middot; dias 16 a 24 (gerados pelo sistema) &middot;&middot;&middot;
+              </td>
+            </tr>
+
+            <!-- 25 Ter: Beatriz bloqueada CADN dia+seguinte; Delegada de ferias: combobox -->
+            <tr>
+              <td>25/03</td><td>Ter</td>
+              <td></td>
+              <td>Carlos Pinto</td>
+              <td>Marina Torres</td>
+              <td>
+                <select class="del-combo">
+                  <option>&#8212; selecionar delegado &#8212;</option>
+                  <option>Dr. Ricardo Almeida</option>
+                  <option>Dra. Sandra Vieira</option>
+                  <option>Dr. Paulo Rezende</option>
+                </select>
+              </td>
+              <td>Beatriz Souza (CADN)</td>
+            </tr>
+
+            <!-- 26 Qua: Beatriz bloqueada dia seguinte ao CADN -->
+            <tr>
+              <td>26/03</td><td>Qua</td>
+              <td>Marina Torres</td>
+              <td>Carlos Pinto</td>
+              <td>Marina Torres</td>
+              <td>
+                <select class="del-combo">
+                  <option>&#8212; selecionar delegado &#8212;</option>
+                  <option>Dr. Ricardo Almeida</option>
+                  <option>Dra. Sandra Vieira</option>
+                  <option>Dr. Paulo Rezende</option>
+                </select>
+              </td>
+              <td></td>
+            </tr>
+
+            <!-- 27 Qui -->
+            <tr>
+              <td>27/03</td><td>Qui</td>
+              <td>Beatriz Souza</td>
+              <td>Carlos Pinto</td>
+              <td>Beatriz Souza</td>
+              <td>
+                <select class="del-combo">
+                  <option>&#8212; selecionar delegado &#8212;</option>
+                  <option>Dr. Ricardo Almeida</option>
+                  <option>Dra. Sandra Vieira</option>
+                  <option>Dr. Paulo Rezende</option>
+                </select>
+              </td>
+              <td></td>
+            </tr>
+
+            <!-- 28 Sex -->
+            <tr>
+              <td>28/03</td><td>Sex</td>
+              <td>Marina Torres</td>
+              <td>Carlos Pinto</td>
+              <td>Marina Torres</td>
+              <td>
+                <select class="del-combo">
+                  <option>&#8212; selecionar delegado &#8212;</option>
+                  <option>Dr. Ricardo Almeida</option>
+                  <option>Dra. Sandra Vieira</option>
+                  <option>Dr. Paulo Rezende</option>
+                </select>
+              </td>
+              <td></td>
+            </tr>
+
+            <!-- 29 Sab -->
+            <tr class="row-fds">
+              <td>29/03</td><td>S&aacute;b</td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+
+            <!-- 30 Dom -->
+            <tr class="row-fds">
+              <td>30/03</td><td>Dom</td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+
+            <!-- 31 Seg: Marina com PLN bloqueia dia 31 e afeta 01/abr -->
+            <tr>
+              <td>31/03</td><td>Seg</td>
+              <td></td>
+              <td>Carlos Pinto</td>
+              <td>Beatriz Souza</td>
+              <td>
+                <select class="del-combo">
+                  <option>&#8212; selecionar delegado &#8212;</option>
+                  <option>Dr. Ricardo Almeida</option>
+                  <option>Dra. Sandra Vieira</option>
+                  <option>Dr. Paulo Rezende</option>
+                </select>
+              </td>
+              <td>Marina Torres (PLN)</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Observacoes do mes: geradas a partir dos afastamentos e feriados registrados -->
+      <div class="obs-box">
+        <strong>Observa&ccedil;&otilde;es do M&ecirc;s</strong>
+        De 15/03 a 31/03, Dra. Laura Mendes estar&aacute; de F&eacute;rias.<br>
+        Feriado em 12/03.
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+        <button class="btn btn-print">&#128424; Imprimir Provis&oacute;ria</button>
+        <button class="btn btn-ok" style="font-size:14px;padding:10px 24px;">&#128190; Gerar Escala Definitiva (Salvar)</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>
