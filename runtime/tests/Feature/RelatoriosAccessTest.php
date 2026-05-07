@@ -127,7 +127,7 @@ class RelatoriosAccessTest extends TestCase
         $response->assertSee('Acompanhamento Operacional Integrado');
         $response->assertSee('Cartorios reais espelhados');
         $response->assertSee('Cartorio Integrado');
-        $response->assertSee('Confronto direto do cadastro de pessoas.');
+        $response->assertSee('Cadastro consolidado no espelho web.');
     }
 
     public function test_authorized_user_can_download_operational_followup_report_pdf(): void

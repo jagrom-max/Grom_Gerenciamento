@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Calendarios;
 use App\Http\Controllers\Controller;
 use App\Models\RhAfastamento;
 use App\Models\RhHoliday;
-use App\Services\Rh\LegacyFuncionariosReader;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\View\View;
@@ -18,19 +17,14 @@ use SQLite3;
 
 class CalendariosController extends Controller
 {
-    public function __invoke(Request $request, LegacyFuncionariosReader $reader): View
+    public function __invoke(Request $request): View
     {
-        return $this->index($request, $reader);
+        return $this->index($request);
     }
 
-    public function index(Request $request, LegacyFuncionariosReader $reader): View
+    public function index(Request $request): View
     {
         $filters = $this->resolveFilters($request);
-        try {
-            $legacySnapshot = $reader->snapshot();
-        } catch (\Throwable) {
-            $legacySnapshot = ['employees' => [], 'afastamentos' => [], 'warning' => 'Base legada indisponivel.'];
-        }
 
         $monthStart = Carbon::create($filters['ano'], $filters['mes'], 1)->startOfDay();
         $monthEnd = $monthStart->copy()->endOfMonth();
@@ -53,21 +47,10 @@ class CalendariosController extends Controller
             ->orderBy('holiday_date')
             ->get();
 
-        $legacyHolidayRows = collect($this->loadLegacyHolidayRows($filters['ano'], $filters['mes']));
-        $legacyAllHolidayRows = collect($this->loadLegacyHolidayRows());
-        $legacyAbsenceRowsSource = collect($legacySnapshot['afastamentos'] ?? []);
-        $legacyEmployees = $legacySnapshot['employees'] ?? [];
-
-        $availableYears = $this->buildAvailableYears($legacyAbsenceRowsSource, $legacyAllHolidayRows);
+        $availableYears = $this->buildAvailableYears();
         $availableMonths = range(1, 12);
 
         [$days, $criticalDays, $absenceRows] = $this->buildAbsenceCalendar($monthStart, $monthEnd, $afastamentos, $contextHolidays);
-        [$legacyCriticalDays, $legacyAbsenceRows, $legacyStats] = $this->buildLegacyAbsenceCalendar(
-            $legacyAbsenceRowsSource,
-            $legacyEmployees,
-            $monthStart,
-            $monthEnd,
-        );
 
         $afastamentosNoMes = collect($absenceRows);
         $funcionariosAfastados = $afastamentosNoMes
@@ -87,20 +70,20 @@ class CalendariosController extends Controller
         return view('calendarios.index', [
             'filters' => $filters,
             'snapshot' => [
-                'source_name' => $legacySnapshot['source_name'] ?? null,
+                'source_name' => null,
                 'year' => $filters['ano'],
                 'month' => $filters['mes'],
                 'month_label' => Carbon::create()->month($filters['mes'])->locale('pt_BR')->isoFormat('MMMM'),
                 'available_years' => $availableYears,
                 'available_months' => $availableMonths,
-                'summary' => $legacySnapshot['summary'] ?? [],
+                'summary' => [],
             ],
             'days' => $days,
             'calendarSlots' => $this->buildCalendarSlots($days, $monthStart),
             'criticalDays' => $criticalDays,
             'absenceRows' => $afastamentosNoMes,
-            'legacyCriticalDays' => $legacyCriticalDays,
-            'legacyAbsenceRows' => $legacyAbsenceRows,
+            'legacyCriticalDays' => [],
+            'legacyAbsenceRows' => [],
             'editingHoliday' => $request->filled('holiday')
                 ? RhHoliday::query()->find($request->string('holiday')->toString())
                 : null,
@@ -112,7 +95,7 @@ class CalendariosController extends Controller
                 ->orderBy('holiday_date')
                 ->limit(8)
                 ->get(),
-            'legacyHolidays' => $legacyHolidayRows,
+            'legacyHolidays' => collect(),
             'summary' => [
                 'dias_total' => count($days),
                 'afastamentos_total' => $afastamentosNoMes->count(),
@@ -121,17 +104,11 @@ class CalendariosController extends Controller
                 'dias_com_sobreposicao' => count($criticalDays),
                 'afastamentos_em_aberto' => $afastamentosEmAberto,
                 'feriados_contexto' => $contextHolidays->count(),
-                'legacy_funcionarios_total' => $legacySnapshot['summary']['total'] ?? 0,
-                'legacy_funcionarios_ativos' => $legacySnapshot['summary']['ativos'] ?? 0,
-                'legacy_funcionarios_concorrem' => $legacySnapshot['summary']['concorrem_escala'] ?? 0,
-                'legacy_funcionarios_em_afastamento' => $legacySnapshot['summary']['em_afastamento'] ?? 0,
-                'legacy_afastamentos_total' => $legacyStats['afastamentos_total'],
-                'legacy_afastamentos_em_vigor' => $legacySnapshot['summary']['afastamentos_em_vigor'] ?? 0,
-                'legacy_feriados_mes' => $legacyHolidayRows->count(),
-                'legacy_dias_com_afastamento' => $legacyStats['dias_com_afastamento'],
-                'legacy_dias_com_sobreposicao' => $legacyStats['dias_com_sobreposicao'],
-                'legacy_afastamentos_em_aberto' => $legacyStats['afastamentos_em_aberto'],
-                'legacy_funcionarios_afastados' => $legacyStats['funcionarios_afastados'],
+                'legacy_afastamentos_total' => 0,
+                'legacy_feriados_mes' => 0,
+                'legacy_dias_com_sobreposicao' => 0,
+                'legacy_afastamentos_em_aberto' => 0,
+                'legacy_funcionarios_afastados' => 0,
             ],
         ]);
     }
@@ -219,33 +196,22 @@ class CalendariosController extends Controller
     }
 
     /**
-     * @param Collection<int, array<string, mixed>> $legacyAbsences
-     * @param Collection<int, array<string, mixed>> $legacyHolidays
      * @return array<int, int>
      */
-    private function buildAvailableYears(Collection $legacyAbsences, Collection $legacyHolidays): array
+    private function buildAvailableYears(): array
     {
-        $years = collect();
+        $years = RhAfastamento::query()
+            ->selectRaw("CAST(substr(start_date, 1, 4) AS INTEGER) AS y")
+            ->distinct()
+            ->pluck('y')
+            ->filter()
+            ->map(fn ($y) => (int) $y)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
 
-        foreach ($legacyAbsences as $row) {
-            foreach (['data_inicio', 'data_fim'] as $field) {
-                $date = $this->parseLegacyDate($row[$field] ?? null);
-                if ($date !== null) {
-                    $years->push((int) $date->format('Y'));
-                }
-            }
-        }
-
-        foreach ($legacyHolidays as $row) {
-            $date = $this->parseLegacyDate($row['date'] ?? null);
-            if ($date !== null) {
-                $years->push((int) $date->format('Y'));
-            }
-        }
-
-        $availableYears = $years->filter()->unique()->sort()->values()->all();
-
-        return $availableYears !== [] ? $availableYears : [now()->year];
+        return $years !== [] ? $years : [now()->year];
     }
 
     /**

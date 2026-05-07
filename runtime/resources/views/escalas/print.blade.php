@@ -5,6 +5,7 @@ $ano = $filters['ano'];
 $mes = $filters['mes'];
 $previewMode = request()->boolean('preview');
 $mesLabel = Carbon::create()->month($mes)->locale('pt_BR')->isoFormat('MMMM');
+$mesLabelUpper = mb_strtoupper($mesLabel, 'UTF-8');
 $mesLabelFull = ucfirst($mesLabel) . ' / ' . $ano;
 $geradoEm = now();
 $versao = $phpDias->isNotEmpty() ? $phpVersao : ($snapshot['version'] ?? '?');
@@ -48,12 +49,6 @@ $diasMapa = [];
 if ($phpDias->isNotEmpty()) {
     foreach ($phpDias as $dia) {
         $diasMapa[$dia->data->toDateString()] = ['src' => 'php', 'obj' => $dia];
-    }
-} elseif (! empty($snapshot['scale_rows'])) {
-    foreach ($snapshot['scale_rows'] as $row) {
-        if (! empty($row['date'])) {
-            $diasMapa[$row['date']] = ['src' => 'legacy', 'obj' => $row];
-        }
     }
 }
 
@@ -104,26 +99,15 @@ foreach ($phpFuncionarios as $f) {
 }
 $afastamentosMes = $afastamentosMes->sortBy(fn ($i) => $i['funcionario']->name)->values();
 
-// Fallback legado
-$legacyAfastamentos = [];
-if ($afastamentosMes->isEmpty() && ! empty($snapshot['afastamentos_mes'])) {
-    $legacyAfastamentos = $snapshot['afastamentos_mes'];
-}
-
 $observacoesItems = [];
 foreach ($afastamentosMes as $item) {
+    $reason = trim((string) ($item['afastamento']->reason ?? ''));
+    $reason = str_ireplace('ferias', 'Férias', $reason);
+
     $observacoesItems[] = [
         'dates' => $item['afastamento']->start_date?->format('d/m/Y') . ' a ' . ($item['afastamento']->end_date ? $item['afastamento']->end_date->format('d/m/Y') : 'em aberto'),
         'name' => $item['funcionario']->short_name ?? $item['funcionario']->name,
-        'type' => $item['afastamento']->reason ?? '',
-    ];
-}
-
-foreach ($legacyAfastamentos as $la) {
-    $observacoesItems[] = [
-        'dates' => (! empty($la['data_inicio']) ? Carbon::parse($la['data_inicio'])->format('d/m/Y') : '??') . ' a ' . (! empty($la['data_fim']) ? Carbon::parse($la['data_fim'])->format('d/m/Y') : 'em aberto'),
-        'name' => $la['funcionario_nome'] ?? '',
-        'type' => $la['tipo'] ?? '',
+        'type' => $reason,
     ];
 }
 
@@ -141,11 +125,10 @@ foreach ($feriados as $feriado) {
     $feriadosItems[] = [
         'dates' => ($fDate?->format('d/m') ?? ($feriado['date_label'] ?? '')) . ' (' . ($fDate?->locale('pt_BR')->isoFormat('ddd') ?? '') . ')',
         'name' => $feriado['descricao'] ?? '',
-        'type' => $feriado['tipo'] ?? '',
     ];
 }
 
-$diasCarregados = $phpDias->isNotEmpty() ? $phpDias->count() : count($snapshot['scale_rows'] ?? []);
+$diasCarregados = $phpDias->count();
 $plantoesMesTotal = 0;
 foreach ($plantoesMes as $lista) {
     $plantoesMesTotal += count($lista);
@@ -164,8 +147,6 @@ foreach ($allDays as $dayRow) {
         $plantaoTexto = $plantaoTextoConsolidado !== ''
             ? $plantaoTextoConsolidado
             : trim((string) ($scaleEntry['obj']->plantao_externo ?? ''));
-    } else {
-        $plantaoTexto = trim((string) ($scaleEntry['obj']['plantao_externo'] ?? ''));
     }
 
     if ($plantaoTexto === '') {
@@ -185,61 +166,34 @@ foreach ($allDays as $dayRow) {
 @endphp
 
 <x-report.default
-    title="Escala Mensal"
+    :title="'ESCALA MENSAL - ' . $mesLabelUpper . ' / ' . $ano"
     :period="$mesLabelFull"
     :generatedAt="$geradoEm"
     origin="Escalas / Escala Mensal"
-    footer-note="Cartório Central - Gerenciamento"
-    :brasao-src="asset('assets/brasao.png')"
-    :logo-src="asset('assets/logo_grom.png')"
-    :watermark-src="asset('assets/marca_dagua.png')"
+    :brasao-src="$brasaoSrc ?? asset('assets/brasao.png')"
+    :logo-src="$logoSrc ?? asset('assets/logo_grom.png')"
+    :watermark-src="$watermarkSrc ?? asset('assets/marca_dagua.png')"
 >
     @unless($previewMode)
         <x-slot:toolbar>
             <a href="{{ route('escalas.index', $filters) }}">← Voltar</a>
-            <button onclick="window.print()">Imprimir / Salvar PDF</button>
+            <a href="{{ route('escalas.print.pdf', $filters) }}">Imprimir / Salvar PDF paginado</a>
             <span style="font-size:.85em; color:var(--ink-soft);">Pré-visualização da escala {{ $mesLabelFull }}</span>
         </x-slot:toolbar>
     @endunless
 
-    <x-slot:summary>
-        <article class="card">
-            <small>Dias carregados</small>
-            <strong>{{ $diasCarregados }}</strong>
-            <span>Base usada na composição da escala mensal.</span>
-        </article>
-        <article class="card">
-            <small>Plantões externos</small>
-            <strong>{{ $plantoesMesTotal }}</strong>
-            <span>Quantidade total registrada no mês.</span>
-        </article>
-        <article class="card">
-            <small>Observações</small>
-            <strong>{{ count($observacoesItems) }}</strong>
-            <span>Afastamentos consolidados no período.</span>
-        </article>
-        <article class="card">
-            <small>Feriados / P. Fac.</small>
-            <strong>{{ count($feriadosItems) }}</strong>
-            <span>Itens destacados no bloco final.</span>
-        </article>
-    </x-slot:summary>
-
     <style>
-        .scale-note {
-            margin-bottom: 3mm;
-            font-size: 8.5pt;
-            color: var(--ink-soft);
-            line-height: 1.5;
-        }
         .scale-table {
             table-layout: fixed;
-            font-size: 8.2pt;
+            font-size: 7.3pt;
         }
         .scale-table th {
             text-transform: none;
             letter-spacing: 0;
-            font-size: 7.9pt;
+            font-size: 7pt;
+            text-align: center;
+            padding: 1.1mm 1.2mm;
+            line-height: 1;
         }
         .td-date {
             text-align: center;
@@ -265,25 +219,33 @@ foreach ($allDays as $dayRow) {
             font-size: 8pt;
         }
         .td-plantao {
-            font-size: 8pt;
+            font-size: 7pt;
             white-space: normal;
-            overflow-wrap: anywhere;
+            overflow-wrap: normal;
             word-break: normal;
         }
+        .scale-table td {
+            padding: 0.4mm 1.1mm;
+            line-height: 1;
+        }
+        .scale-table tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
         .obs-section {
-            margin-top: 12px;
+            margin-top: 4px;
             break-inside: avoid;
             page-break-inside: avoid;
         }
         .obs-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 6px;
         }
         .obs-card {
             border: 1px solid var(--line);
             border-radius: 12px;
-            padding: 8px 10px;
+            padding: 5px 8px;
             background: #fff;
             break-inside: avoid;
             page-break-inside: avoid;
@@ -294,16 +256,17 @@ foreach ($allDays as $dayRow) {
         .obs-card-title {
             font-weight: 700;
             text-align: center;
-            margin-bottom: 6px;
+            margin: 0 0 2px;
             font-size: 9pt;
         }
         .obs-list {
             list-style: none;
-            padding: 0 4px;
+            margin: 0;
+            padding: 0 2px;
         }
         .obs-list li {
-            font-size: 8.5pt;
-            line-height: 1.6;
+            font-size: 7.7pt;
+            line-height: 1.1;
             display: flex;
             gap: 0;
         }
@@ -327,36 +290,22 @@ foreach ($allDays as $dayRow) {
     </style>
 
     <section class="report-body">
-        <div class="scale-note">
-            <strong>Escala Mensal</strong> de {{ $mesLabelFull }}.
-            @if ($escalaVersao)
-                @if ($escalaVersao->eh_definitiva)
-                    Versão <strong>definitiva</strong> {{ $escalaVersao->versao }}.
-                @else
-                    Versão <strong>provisória</strong> {{ $escalaVersao->versao }}.
-                @endif
-            @elseif ($phpVersao)
-                Versão {{ $phpVersao }}.
-            @endif
-        </div>
-
         <table class="scale-table">
             <colgroup>
-                <col style="width:6%">
-                <col style="width:5%">
-                <col style="width:16%">
-                <col style="width:14%">
-                <col style="width:12%">
+                <col style="width:4.2%">
+                <col style="width:5.2%">
+                <col style="width:12.5%">
+                <col style="width:10.5%">
+                <col style="width:8.8%">
                 <col style="width:15%">
-                <col style="width:32%">
+                <col style="width:43.8%">
             </colgroup>
             <thead>
                 <tr>
-                    <th style="width:6%">Data</th>
-                    <th style="width:5%">Dia</th>
-                    <th style="width:16%">Escrivão</th>
-                    <th style="width:14%">Operacional</th>
-                    <th style="width:12%">Fechar</th>
+                    <th colspan="2" style="width:9.4%">Data</th>
+                    <th style="width:12.5%">Escrivão</th>
+                    <th style="width:10.5%">Operacional</th>
+                    <th style="width:8.8%">Fechar</th>
                     <th style="width:15%">Delegada(o)</th>
                     <th>Plantões Externos</th>
                 </tr>
@@ -383,15 +332,6 @@ foreach ($allDays as $dayRow) {
                             }
                             $plantaoItens = $splitPlantaoTexto((string) $plantaoExt);
                             $isDeclHoliday = strtoupper(trim($escrivao)) === 'FERIADO';
-                        } elseif ($scaleEntry && $scaleEntry['src'] === 'legacy') {
-                            $obj = $scaleEntry['obj'];
-                            $escrivao = trim((string) ($obj['escrivao'] ?? ''));
-                            $operacional = trim((string) ($obj['operacional'] ?? ''));
-                            $fechar = trim((string) ($obj['fechar'] ?? ''));
-                            $delegada = trim((string) ($obj['delegada'] ?? ''));
-                            $plantaoExt = trim((string) ($obj['plantao_externo'] ?? ''));
-                            $plantaoItens = $splitPlantaoTexto($plantaoExt);
-                            $isDeclHoliday = strtoupper($escrivao) === 'FERIADO' || ($obj['display_mode'] ?? '') === 'holiday';
                         } else {
                             $escrivao = $operacional = $fechar = $delegada = $plantaoExt = '';
                             $plantaoItens = [];
@@ -400,7 +340,7 @@ foreach ($allDays as $dayRow) {
                         $isEffHoliday = $isHoliday || $isDeclHoliday;
                     @endphp
                     <tr>
-                        <td class="td-date">{{ $carbon->format('d/m') }}</td>
+                        <td class="td-date">{{ $carbon->format('d') }}</td>
                         <td class="td-day">{{ strtoupper($carbon->locale('pt_BR')->isoFormat('ddd')) }}</td>
                         @if ($isEffHoliday)
                             <td colspan="5" class="td-holiday-span">
@@ -411,6 +351,9 @@ foreach ($allDays as $dayRow) {
                                 @else
                                     FERIADO
                                 @endif
+                            </td>
+                            <td class="td-plantao">
+                                {{ ! empty($plantaoItens) ? implode(', ', $plantaoItens) : ($plantaoExt ?: '—') }}
                             </td>
                         @elseif ($isWeekend && empty($escrivao) && empty($operacional) && empty($fechar) && empty($delegada))
                             <td class="td-span"></td>
@@ -461,12 +404,7 @@ foreach ($allDays as $dayRow) {
                                 @foreach ($feriadosItems as $item)
                                     <li>
                                         <span class="obs-dates">{{ $item['dates'] }} - </span>
-                                        <span class="obs-type">
-                                            {{ $item['name'] }}
-                                            @if (! empty($item['type']))
-                                                ({{ $item['type'] }})
-                                            @endif
-                                        </span>
+                                        <span class="obs-type">{{ $item['name'] }}</span>
                                     </li>
                                 @endforeach
                             </ul>
@@ -475,13 +413,24 @@ foreach ($allDays as $dayRow) {
                 </div>
             </div>
         @endif
+
+        @if (!empty($substituicoesDdm))
+            @foreach ($substituicoesDdm as $subst)
+                <?php
+                $delegadoNome = $delegadosExternos->firstWhere('id', $subst->delegado_externo_id)?->short_name ?? 'Delegado Externo';
+                ?>
+                @php
+                    $periodo = \Carbon\Carbon::parse($subst->data_inicio)->format('d/m/Y') . ' a ' . \Carbon\Carbon::parse($subst->data_fim)->format('d/m/Y');
+                @endphp
+                <?php
+                $observacoesItems[] = [
+                    'dates' => $periodo,
+                    'name' => $delegadoNome,
+                    'type' => 'Delegado Substituto (' . $subst->motivo . ')',
+                ];
+                ?>
+            @endforeach
+        @endif
     </section>
 
-    @unless($previewMode)
-        <script>
-            window.addEventListener('load', function () {
-                setTimeout(function () { window.print(); }, 500);
-            });
-        </script>
-    @endunless
 </x-report.default>

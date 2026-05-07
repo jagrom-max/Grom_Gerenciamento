@@ -50,9 +50,21 @@ class GeradorEscalaMensalService
      */
     public function gerar(int $ano, int $mes, string $userId): array
     {
+        // Validação de plantões externos antes de gerar a escala
+        $validador = new ValidadorPlantoesExternosService();
+        $conflitos = $validador->validar($ano, $mes);
+        if (!empty($conflitos)) {
+            return [
+                'versao' => null,
+                'dias_criados' => 0,
+                'alertas' => ['Conflitos encontrados nos plantões externos. Geração abortada.'],
+                'conflitos' => $conflitos,
+            ];
+        }
+
         return DB::transaction(function () use ($ano, $mes, $userId): array {
             // ── Versão alvo (com lock para evitar corrida) ─────────────────
-            $ultimaVersao = EscalaDia::query()
+            $ultimaVersao = EscalaDia::withTrashed()
                 ->where('ano', $ano)
                 ->where('mes', $mes)
                 ->orderByDesc('versao')
@@ -66,9 +78,23 @@ class GeradorEscalaMensalService
                 $header = EscalaVersao::query()
                     ->where('ano', $ano)
                     ->where('mes', $mes)
+                    ->where('versao', $ultimaVersao)
                     ->orderByDesc('versao')
                     ->lockForUpdate()
                     ->first();
+
+                $diasAtivosUltimaVersao = EscalaDia::query()
+                    ->where('ano', $ano)
+                    ->where('mes', $mes)
+                    ->where('versao', $ultimaVersao)
+                    ->count();
+
+                if ($diasAtivosUltimaVersao > 0 && (! $header || $header->status !== 'definitiva')) {
+                    throw new \RuntimeException(
+                        "Ja existe uma escala provisoria ou incompleta (v{$ultimaVersao}) para este mes. ".
+                        "Grave-a como definitiva antes de gerar novamente."
+                    );
+                }
 
                 if ($header && $header->status === 'provisoria') {
                     throw new \RuntimeException(
@@ -344,11 +370,11 @@ class GeradorEscalaMensalService
             $regraDia   = $entradaDia['regra'] ?? null;
             $siglaDia   = $entradaDia['sigla'] ?? '';
 
+            // Regra: PLD (Plantão de Dia) não bloqueia delegada, mas PLN (Plantão Noturno) e outros bloqueiam TODOS os cargos
+            $isDelegada = in_array($f->cargo?->code, self::CARGO_DELEGADA, true);
             if (in_array($regraDia, [self::REGRA_MESMO_DIA, self::REGRA_AMBOS], true)) {
-                // Regra especial do legado: PLD (Plantão de Dia) não bloqueia
-                // o cargo Delegada(o) — a DEL pode ser escalada normalmente.
-                $isDelegada = in_array($f->cargo?->code, self::CARGO_DELEGADA, true);
-                if (! ($siglaDia === 'PLD' && $isDelegada)) {
+                // Só PLD permite delegada, todos os outros bloqueiam todos
+                if (!($siglaDia === 'PLD' && $isDelegada)) {
                     $impedidos[] = $f->id;
                     continue;
                 }
@@ -357,6 +383,8 @@ class GeradorEscalaMensalService
             // ── Plantão do dia anterior (DIA_SEGUINTE ou AMBOS) ──────────
             $entradaAnterior = $plantaoMapa[$anteriorStr][$f->id] ?? null;
             $regraAnterior   = $entradaAnterior['regra'] ?? null;
+            $siglaAnterior   = $entradaAnterior['sigla'] ?? '';
+            // Se o plantão do dia anterior for PLN (ou qualquer outro com regra DIA_SEGUINTE ou AMBOS), bloqueia TODOS os cargos
             if (in_array($regraAnterior, [self::REGRA_DIA_SEGUINTE, self::REGRA_AMBOS], true)) {
                 $impedidos[] = $f->id;
             }

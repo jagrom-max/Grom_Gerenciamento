@@ -19,7 +19,7 @@
         <div>
             <h1>Calendario de afastamentos</h1>
             <p class="muted" style="margin: 6px 0 0;">
-                Consulta mensal dos afastamentos ja lancados no RH, com confronto direto com o espelho legado do Python.
+                Consulta mensal dos afastamentos ja lancados no RH.
             </p>
         </div>
         <div class="actions">
@@ -59,7 +59,7 @@
         <article class="card">
             <small>Periodo</small>
             <strong>{{ ucfirst($snapshot['month_label']) }}</strong>
-            <span>{{ $snapshot['year'] }} | agenda de afastamentos e confronto legado.</span>
+            <span>{{ $snapshot['year'] }} | agenda de afastamentos.</span>
         </article>
         <article class="card">
             <small>Afastamentos no mes</small>
@@ -80,11 +80,6 @@
             <small>Afastamentos em aberto</small>
             <strong>{{ $summary['afastamentos_em_aberto'] }}</strong>
             <span>Registros sem data final definida.</span>
-        </article>
-        <article class="card">
-            <small>Legado Python</small>
-            <strong>{{ $summary['legacy_afastamentos_total'] }}</strong>
-            <span>{{ $summary['legacy_funcionarios_afastados'] }} servidores distintos no espelho antigo.</span>
         </article>
     </div>
 
@@ -145,103 +140,6 @@
                 @endforelse
             </tbody>
         </table>
-    </section>
-
-    <section class="card" style="margin-bottom: 18px;">
-        <h2 style="margin-top: 0;">Espelho legado Python</h2>
-        <p class="muted" style="margin-top: 0;">
-            Leitura direta dos afastamentos do SQLite legado para confrontar com o espelho PHP.
-        </p>
-
-        <div class="cards" style="margin-bottom: 16px;">
-            <article class="card">
-                <small>Python legado</small>
-                <strong>{{ $summary['legacy_afastamentos_total'] }}</strong>
-                <span>{{ $summary['legacy_funcionarios_afastados'] }} funcionarios distintos e {{ $summary['legacy_dias_com_sobreposicao'] }} dias criticos.</span>
-            </article>
-            <article class="card">
-                <small>Espelho PHP</small>
-                <strong>{{ $summary['afastamentos_total'] }}</strong>
-                <span>{{ $summary['funcionarios_afastados'] }} funcionarios distintos e {{ $summary['dias_com_sobreposicao'] }} dias criticos.</span>
-            </article>
-            <article class="card">
-                <small>Feriados legados no mes</small>
-                <strong>{{ $summary['legacy_feriados_mes'] }}</strong>
-                <span>Feriados lidos diretamente do SQLite Python.</span>
-            </article>
-            <article class="card">
-                <small>Afastamentos em aberto</small>
-                <strong>{{ $summary['legacy_afastamentos_em_aberto'] }}</strong>
-                <span>Registros sem data final no espelho antigo.</span>
-            </article>
-        </div>
-
-        <div class="grid" style="grid-template-columns: 1fr 1.2fr; gap: 16px;">
-            <section class="card" style="background: #f9fbfd;">
-                <h3 style="margin-top: 0;">Dias criticos do legado</h3>
-                @forelse ($legacyCriticalDays as $criticalDay)
-                    <div class="critical-item">
-                        <div class="actions" style="justify-content: space-between;">
-                            <strong>{{ str_pad((string) $criticalDay['day'], 2, '0', STR_PAD_LEFT) }}/{{ str_pad((string) $filters['mes'], 2, '0', STR_PAD_LEFT) }}/{{ $filters['ano'] }}</strong>
-                            <span class="tag warn">{{ $criticalDay['absence_count'] }} impedimentos</span>
-                        </div>
-                        <div class="muted" style="margin-top: 6px;">
-                            {{ implode(', ', array_slice($criticalDay['names'], 0, 4)) }}
-                            @if (count($criticalDay['names']) > 4)
-                                +{{ count($criticalDay['names']) - 4 }} adicionais
-                            @endif
-                        </div>
-                        <div class="muted" style="margin-top: 4px;">
-                            {{ implode(' | ', array_slice($criticalDay['reasons'], 0, 4)) }}
-                        </div>
-                    </div>
-                @empty
-                    <div class="tag good">Nenhuma sobreposicao identificada na base legada.</div>
-                @endforelse
-            </section>
-
-            <section class="card" style="background: #f9fbfd;">
-                <h3 style="margin-top: 0;">Afastamentos do legado Python</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Servidor</th>
-                            <th>Tipo</th>
-                            <th>Periodo</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($legacyAbsenceRows as $absence)
-                            <tr>
-                                <td>
-                                    <strong>{{ $absence['matricula'] }} - {{ $absence['funcionario_short'] }}</strong><br>
-                                    <span class="muted">{{ $absence['cargo'] }} | {{ $absence['sector'] }}</span>
-                                </td>
-                                <td>
-                                    {{ $absence['reason'] }}<br>
-                                    <span class="muted">{{ $absence['notes'] ?: 'Sem observacoes' }}</span>
-                                </td>
-                                <td>
-                                    {{ $absence['start_label'] }}<br>
-                                    <span class="muted">ate {{ $absence['end_label'] }}</span>
-                                </td>
-                                <td>
-                                    <span class="tag {{ $absence['status_tone'] }}">{{ $absence['status_label'] }}</span>
-                                    @if ($absence['has_conflict'])
-                                        <br><span class="tag warn" style="margin-top: 6px;">Conflito em {{ $absence['conflict_days'] }} dia(s)</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4">Nenhum afastamento legado encontrado para o mes selecionado.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </section>
-        </div>
     </section>
 
     @if ($canManage)

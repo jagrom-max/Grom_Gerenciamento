@@ -31,11 +31,11 @@ class OperacionalAccessTest extends TestCase
         $response->assertSee('Cartorios reais do periodo');
         $response->assertSee('Base operacional ligada');
         $response->assertSee('Ranking operacional');
-        $response->assertSee('Acao rapida');
+        $response->assertSee('Ação rápida');
         $response->assertSee('Pendencias envelhecidas');
         $response->assertSee('Espelho RH');
-        $response->assertSee('Maria Souza');
-        $response->assertSee('Carlos Lima');
+        $response->assertDontSee('Maria Souza');
+        $response->assertDontSee('Carlos Lima');
     }
 
     public function test_user_without_permission_is_forbidden(): void

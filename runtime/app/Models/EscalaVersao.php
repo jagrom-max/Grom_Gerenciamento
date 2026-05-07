@@ -36,6 +36,7 @@ class EscalaVersao extends Model
         'created_by',
         'fechada_por',
         'fechada_em',
+        'conferida_em', // NOVO: data/hora da conferência obrigatória
     ];
 
     protected $casts = [
@@ -43,7 +44,20 @@ class EscalaVersao extends Model
         'mes'        => 'integer',
         'versao'     => 'integer',
         'fechada_em' => 'datetime',
+        'conferida_em' => 'datetime',
     ];
+    /** Marca a versão como conferida (tela ou PDF). */
+    public function marcarConferida(): void
+    {
+        $this->conferida_em = now();
+        $this->save();
+    }
+
+    /** Indica se a versão já foi conferida. */
+    public function getEhConferidaAttribute(): bool
+    {
+        return !empty($this->conferida_em);
+    }
 
     // -------------------------------------------------------
     // Query helpers

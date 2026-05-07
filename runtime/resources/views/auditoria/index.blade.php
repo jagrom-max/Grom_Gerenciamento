@@ -127,7 +127,7 @@
                             <td>{{ $event->created_at?->format('d/m/Y H:i:s') }}</td>
                             <td>
                                 <strong>{{ $event->actor?->username ?? 'Sistema' }}</strong><br>
-                                <span class="muted">{{ $event->source_ip ?: 'IP nao informado' }}</span>
+                                <span class="muted">{{ $event->source_ip ?: 'IP não informado' }}</span>
                             </td>
                             <td>
                                 <span class="tag good">{{ $event->module_code }}</span><br>

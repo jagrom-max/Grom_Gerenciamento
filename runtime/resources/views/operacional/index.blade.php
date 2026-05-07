@@ -108,12 +108,12 @@
         <table>
             <thead>
                 <tr>
-                    <th>Cartorio</th>
-                    <th>Responsavel</th>
-                    <th>Periodo</th>
+                    <th>Cartório</th>
+                    <th>Responsável</th>
+                    <th>Período</th>
                     <th>IP</th>
                     <th>Relatados</th>
-                    <th>Concluidos</th>
+                    <th>Concluídos</th>
                     <th>Registros</th>
                     <th>Andamento</th>
                     <th>Flagrantes</th>
@@ -128,12 +128,12 @@
                             <span class="tag {{ $row['cartorio']->is_active ? 'good' : 'warn' }}">{{ $row['cartorio']->is_active ? 'Ativo' : 'Inativo' }}</span>
                         </td>
                         <td>
-                            {{ $row['cartorio']->manager_name ?: 'Nao informado' }}<br>
-                            <span class="muted">{{ $row['cartorio']->designacao ?: 'Sem designacao' }}</span>
+                            {{ $row['cartorio']->manager_name ?: 'Não informado' }}<br>
+                            <span class="muted">{{ $row['cartorio']->designacao ?: 'Sem designação' }}</span>
                         </td>
                         <td>
                             {{ $row['period_label'] }}<br>
-                            <span class="tag {{ $row['has_stats'] ? 'good' : 'warn' }}">{{ $row['has_stats'] ? 'Com estatistica' : 'Sem estatistica' }}</span>
+                            <span class="tag {{ $row['has_stats'] ? 'good' : 'warn' }}">{{ $row['has_stats'] ? 'Com estatística' : 'Sem estatística' }}</span>
                         </td>
                         <td>{{ $row['ip_instaurados'] }}</td>
                         <td>{{ $row['ip_relatados'] }}</td>
@@ -157,15 +157,10 @@
     <section class="card" style="margin-bottom: 18px;">
         <h2 style="margin-top: 0;">Base operacional ligada</h2>
         <p class="muted" style="margin: 0 0 14px;">
-            Confronto direto entre a escala legada do Python, os funcionários já espelhados no PHP e a fila operacional atual.
+            Funcionários cadastrados no espelho PHP com situação de escala e afastamentos.
         </p>
 
         <div class="cards" style="margin-bottom: 16px;">
-            <article class="card">
-                <small>Python escala</small>
-                <strong>{{ $operationalLegacy['summary']['dias_total'] ?? 0 }}</strong>
-                <span>{{ $operationalLegacy['summary']['funcionarios_total'] ?? 0 }} funcionários na base legada.</span>
-            </article>
             <article class="card">
                 <small>PHP espelho</small>
                 <strong>{{ $phpFuncionariosSummary['total'] }}</strong>
@@ -178,48 +173,8 @@
             </article>
         </div>
 
-        @if (! empty($operationalLegacyWarnings))
-            <div class="grid" style="margin-bottom: 14px;">
-                @foreach ($operationalLegacyWarnings as $warning)
-                    <div class="tag warn">{{ $warning }}</div>
-                @endforeach
-            </div>
-        @endif
-
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 14px;">
-            <details open>
-                <summary>Escala legada do periodo</summary>
-                <table style="margin-top: 12px;">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Escrivao</th>
-                            <th>Operacional</th>
-                            <th>Delegada</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse (($operationalLegacy['scale_rows'] ?? []) as $row)
-                            <tr>
-                                <td>
-                                    <strong>{{ $row['date_label'] }}</strong><br>
-                                    <span class="muted">{{ $row['date'] }}</span>
-                                </td>
-                                <td>{{ $row['escrivao'] ?: 'Livre / sem escala' }}</td>
-                                <td>{{ $row['operacional'] ?: 'Livre / sem escala' }}</td>
-                                <td>{{ $row['delegada'] ?: 'Livre / sem escala' }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4">Nenhuma linha de escala legada disponivel para o periodo.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </details>
-
-            <details open>
-                <summary>Funcionarios do espelho PHP</summary>
+        <details open>
+            <summary>Funcionarios do espelho PHP</summary>
                 <table style="margin-top: 12px;">
                     <thead>
                         <tr>
@@ -264,7 +219,6 @@
                     </tbody>
                 </table>
             </details>
-        </div>
     </section>
 
     <div class="grid" style="grid-template-columns: 1.1fr .9fr; margin-bottom: 18px;">
@@ -273,14 +227,14 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Cartorio</th>
+                        <th>Cartório</th>
                         <th>IP instaurados</th>
                         <th>Relatados</th>
-                        <th>Concluidos</th>
+                        <th>Concluídos</th>
                         <th>Registros</th>
                         <th>Andamento</th>
                         <th>Flagrantes</th>
-                        <th>Pendencias</th>
+                        <th>Pendências</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -308,26 +262,26 @@
         </section>
 
         <section class="card">
-            <h2 style="margin-top: 0;">Acao rapida</h2>
+            <h2 style="margin-top: 0;">Ação rápida</h2>
             <div class="grid">
-                <a class="btn secondary" href="{{ route('produtividade.cartorios.index') }}">Abrir cartorios</a>
+                <a class="btn secondary" href="{{ route('produtividade.cartorios.index') }}">Abrir cartórios</a>
                 <a class="btn secondary" href="{{ route('produtividade.flagrantes.index') }}">Abrir fila de flagrantes</a>
-                <a class="btn secondary" href="{{ route('produtividade.stats.index', request()->query()) }}">Abrir estatisticas</a>
-                <a class="btn secondary" href="{{ route('analise.index') }}">Abrir analise</a>
-                <a class="btn secondary" href="{{ route('calendarios.index') }}">Abrir calendarios</a>
+                <a class="btn secondary" href="{{ route('produtividade.stats.index', request()->query()) }}">Abrir estatísticas</a>
+                <a class="btn secondary" href="{{ route('analise.index') }}">Abrir análise</a>
+                <a class="btn secondary" href="{{ route('calendarios.index') }}">Abrir calendários</a>
             </div>
 
             <h2 style="margin-top: 18px;">Resumo do periodo</h2>
             <div class="grid">
                 <div class="tag good">IP relatados: {{ $selectedStats['ip_relatados'] }}</div>
-                <div class="tag good">Concluidos: {{ $selectedStats['concluidos'] }}</div>
+                <div class="tag good">Concluídos: {{ $selectedStats['concluidos'] }}</div>
                 <div class="tag good">Despachos: {{ $selectedStats['despachos'] }}</div>
                 <div class="tag good">Cotas: {{ $selectedStats['cotas'] }}</div>
                 <div class="tag good">IPs em andamento: {{ $selectedStats['ips_andamento'] }}</div>
                 <div class="tag good">Flagrantes DDM: {{ $selectedStats['flagrantes_ddm'] }}</div>
             </div>
 
-            <h3 style="margin: 18px 0 10px;">Ultimos lotes</h3>
+            <h3 style="margin: 18px 0 10px;">Últimos lotes</h3>
             <table>
                 <thead>
                     <tr>
@@ -381,7 +335,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4">Nenhuma pendencia aberta.</td>
+                            <td colspan="4">Nenhuma pendência aberta.</td>
                         </tr>
                     @endforelse
                 </tbody>

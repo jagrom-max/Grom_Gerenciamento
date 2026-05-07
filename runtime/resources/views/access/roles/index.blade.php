@@ -33,7 +33,7 @@
         <article class="card">
             <small>Perfis com usuarios</small>
             <strong>{{ $roles->where('users_count', '>', 0)->count() }}</strong>
-            <span>Perfis ja atribuÃ­dos a contas ativas.</span>
+            <span>Perfis ja atribuídos a contas ativas.</span>
         </article>
     </div>
 
@@ -72,7 +72,7 @@
                 </div>
                 <div class="actions">
                     <button type="submit">Criar perfil</button>
-                    <span class="muted">A criacao nao remove perfis existentes e preserva a trilha de auditoria.</span>
+                    <span class="muted">A criação não remove perfis existentes e preserva a trilha de auditoria.</span>
                 </div>
             </form>
         </section>
@@ -80,7 +80,7 @@
         <section class="card" style="margin-bottom: 18px;">
             <h2 style="margin-top: 0;">Visualizacao somente leitura</h2>
             <p class="muted" style="margin: 0;">
-                Seu acesso permite consultar os perfis, mas nao criar ou alterar atribuicoes.
+                Seu acesso permite consultar os perfis, mas não criar ou alterar atribuições.
             </p>
         </section>
     @endif

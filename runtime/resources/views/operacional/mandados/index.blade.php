@@ -9,18 +9,13 @@
         <div>
             <h1>Mandados de Prisão</h1>
             <p class="muted" style="margin: 6px 0 0;">
-                Controle de mandados (MPP, MPT, MPD, MPC, MBA, MAM), procedimento, cumprimento e integração com o legado Python.
+                Controle de mandados (MPP, MPT, MPD, MPC, MBA, MAM), procedimento e cumprimento.
             </p>
         </div>
         @if (auth()->user()->hasPermission('operacional.mandados.manage'))
             <div class="actions">
                 <button type="button" onclick="document.getElementById('modal-cadastro').showModal()">+ Novo Mandado</button>
-                @if (config('grom_legacy.enabled'))
-                <form method="POST" action="{{ route('operacional.mandados.sync-legacy') }}" style="display:inline;">
-                    @csrf
-                    <button type="submit" style="background:var(--color-secondary,#555);">↺ Sincronizar legado</button>
-                </form>
-                @endif
+
             </div>
         @endif
     </div>
@@ -68,11 +63,7 @@
             <strong>{{ $summary['exibidos'] }}</strong>
             <span>Resultado do filtro atual.</span>
         </article>
-        <article class="card">
-            <small>No legado Python</small>
-            <strong>{{ $summary['legacy_total'] }}</strong>
-            <span>{{ $summary['legacy_synced'] }} já sincronizados.</span>
-        </article>
+
     </div>
 
     {{-- === FILTROS ============================================================== --}}

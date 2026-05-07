@@ -11,6 +11,10 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class BoletimExportController extends Controller
+    public function index(Request $request): Response
+    {
+        return $this->__invoke($request);
+    }
 {
     public function __invoke(Request $request): Response
     {

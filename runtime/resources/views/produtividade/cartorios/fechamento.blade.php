@@ -19,8 +19,8 @@
         </p>
     </div>
     <div class="actions">
-        <a class="btn secondary" href="{{ route('produtividade.cartorios.index') }}">â† CartÃ³rios</a>
-        <a class="btn secondary" href="{{ route('produtividade.stats.index', ['year' => $year, 'month' => $month]) }}">EstatÃ­sticas</a>
+        <a class="btn secondary" href="{{ route('produtividade.cartorios.index') }}">â† Cartórios</a>
+        <a class="btn secondary" href="{{ route('produtividade.stats.index', ['year' => $year, 'month' => $month]) }}">Estatísticas</a>
         <a class="btn secondary" href="{{ route('produtividade.hub') }}">Hub</a>
     </div>
 </div>
@@ -42,10 +42,10 @@
 
 <div class="grid" style="grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start;">
 
-    {{-- â”€â”€ FormulÃ¡rio principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+    {{-- â”€â”€ Formulário principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
     <section class="card">
         <h2 style="margin-top: 0;">
-            LanÃ§ar / editar dados
+            Lançar / editar dados
             @if ($existing)
                 <span style="font-size: 0.78rem; font-weight: 400; color: #6b7280;">
                     (atualizado {{ $existing->updated_at->format('d/m/Y H:i') }})
@@ -56,7 +56,7 @@
         <form method="POST" action="{{ route('produtividade.cartorios.fechamento.store', $cartorio) }}" class="form-grid">
             @csrf
 
-            {{-- PerÃ­odo --}}
+            {{-- Período --}}
             <div class="field">
                 <label for="year">Ano</label>
                 <input id="year" name="year" type="number" min="2020" max="2100"
@@ -65,7 +65,7 @@
             </div>
 
             <div class="field">
-                <label for="month">MÃªs</label>
+                <label for="month">Mês</label>
                 <select id="month" name="month" required>
                     @foreach ($months as $idx => $label)
                         <option value="{{ $idx }}" @selected(old('month', $month) == $idx)>{{ $label }}</option>
@@ -74,10 +74,10 @@
                 @error('month') <span class="field-error">{{ $message }}</span> @enderror
             </div>
 
-            {{-- InquÃ©ritos policiais --}}
+            {{-- Inquéritos policiais --}}
             <div class="field" style="grid-column:span 2;">
                 <label style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:#6b7280; font-weight:600;">
-                    InquÃ©ritos policiais
+                    Inquéritos policiais
                 </label>
             </div>
 
@@ -103,7 +103,7 @@
             </div>
 
             <div class="field">
-                <label for="concluidos">ConcluÃ­dos</label>
+                <label for="concluidos">Concluídos</label>
                 <input id="concluidos" name="concluidos" type="number" min="0"
                        value="{{ old('concluidos', $existing?->concluidos ?? 0) }}" required>
                 @error('concluidos') <span class="field-error">{{ $message }}</span> @enderror
@@ -139,7 +139,7 @@
 
             {{-- Notas --}}
             <div class="field" style="grid-column:span 2;">
-                <label for="manual_notes">ObservaÃ§Ãµes (opcional)</label>
+                <label for="manual_notes">Observações (opcional)</label>
                 <textarea id="manual_notes" name="manual_notes" rows="3" maxlength="2000"
                           style="resize:vertical;">{{ old('manual_notes', $existing?->manual_notes ?? '') }}</textarea>
                 @error('manual_notes') <span class="field-error">{{ $message }}</span> @enderror
@@ -152,12 +152,12 @@
                         'cartorio' => $cartorio,
                         'year'  => $month === 1 ? $year - 1 : $year,
                         'month' => $month === 1 ? 12 : $month - 1,
-                    ]) }}">â† MÃªs anterior</a>
+                    ]) }}">â† Mês anterior</a>
                     <a class="btn secondary" href="{{ route('produtividade.cartorios.fechamento.create', [
                         'cartorio' => $cartorio,
                         'year'  => $month === 12 ? $year + 1 : $year,
                         'month' => $month === 12 ? 1 : $month + 1,
-                    ]) }}">MÃªs seguinte â†’</a>
+                    ]) }}">Mês seguinte â†’</a>
                 </div>
             </div>
         </form>
@@ -166,17 +166,17 @@
     {{-- â”€â”€ Painel lateral â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
     <div style="display:flex; flex-direction:column; gap:16px;">
 
-        {{-- MÃªs anterior (referÃªncia) --}}
+        {{-- Mês anterior (referência) --}}
         @if ($prevRecord)
         <section class="card">
             <h3 style="margin-top:0; font-size:0.9rem;">
-                ReferÃªncia: {{ $months[$prevMonth] }} {{ $prevYear }}
+                Referência: {{ $months[$prevMonth] }} {{ $prevYear }}
             </h3>
             <table style="font-size:0.82rem; width:100%;">
                 <tbody>
                     <tr><td>IP instaurados</td><td style="text-align:right; font-weight:600;">{{ $prevRecord->ip_instaurados }}</td></tr>
                     <tr><td>IP relatados</td><td style="text-align:right; font-weight:600;">{{ $prevRecord->ip_relatados }}</td></tr>
-                    <tr><td>ConcluÃ­dos</td><td style="text-align:right; font-weight:600;">{{ $prevRecord->concluidos }}</td></tr>
+                    <tr><td>Concluídos</td><td style="text-align:right; font-weight:600;">{{ $prevRecord->concluidos }}</td></tr>
                     <tr><td>IPs andamento</td><td style="text-align:right; font-weight:600;">{{ $prevRecord->ips_andamento }}</td></tr>
                     <tr><td>Cotas</td><td style="text-align:right; font-weight:600;">{{ $prevRecord->cotas }}</td></tr>
                     <tr><td>Despachos</td><td style="text-align:right; font-weight:600;">{{ $prevRecord->despachos }}</td></tr>
@@ -188,18 +188,18 @@
         @else
         <section class="card">
             <p class="muted" style="margin:0; font-size:0.83rem;">
-                Sem dados do mÃªs anterior ({{ $months[$prevMonth] }} {{ $prevYear }}).
+                Sem dados do mês anterior ({{ $months[$prevMonth] }} {{ $prevYear }}).
             </p>
         </section>
         @endif
 
-        {{-- EvoluÃ§Ã£o anual --}}
+        {{-- Evolução anual --}}
         <section class="card">
-            <h3 style="margin-top:0; font-size:0.9rem;">EvoluÃ§Ã£o {{ $year }}</h3>
+            <h3 style="margin-top:0; font-size:0.9rem;">Evolução {{ $year }}</h3>
             <table style="font-size:0.78rem; width:100%;">
                 <thead>
                     <tr style="border-bottom:1px solid #e5e7eb;">
-                        <th style="text-align:left; padding:4px 6px;">MÃªs</th>
+                        <th style="text-align:left; padding:4px 6px;">Mês</th>
                         <th style="text-align:right; padding:4px 6px;">IP</th>
                         <th style="text-align:right; padding:4px 6px;">Rel.</th>
                         <th style="text-align:right; padding:4px 6px;">Flag.</th>

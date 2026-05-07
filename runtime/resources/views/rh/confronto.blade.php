@@ -7,11 +7,11 @@
         use Illuminate\Support\Carbon;
 
         $meses = [
-            1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'MarÃ§o', 4 => 'Abril',
+            1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
             5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto',
             9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro',
         ];
-        $diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','SÃ¡b'];
+        $diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
         $anoAnterior = $ano;
         $mesAnterior = $mes - 1;
         if ($mesAnterior < 1) { $mesAnterior = 12; $anoAnterior--; }
@@ -24,34 +24,34 @@
         <div>
             <h1>Confronto de Afastamentos</h1>
             <p class="muted" style="margin: 6px 0 0;">
-                VisualizaÃ§Ã£o mensal de quem estÃ¡ afastado, perÃ­odos simultÃ¢neos e colisÃµes crÃ­ticas.
+                Visualização mensal de quem está afastado, períodos simultâneos e colisões críticas.
             </p>
         </div>
         <div class="actions">
             <a href="{{ route('rh.confronto.print', ['ano' => $ano, 'mes' => $mes, 'funcionario_id' => $filters['funcionario_id'] ?? '']) }}"
                class="btn secondary" target="_blank">Imprimir A4</a>
-            <a href="{{ route('rh.index') }}" class="btn secondary">â† RH/Admin</a>
+            <a href="{{ route('rh.index') }}" class="btn secondary">← RH/Admin</a>
         </div>
     </div>
 
-    {{-- NavegaÃ§Ã£o de mÃªs --}}
+    {{-- Navegação de mês --}}
     <section class="card" style="margin-bottom: 14px;">
         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
             <a href="{{ route('rh.confronto', ['ano' => $anoAnterior, 'mes' => $mesAnterior]) }}"
-               class="btn secondary" style="padding: 4px 12px;">â† {{ $meses[$mesAnterior] }}/{{ $anoAnterior }}</a>
+               class="btn secondary" style="padding: 4px 12px;">← {{ $meses[$mesAnterior] }}/{{ $anoAnterior }}</a>
             <strong style="font-size: 1.1rem; flex: 1; text-align: center;">
                 {{ $meses[$mes] }} de {{ $ano }}
             </strong>
             <a href="{{ route('rh.confronto', ['ano' => $anoPosterior, 'mes' => $mesPosterior]) }}"
-               class="btn secondary" style="padding: 4px 12px;">{{ $meses[$mesPosterior] }}/{{ $anoPosterior }} â†’</a>
+               class="btn secondary" style="padding: 4px 12px;">{{ $meses[$mesPosterior] }}/{{ $anoPosterior }} →</a>
         </div>
 
         <form method="GET" action="{{ route('rh.confronto') }}" style="margin-top: 14px;">
             <div class="form-grid">
                 <div class="field">
-                    <label>Filtrar funcionÃ¡rio</label>
+                    <label>Filtrar funcionário</label>
                     <select name="funcionario_id">
-                        <option value="">Todos os funcionÃ¡rios</option>
+                        <option value="">Todos os funcionários</option>
                         @foreach ($funcionarios as $f)
                             <option value="{{ $f->id }}" @selected(($filters['funcionario_id'] ?? '') === $f->id)>
                                 {{ $f->name }}
@@ -60,7 +60,7 @@
                     </select>
                 </div>
                 <div class="field">
-                    <label>MÃªs</label>
+                    <label>Mês</label>
                     <select name="mes">
                         @foreach ($meses as $num => $nome)
                             <option value="{{ $num }}" @selected($mes === $num)>{{ $nome }}</option>
@@ -80,103 +80,34 @@
         </form>
     </section>
 
-    {{-- Resumo do perÃ­odo --}}
-    <div class="cards" style="margin-bottom: 14px;">
+    {{-- Resumo do período --}}
+    <div class="cards" style="margin-bottom: 14px; display: none;">
         <article class="card">
-            <small>Afastamentos no perÃ­odo</small>
+            <small>Afastamentos no período</small>
             <strong>{{ $afastamentos->count() }}</strong>
             <span>Registros ativos que abrangem {{ $meses[$mes] }}/{{ $ano }}.</span>
         </article>
         <article class="card">
-            <small>FuncionÃ¡rios afastados</small>
+            <small>Funcionários afastados</small>
             <strong>{{ $afastamentos->pluck('funcionario_id')->unique()->count() }}</strong>
-            <span>Servidores com ao menos um afastamento no perÃ­odo.</span>
+            <span>Servidores com ao menos um afastamento no período.</span>
         </article>
         <article class="card">
-            <small>ColisÃµes crÃ­ticas</small>
+            <small>Colisões críticas</small>
             <strong style="color: {{ $colisoesCriticas->count() > 0 ? '#c0392b' : 'inherit' }}">
                 {{ $colisoesCriticas->count() }}
             </strong>
-            <span>Dias com 2+ afastamentos em cargos de Delegado/EscrivÃ£o.</span>
+            <span>Dias com 2+ afastamentos em cargos de Delegado/Escrivão.</span>
         </article>
     </div>
 
-    @if ($colisoesCriticas->count() > 0)
-        <div class="alert alert-warn" style="margin-bottom: 14px; padding: 10px 14px; background: #fff3cd; border-left: 4px solid #f39c12; border-radius: 4px;">
-            <strong>âš  AtenÃ§Ã£o:</strong>
-            ColisÃµes de cargo crÃ­tico detectadas nos dias:
-            <strong>{{ $colisoesCriticas->map(fn($d) => sprintf('%02d', $d))->implode(', ') }}</strong>
-            de {{ $meses[$mes] }}/{{ $ano }}.
-            Verifique cobertura de escala nesses dias.
-        </div>
-    @endif
 
-    {{-- Tabela de afastamentos no perÃ­odo --}}
-    @if ($afastamentos->count() > 0)
-        <section class="card" style="margin-bottom: 18px;">
-            <h2 style="margin-top: 0;">Afastamentos vigentes em {{ $meses[$mes] }}/{{ $ano }}</h2>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>FuncionÃ¡rio</th>
-                            <th>Cargo</th>
-                            <th>Setor</th>
-                            <th>Motivo</th>
-                            <th>InÃ­cio</th>
-                            <th>Fim</th>
-                            <th>DuraÃ§Ã£o no mÃªs</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($afastamentos->sortBy('start_date') as $af)
-                            @php
-                                $inicio = $af->start_date instanceof Carbon ? $af->start_date : Carbon::parse($af->start_date);
-                                $fim    = $af->end_date
-                                    ? ($af->end_date instanceof Carbon ? $af->end_date : Carbon::parse($af->end_date))
-                                    : null;
-                                $periodoInicio = Carbon::create($ano, $mes, 1);
-                                $periodoFim    = $periodoInicio->copy()->endOfMonth();
-                                $inicioNoMes   = $inicio->lt($periodoInicio) ? $periodoInicio : $inicio;
-                                $fimNoMes      = ($fim === null || $fim->gt($periodoFim)) ? $periodoFim : $fim;
-                                $diasNoMes     = $inicioNoMes->diffInDays($fimNoMes) + 1;
-                                $isCritico     = in_array($af->dia ?? null, $colisoesCriticas->toArray());
-                                $cargoNome     = mb_strtolower($af->funcionario?->cargo?->name ?? '');
-                                $ehCargoCritico = str_contains($cargoNome, 'delegad') || str_contains($cargoNome, 'escrivao') || str_contains($cargoNome, 'escrivÃ£');
-                            @endphp
-                            <tr @if ($ehCargoCritico) style="background: #fdf5e6;" @endif>
-                                <td><strong>{{ $af->funcionario?->name ?? 'â€”' }}</strong></td>
-                                <td>{{ $af->funcionario?->cargo?->name ?? 'â€”' }}</td>
-                                <td>{{ $af->funcionario?->sector ?: 'â€”' }}</td>
-                                <td>{{ $af->reason }}</td>
-                                <td style="white-space: nowrap;">{{ $inicio->format('d/m/Y') }}</td>
-                                <td style="white-space: nowrap;">{{ $fim ? $fim->format('d/m/Y') : 'Em aberto' }}</td>
-                                <td style="text-align: center; font-weight: bold;">{{ $diasNoMes }} dia(s)</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    @else
-        <section class="card" style="margin-bottom: 18px;">
-            <p class="muted" style="text-align: center; padding: 24px 0;">
-                Nenhum afastamento ativo encontrado para {{ $meses[$mes] }}/{{ $ano }}.
-            </p>
-        </section>
-    @endif
-
-    {{-- Grade calendÃ¡rio --}}
+    {{-- Grade calendário --}}
     <section class="card">
-        <h2 style="margin-top: 0;">Grade diÃ¡ria â€” {{ $meses[$mes] }}/{{ $ano }}</h2>
-        <p class="muted" style="margin: 0 0 14px; font-size: 0.88rem;">
-            Cada dia mostra quem estÃ¡ afastado. Dias com
-            <span style="background: #fff3cd; padding: 1px 5px; border-radius: 3px; font-weight: bold;">fundo amarelo</span>
-            indicam colisÃ£o de cargo crÃ­tico.
-        </p>
+        <h2 style="margin-top: 0;">Grade diária — {{ $meses[$mes] }}/{{ $ano }}</h2>
 
         <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; font-size: 0.82rem;">
-            @foreach (['Dom','Seg','Ter','Qua','Qui','Sex','SÃ¡b'] as $ds)
+            @foreach (['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'] as $ds)
                 <div style="text-align: center; font-weight: bold; padding: 4px; background: #f0f0f0; border-radius: 3px;">
                     {{ $ds }}
                 </div>
@@ -206,12 +137,12 @@
                             <span style="color: #2980b9; font-size: 0.7rem;">hoje</span>
                         @endif
                         @if ($temColisao)
-                            <span style="color: #c0392b; font-size: 0.7rem; font-weight: bold;">âš </span>
+                            <span style="color: #c0392b; font-size: 0.7rem; font-weight: bold;">⚠</span>
                         @endif
                     </div>
                     @foreach ($dadosDia['afastamentos'] as $af)
                         <div style="font-size: 0.72rem; line-height: 1.4; padding: 1px 0; border-top: 1px dotted #bbb; color: #333;">
-                            {{ $af->funcionario?->short_name ?: \Illuminate\Support\Str::limit($af->funcionario?->name ?? 'â€”', 18) }}
+                            {{ $af->funcionario?->short_name ?: \Illuminate\Support\Str::limit($af->funcionario?->name ?? '—', 18) }}
                             <span style="color: #777; font-style: italic;">{{ \Illuminate\Support\Str::limit($af->reason, 12) }}</span>
                         </div>
                     @endforeach

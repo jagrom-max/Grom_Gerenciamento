@@ -8,6 +8,13 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\File;
 
 class BackupController extends Controller
+    /**
+     * Compatibilidade com rotas explícitas: delega para __invoke().
+     */
+    public function index(): View
+    {
+        return $this->__invoke();
+    }
 {
     public function __invoke(): View
     {

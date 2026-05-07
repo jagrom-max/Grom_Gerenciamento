@@ -37,6 +37,27 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Atributos em massa permitidos (compatibilidade).
+     * @var array
+     */
+    protected $fillable = [
+        'name',
+        'username',
+        'cpf',
+        'rg',
+        'email',
+        'phone',
+        'password',
+        'is_active',
+        'must_change_password',
+        'last_login_at',
+        'last_login_ip',
+        'funcionario_id',
+        'tipo_usuario',
+        'notes',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

@@ -1,30 +1,30 @@
 @extends('layouts.app')
 
-@section('title', 'Resultado da ImportaÃ§Ã£o | Grom.Seg')
+@section('title', 'Resultado da Importação | Grom.Seg')
 
 @section('content')
 <div class="section-head">
     <div>
-        <h1>Resultado da importaÃ§Ã£o</h1>
+        <h1>Resultado da importação</h1>
         <p class="muted" style="margin: 6px 0 0;">
             Arquivo: <strong>{{ $source }}</strong>
             @if ($periodo && $periodo->inicio)
-                &mdash; PerÃ­odo: <strong>{{ $periodo->inicio }}</strong> a <strong>{{ $periodo->fim }}</strong>
+                &mdash; Período: <strong>{{ $periodo->inicio }}</strong> a <strong>{{ $periodo->fim }}</strong>
             @endif
         </p>
     </div>
     <div class="actions">
-        <a class="btn secondary" href="{{ route('analise.bos.import') }}">â† Nova importaÃ§Ã£o</a>
-        <a class="btn secondary" href="{{ route('analise.index') }}">Painel de anÃ¡lise</a>
+        <a class="btn secondary" href="{{ route('analise.bos.import') }}">â† Nova importação</a>
+        <a class="btn secondary" href="{{ route('analise.index') }}">Painel de análise</a>
         @if ($totalPendentes > 0)
             <a class="btn" style="background:#ef4444; color:#fff;" href="{{ route('analise.bos.auditoria-flagrantes') }}">
-                âš  Auditoria de flagrantes ({{ $totalPendentes }})
+                ⚠ Auditoria de flagrantes ({{ $totalPendentes }})
             </a>
         @endif
     </div>
 </div>
 
-{{-- â”€â”€ KPIs do import â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- â"€â"€ KPIs do import â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ --}}
 <div class="cards" style="margin-bottom: 20px;">
     <article class="card" style="text-align:center; padding:18px;">
         <small>Inseridos</small>
@@ -34,12 +34,12 @@
     <article class="card" style="text-align:center; padding:18px;">
         <small>Atualizados</small>
         <div style="font-size:2rem; font-weight:700; color:#2563eb;">{{ number_format($result['updated']) }}</div>
-        <span class="muted" style="font-size:0.78rem;">jÃ¡ existiam</span>
+        <span class="muted" style="font-size:0.78rem;">já existiam</span>
     </article>
     <article class="card" style="text-align:center; padding:18px;">
         <small>Ignorados</small>
         <div style="font-size:2rem; font-weight:700; color:#6b7280;">{{ number_format($result['skipped']) }}</div>
-        <span class="muted" style="font-size:0.78rem;">sem SPJ vÃ¡lido</span>
+        <span class="muted" style="font-size:0.78rem;">sem SPJ válido</span>
     </article>
     <article class="card" style="text-align:center; padding:18px;">
         <small>Erros</small>
@@ -51,21 +51,21 @@
     <article class="card" style="text-align:center; padding:18px;">
         <small>Flagrantes</small>
         <div style="font-size:2rem; font-weight:700; color:#dc2626;">{{ number_format($result['flagrantesTotal']) }}</div>
-        <span class="muted" style="font-size:0.78rem;">prisÃµes em flagrante</span>
+        <span class="muted" style="font-size:0.78rem;">prisões em flagrante</span>
     </article>
 </div>
 
-{{-- â”€â”€ Alerta de pendÃªncias de auditoria â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- â"€â"€ Alerta de pendências de auditoria â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ --}}
 @if ($pendenciasImport > 0)
 <div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px;">
-    <div style="font-size:1.8rem;">âš </div>
+    <div style="font-size:1.8rem;">⚠</div>
     <div style="flex:1;">
-        <strong style="color:#92400e;">{{ $pendenciasImport }} flagrante{{ $pendenciasImport > 1 ? 's' : '' }} sem cartÃ³rio atribuÃ­do</strong>
+        <strong style="color:#92400e;">{{ $pendenciasImport }} flagrante{{ $pendenciasImport > 1 ? 's' : '' }} sem cartório atribuído</strong>
         <p style="margin:4px 0 0; color:#78350f; font-size:0.88rem;">
-            Esses BOs foram marcados como <strong>flagrante</strong> na planilha, porÃ©m o campo
-            <em>CartÃ³rio do IP</em> estÃ¡ vazio ou ausente. Eles entram automaticamente na
-            <strong>lista de auditoria</strong> para que o cartÃ³rio responsÃ¡vel seja
-            atribuÃ­do ou o registro corrigido.
+            Esses BOs foram marcados como <strong>flagrante</strong> na planilha, porém o campo
+            <em>Cartório do IP</em> está vazio ou ausente. Eles entram automaticamente na
+            <strong>lista de auditoria</strong> para que o cartório responsável seja
+            atribuído ou o registro corrigido.
         </p>
     </div>
     <a class="btn" style="background:#f59e0b; color:#fff; white-space:nowrap;"
@@ -75,10 +75,10 @@
 </div>
 @endif
 
-{{-- â”€â”€ EstatÃ­sticas de flagrantes por cartÃ³rio do arquivo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- â"€â"€ Estatísticas de flagrantes por cartório do arquivo â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ --}}
 @if ($porCartorio->isNotEmpty())
 <section class="card" style="margin-bottom:20px;">
-    <h2 style="margin-top:0;">Flagrantes do perÃ­odo por cartÃ³rio</h2>
+    <h2 style="margin-top:0;">Flagrantes do período por cartório</h2>
     <p class="muted" style="margin-bottom:12px; font-size:0.85rem;">
         Baseado nos registros do arquivo <strong>{{ $source }}</strong>.
     </p>
@@ -93,7 +93,7 @@
         <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
             <thead>
                 <tr style="border-bottom:2px solid #e5e7eb;">
-                    <th style="padding:8px 12px; text-align:left;">CartÃ³rio IP</th>
+                    <th style="padding:8px 12px; text-align:left;">Cartório IP</th>
                     <th style="padding:8px 12px; text-align:right;">Total BOs</th>
                     <th style="padding:8px 12px; text-align:right;">Flagrantes</th>
                     <th style="padding:8px 12px; text-align:right;">Atos infrac.</th>
@@ -106,7 +106,7 @@
                     @php
                         $taxa = $row->total > 0 ? round($row->flagrantes / $row->total * 100, 1) : 0;
                         $barW = $maxCart > 0 ? round($row->total / $maxCart * 100) : 0;
-                        $semCart = $row->cartorio === 'Sem cartÃ³rio';
+                        $semCart = $row->cartorio === 'Sem cartório';
                     @endphp
                     <tr style="border-bottom:1px solid #f3f4f6; {{ $semCart ? 'background:#fff7ed;' : '' }}">
                         <td style="padding:7px 12px; font-weight:{{ $semCart ? '600' : '400' }}; color:{{ $semCart ? '#b45309' : 'inherit' }};">

@@ -9,6 +9,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StatsExportController extends Controller
 {
+    public function index(Request $request): Response
+    {
+        return $this->__invoke($request);
+    }
     public function __construct(private readonly ProdutividadeStatsDashboardData $dashboardData)
     {
     }

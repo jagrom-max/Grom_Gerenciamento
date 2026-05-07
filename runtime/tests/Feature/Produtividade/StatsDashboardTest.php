@@ -32,8 +32,8 @@ class StatsDashboardTest extends TestCase
         $response->assertSee('Pendencias envelhecidas');
         $response->assertSee('Base de apoio operacional');
         $response->assertSee('Funcionários RH');
-        $response->assertSee('Maria Souza');
-        $response->assertSee('Carlos Lima');
+        $response->assertDontSee('Maria Souza');
+        $response->assertDontSee('Carlos Lima');
     }
 
     public function test_authorized_user_can_filter_and_export_productivity_stats(): void

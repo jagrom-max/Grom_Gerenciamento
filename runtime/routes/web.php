@@ -22,7 +22,6 @@ use App\Http\Controllers\Analise\AnaliseBoSearchController;
 use App\Http\Controllers\Analise\AnaliseEstatisticasController;
 use App\Http\Controllers\Analise\AnaliseRelatorioDadosController;
 use App\Http\Controllers\Analise\AnaliseFlagrantePendenciaController;
-use App\Http\Controllers\PilotAccessController;
 use App\Http\Controllers\Produtividade\CartorioController;
 use App\Http\Controllers\Produtividade\CartorioFlagranteController;
 use App\Http\Controllers\Produtividade\FlagranteController;
@@ -35,6 +34,7 @@ use App\Http\Controllers\Produtividade\StatsController;
 use App\Http\Controllers\Produtividade\StatsExportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Escalas\EscalasController;
+use App\Http\Controllers\Escalas\EscalasPrintPdfController;
 use App\Http\Controllers\RelatoriosController;
 use App\Http\Controllers\RelatoriosAcompanhamentoOperacionalController;
 use App\Http\Controllers\RelatoriosAcompanhamentoOperacionalPdfController;
@@ -47,9 +47,10 @@ use App\Http\Controllers\Operacional\MandadosStatsController;
 use App\Http\Controllers\Operacional\MandadosRelatorioController;
 use App\Http\Controllers\Operacional\OrdemServicoController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
-    return auth()->check()
+    return Auth::check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
@@ -57,11 +58,11 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
-    Route::get('/acesso-teste', PilotAccessController::class)->name('pilot.access');
+    // Route legacy removida: acesso-teste (PilotAccessController)
 });
 
-Route::get('/homologacao', HomologacaoController::class)->name('homologacao');
-Route::get('/evolucao', HomologacaoController::class)->name('evolucao');
+Route::get('/homologacao', [HomologacaoController::class, 'index'])->name('homologacao');
+Route::get('/evolucao', [HomologacaoController::class, 'evolucao'])->name('evolucao');
 
 Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/password/change', [PasswordController::class, 'edit'])->name('password.edit');
@@ -69,11 +70,11 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::middleware('password.change.required')->group(function (): void {
-        Route::get('/dashboard', DashboardController::class)->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/escala', fn () => redirect()->route('escalas.index'))->name('escala.alias');
         Route::get('/plantoes', fn () => redirect()->route('escalas.plantoes'))->name('plantoes.alias');
 
-        Route::get('/produtividade', ProdutividadeHubController::class)
+        Route::get('/produtividade', [ProdutividadeHubController::class, 'index'])
             ->middleware('permission:produtividade.cartorios.view')
             ->name('produtividade.hub');
 
@@ -145,7 +146,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
             Route::post('/import-items/{item}/reject', [FlagranteController::class, 'rejectImportItem'])
                 ->middleware('permission:produtividade.flagrantes.confirm')
                 ->name('reject');
-            Route::get('/relatorio', FlagrantesRelatorioController::class)->name('relatorio');
+            Route::get('/relatorio', [FlagrantesRelatorioController::class, 'index'])->name('relatorio');
         });
 
         Route::prefix('produtividade/boletins')->name('produtividade.boletins.')->middleware('permission:produtividade.boletins.view')->group(function (): void {
@@ -153,8 +154,8 @@ Route::middleware(['auth', 'active'])->group(function (): void {
             Route::post('/importar', [BoletimController::class, 'import'])
                 ->middleware(['permission:produtividade.boletins.manage', 'throttle:10,1'])
                 ->name('import');
-            Route::get('/relatorio', BoletimRelatorioController::class)->name('relatorio');
-            Route::get('/exportar', BoletimExportController::class)->name('export');
+            Route::get('/relatorio', [BoletimRelatorioController::class, 'index'])->name('relatorio');
+            Route::get('/exportar', [BoletimExportController::class, 'index'])->name('export');
             Route::get('/{boletim}/editar', [BoletimController::class, 'edit'])
                 ->middleware('permission:produtividade.boletins.manage')
                 ->name('edit');
@@ -164,12 +165,12 @@ Route::middleware(['auth', 'active'])->group(function (): void {
         });
 
         Route::prefix('produtividade/estatisticas')->name('produtividade.stats.')->middleware('permission:produtividade.stats.view')->group(function (): void {
-            Route::get('/', StatsController::class)->name('index');
-            Route::get('/exportar', StatsExportController::class)->name('export');
+            Route::get('/', [StatsController::class, 'index'])->name('index');
+            Route::get('/exportar', [StatsExportController::class, 'index'])->name('export');
         });
 
         Route::prefix('operacional')->name('operacional.')->middleware('permission:operacional.view')->group(function (): void {
-            Route::get('/', OperacionalController::class)->name('index');
+            Route::get('/', [OperacionalController::class, 'index'])->name('index');
 
             Route::prefix('mandados')->name('mandados.')->middleware('permission:operacional.mandados.view')->group(function (): void {
                 Route::get('/', [MandadosController::class, 'index'])->name('index');
@@ -185,9 +186,9 @@ Route::middleware(['auth', 'active'])->group(function (): void {
                 Route::post('/sincronizar-legado', [MandadosController::class, 'syncLegacy'])
                     ->middleware('permission:operacional.mandados.manage')
                     ->name('sync-legacy');
-                Route::get('/estatisticas', MandadosStatsController::class)->name('stats');
-                Route::get('/relatorio', MandadosRelatorioController::class)->name('relatorio');
-                Route::get('/relatorio/pdf', MandadosRelatorioPdfController::class)->name('relatorio.pdf');
+                Route::get('/estatisticas', [MandadosStatsController::class, 'index'])->name('stats');
+                Route::get('/relatorio', [MandadosRelatorioController::class, 'index'])->name('relatorio');
+                Route::get('/relatorio/pdf', [MandadosRelatorioPdfController::class, 'index'])->name('relatorio.pdf');
             });
 
             Route::prefix('ordens')->name('ordens.')->middleware('permission:operacional.ordens.view')->group(function (): void {
@@ -229,9 +230,10 @@ Route::middleware(['auth', 'active'])->group(function (): void {
         Route::prefix('escalas')->name('escalas.')->middleware('permission:escalas.view')->group(function (): void {
             Route::get('/', [EscalasController::class, 'index'])->name('index');
             Route::get('/plantoes', [EscalasController::class, 'plantoes'])->name('plantoes');
-            Route::get('/plantoes/relatorio', PlantaoRelatorioController::class)->name('plantoes.relatorio');
+            Route::get('/plantoes/relatorio', [PlantaoRelatorioController::class, 'index'])->name('plantoes.relatorio');
             Route::get('/prova', [EscalasController::class, 'proofView'])->name('prova');
             Route::get('/imprimir', [EscalasController::class, 'printView'])->name('print');
+            Route::get('/imprimir/pdf', [EscalasPrintPdfController::class, 'index'])->name('print.pdf');
 
             // CRUD — requer manage
             Route::post('/sincronizar-legado', [EscalasController::class, 'syncLegado'])
@@ -273,10 +275,13 @@ Route::middleware(['auth', 'active'])->group(function (): void {
             Route::put('/plantoes-externos/{plantao}', [EscalasController::class, 'updatePlantaoExterno'])
                 ->middleware('permission:escalas.manage')
                 ->name('plantoes-externos.update');
+            Route::post('/substituicao-ddm', [EscalasController::class, 'storeSubstituicaoDdm'])
+                ->middleware('permission:escalas.manage')
+                ->name('substituicao-ddm.store');
         });
 
         Route::prefix('calendarios')->name('calendarios.')->middleware('permission:calendarios.view')->group(function (): void {
-            Route::get('/', CalendariosController::class)->name('index');
+            Route::get('/', [CalendariosController::class, 'index'])->name('index');
             Route::post('/feriados', [CalendariosController::class, 'store'])
                 ->middleware('permission:calendarios.manage')
                 ->name('feriados.store');
@@ -289,7 +294,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
         });
 
         Route::prefix('backup')->name('backup.')->middleware('permission:backup.view')->group(function (): void {
-            Route::get('/', BackupController::class)->name('index');
+            Route::get('/', [BackupController::class, 'index'])->name('index');
         });
 
         Route::prefix('funcionarios')->name('funcionarios.')->middleware('permission:rh.view')->group(function (): void {

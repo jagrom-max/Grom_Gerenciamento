@@ -11,6 +11,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MandadosRelatorioPdfController extends Controller
 {
+    public function index(Request $request): BinaryFileResponse
+    {
+        return $this->__invoke($request);
+    }
     public function __construct(
         private readonly MandadosReportData $reportData,
         private readonly HeadlessBrowserPdfRenderer $pdfRenderer,

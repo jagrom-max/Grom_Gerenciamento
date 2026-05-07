@@ -6,27 +6,34 @@ use App\Enums\ImportItemStatus;
 use App\Models\Cartorio;
 use App\Models\ImportBatch;
 use App\Models\ImportItem;
+use App\Models\EscalaDia;
 use App\Models\RhAfastamento;
 use App\Models\RhCargo;
 use App\Models\RhDelegadoExterno;
 use App\Models\RhFuncionario;
 use App\Models\RhHoliday;
+use App\Models\EscalaPlantaoFuncionario;
 use App\Models\ProductivityFlagrante;
 use App\Models\ProductivityBoletim;
 use App\Models\ProductivityStatMonthly;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\Escalas\LegacyEscalasReader;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class DashboardController extends Controller
 {
-    public function __invoke(LegacyEscalasReader $legacyEscalasReader): View
+    public function index(): View
     {
-        $user = auth()->user();
+        return $this->__invoke();
+    }
+    public function __invoke(): View
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
         $canViewFlagrantes = $user?->hasPermission('produtividade.flagrantes.view') ?? false;
         $canViewRh = $user?->hasPermission('rh.view') ?? false;
         $canViewEscalas = $user?->hasPermission('escalas.view') ?? false;
@@ -62,7 +69,8 @@ class DashboardController extends Controller
         $rhHoje = null;
         $afastadosHojePreview = collect();
         $agendadosPreview = collect();
-        $escalaSnapshot = null;
+        $escalaDiasMes = 0;
+        $escalaPlantoesMes = 0;
         $latestBatchesPreview = collect();
         $pendingItemsPreview = collect();
 
@@ -210,11 +218,18 @@ class DashboardController extends Controller
         }
 
         if ($canViewEscalas) {
-            try {
-                $escalaSnapshot = $legacyEscalasReader->snapshotForMonth($user, $currentYear, $currentMonth);
-            } catch (\Throwable) {
-                $escalaSnapshot = null;
-            }
+            $escalaDiasMes = EscalaDia::query()
+                ->where('ano', $currentYear)
+                ->where('mes', $currentMonth)
+                ->count();
+
+            $mesInicio = Carbon::create($currentYear, $currentMonth, 1)->startOfDay();
+            $mesFim = $mesInicio->copy()->endOfMonth();
+
+            $escalaPlantoesMes = EscalaPlantaoFuncionario::query()
+                ->whereDate('data', '>=', $mesInicio->toDateString())
+                ->whereDate('data', '<=', $mesFim->toDateString())
+                ->count();
         }
 
         $rhHoje = $rhHoje ?? null;
@@ -227,8 +242,8 @@ class DashboardController extends Controller
                 'roles' => Role::query()->count(),
                 'permissoes' => $user?->permissionCodes()->count() ?? 0,
                 'cartorios' => Cartorio::query()->count(),
-                'escalas_dias' => $escalaSnapshot['summary']['dias_total'] ?? 0,
-                'escalas_plantoes' => $escalaSnapshot['summary']['plantoes_atribuicoes'] ?? 0,
+                'escalas_dias' => $escalaDiasMes,
+                'escalas_plantoes' => $escalaPlantoesMes,
                 'rh_cargos' => RhCargo::query()->count(),
                 'rh_funcionarios' => RhFuncionario::query()->count(),
                 'rh_afastamentos' => RhAfastamento::query()->where('is_active', true)->count(),
@@ -247,7 +262,6 @@ class DashboardController extends Controller
             'rhHoje' => $rhHoje,
             'afastadosHojePreview' => $afastadosHojePreview,
             'agendadosPreview' => $agendadosPreview,
-            'escalaSnapshot' => $escalaSnapshot,
             'latestBatchesPreview' => $latestBatchesPreview,
             'pendingItemsPreview' => $pendingItemsPreview,
         ]);

@@ -7,21 +7,15 @@ use App\Models\AuditEvent;
 use App\Models\RhAfastamento;
 use App\Models\RhCargo;
 use App\Models\RhDelegadoExterno;
-use App\Models\RhDelegadoExternoPeriodo;
 use App\Models\RhFuncionario;
 use App\Models\RhHoliday;
 use App\Models\Role;
-use App\Models\User;
-use App\Support\AccessCredentialPolicy;
 use App\Support\AuditLogger;
 use App\Services\Rh\LegacyFuncionariosReader;
 use App\Services\Rh\LegacyFuncionariosSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RhController extends Controller
@@ -43,7 +37,7 @@ class RhController extends Controller
             ->orderBy('name');
 
         $funcionariosQuery = RhFuncionario::query()
-            ->with(['cargo', 'user.roles', 'afastamentos' => fn ($query) => $query->orderByDesc('start_date')])
+            ->with(['cargo', 'user', 'afastamentos' => fn ($query) => $query->orderByDesc('start_date')])
             ->orderByDesc('is_active')
             ->orderBy('name')
             ->when($cargoId, fn ($query, string $cargoId) => $query->where('cargo_id', $cargoId))
@@ -68,17 +62,41 @@ class RhController extends Controller
         } catch (\Throwable) {
             $legacySnapshot = ['employees' => [], 'warning' => 'Base legada indisponivel.'];
         }
-        $afastamentos = (clone $afastamentosQuery)->get();
         $legacyEmployees = $legacySnapshot['employees'] ?? [];
         $legacyPreview = $legacyEmployees;
+        $afastamentosResumoBase = (clone $afastamentosQuery)->get();
+        $afastamentosSummary = [
+            'ferias_dias' => 0,
+            'ferias_registros' => 0,
+            'outros_dias' => 0,
+            'outros_registros' => 0,
+            'registros_em_aberto' => 0,
+        ];
+
+        foreach ($afastamentosResumoBase as $afastamentoResumo) {
+            $reason = mb_strtolower((string) $afastamentoResumo->reason);
+            $isFerias = str_contains($reason, 'ferias') || str_contains($reason, 'férias');
+            $registroKey = $isFerias ? 'ferias_registros' : 'outros_registros';
+            $diasKey = $isFerias ? 'ferias_dias' : 'outros_dias';
+
+            $afastamentosSummary[$registroKey]++;
+
+            if (! $afastamentoResumo->start_date || ! $afastamentoResumo->end_date) {
+                $afastamentosSummary['registros_em_aberto']++;
+                continue;
+            }
+
+            $afastamentosSummary[$diasKey] += $afastamentoResumo->start_date
+                ->startOfDay()
+                ->diffInDays($afastamentoResumo->end_date->startOfDay()) + 1;
+        }
 
         return view('rh.index', [
             'filters' => $filters,
             'roles' => Role::query()->orderBy('name')->get(),
             'cargos' => (clone $cargosQuery)->get(),
             'funcionarios' => (clone $funcionariosQuery)->get(),
-            'afastamentos' => $afastamentos,
-            'afastamentosSummary' => $this->buildAfastamentosSummary($afastamentos),
+            'afastamentos' => (clone $afastamentosQuery)->get(),
             'delegadosExternos' => (clone $delegadosQuery)->get(),
             'holidays' => (clone $holidayQuery)->get(),
             'upcomingHolidays' => RhHoliday::query()
@@ -89,6 +107,7 @@ class RhController extends Controller
                 ->get(),
             'legacySnapshot' => $legacySnapshot,
             'legacyPreview' => $legacyPreview,
+            'afastamentosSummary' => $afastamentosSummary,
             'recentHistory' => AuditEvent::query()
                 ->with('actor')
                 ->where('module_code', 'rh')
@@ -186,6 +205,7 @@ class RhController extends Controller
 
     public function storeFuncionario(Request $request): RedirectResponse
     {
+
         $data = $request->validate([
             'matricula' => ['required', 'string', 'max:50', 'unique:rh_funcionarios,matricula'],
             'name' => ['required', 'string', 'max:255'],
@@ -202,12 +222,17 @@ class RhController extends Controller
             'departure_date' => ['nullable', 'date', 'after_or_equal:admission_date'],
             'removal_date' => ['nullable', 'date'],
             'concorre_escala' => ['required', 'boolean'],
+            'is_delegado_externo' => ['required', 'boolean'],
+            'senha_spj' => ['nullable', 'string', 'max:255'],
+            'senha_ipe' => ['nullable', 'string', 'max:255'],
+            'observacoes_operacionais' => ['nullable', 'string', 'max:2000'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['required', 'boolean'],
-            'create_access' => ['nullable', 'boolean'],
-            'access_roles' => ['nullable', 'array'],
-            'access_roles.*' => ['integer', 'exists:roles,id'],
         ]);
+
+        // Se for delegado externo, nunca concorre à escala
+        $isDelegadoExterno = (bool) $data['is_delegado_externo'];
+        $concorreEscala = $isDelegadoExterno ? false : (bool) $data['concorre_escala'];
 
         $funcionario = RhFuncionario::query()->create([
             'legacy_id' => null,
@@ -225,17 +250,14 @@ class RhController extends Controller
             'designation_date' => $data['designation_date'] ?? null,
             'departure_date' => $data['departure_date'] ?? null,
             'removal_date' => $data['removal_date'] ?? null,
-            'concorre_escala' => (bool) $data['concorre_escala'],
+            'concorre_escala' => $concorreEscala,
+            'is_delegado_externo' => $isDelegadoExterno,
+            'senha_spj' => $this->cleanNullable($data['senha_spj'] ?? null),
+            'senha_ipe' => $this->cleanNullable($data['senha_ipe'] ?? null),
+            'observacoes_operacionais' => $this->cleanNullable($data['observacoes_operacionais'] ?? null),
             'notes' => $this->cleanNullable($data['notes'] ?? null),
             'is_active' => (bool) $data['is_active'],
         ]);
-
-        $accessCreated = false;
-        if ($request->boolean('create_access')) {
-            $this->ensureCurrentUserCanDefineAccess();
-            $this->createOrUpdateFuncionarioAccess($funcionario, $data['access_roles'] ?? []);
-            $accessCreated = true;
-        }
 
         AuditLogger::log(
             moduleCode: 'rh',
@@ -249,16 +271,12 @@ class RhController extends Controller
             ]
         );
 
-        $status = 'Funcionario criado com sucesso.';
-        if ($accessCreated) {
-            $status .= ' Acesso ao sistema criado com senha inicial DDM + CPF.';
-        }
-
-        return redirect()->route('rh.index')->with('status', $status);
+        return redirect()->route('rh.index')->with('status', 'Funcionario criado com sucesso.');
     }
 
     public function updateFuncionario(Request $request, RhFuncionario $funcionario): RedirectResponse
     {
+
         $data = $request->validate([
             'name'             => ['required', 'string', 'max:255'],
             'short_name'       => ['nullable', 'string', 'max:255'],
@@ -274,12 +292,17 @@ class RhController extends Controller
             'departure_date'   => ['nullable', 'date', 'after_or_equal:admission_date'],
             'removal_date'     => ['nullable', 'date'],
             'concorre_escala'  => ['required', 'boolean'],
+            'is_delegado_externo' => ['required', 'boolean'],
+            'senha_spj' => ['nullable', 'string', 'max:255'],
+            'senha_ipe' => ['nullable', 'string', 'max:255'],
+            'observacoes_operacionais' => ['nullable', 'string', 'max:2000'],
             'notes'            => ['nullable', 'string', 'max:2000'],
             'is_active'        => ['required', 'boolean'],
-            'create_access'    => ['nullable', 'boolean'],
-            'access_roles'     => ['nullable', 'array'],
-            'access_roles.*'   => ['integer', 'exists:roles,id'],
         ]);
+
+        // Se for delegado externo, nunca concorre à escala
+        $isDelegadoExterno = (bool) $data['is_delegado_externo'];
+        $concorreEscala = $isDelegadoExterno ? false : (bool) $data['concorre_escala'];
 
         $funcionario->update([
             'name'             => trim($data['name']),
@@ -295,23 +318,14 @@ class RhController extends Controller
             'designation_date' => $data['designation_date'] ?? null,
             'departure_date'   => $data['departure_date'] ?? null,
             'removal_date'     => $data['removal_date'] ?? null,
-            'concorre_escala'  => (bool) $data['concorre_escala'],
+            'concorre_escala'  => $concorreEscala,
+            'is_delegado_externo' => $isDelegadoExterno,
+            'senha_spj' => $this->cleanNullable($data['senha_spj'] ?? null),
+            'senha_ipe' => $this->cleanNullable($data['senha_ipe'] ?? null),
+            'observacoes_operacionais' => $this->cleanNullable($data['observacoes_operacionais'] ?? null),
             'notes'            => $this->cleanNullable($data['notes'] ?? null),
             'is_active'        => (bool) $data['is_active'],
         ]);
-
-        $status = 'Funcionario atualizado com sucesso.';
-
-        if ($request->boolean('create_access')) {
-            $this->ensureCurrentUserCanDefineAccess();
-            $this->createOrUpdateFuncionarioAccess($funcionario, $data['access_roles'] ?? []);
-            $status = 'Funcionario atualizado com acesso ao sistema sincronizado.';
-        } elseif ($funcionario->user) {
-            $funcionario->user->update([
-                'is_active' => false,
-            ]);
-            $status = 'Funcionario atualizado e acesso ao sistema inativado.';
-        }
 
         AuditLogger::log(
             moduleCode: 'rh',
@@ -322,7 +336,7 @@ class RhController extends Controller
             metadata: ['matricula' => $funcionario->matricula, 'cargo_id' => $funcionario->cargo_id]
         );
 
-        return redirect()->route('rh.index')->with('status', $status);
+        return redirect()->route('rh.index')->with('status', 'Funcionario atualizado com sucesso.');
     }
 
     public function toggleFuncionarioActive(RhFuncionario $funcionario): RedirectResponse
@@ -350,6 +364,7 @@ class RhController extends Controller
     {
         $name = $funcionario->name;
         $matricula = $funcionario->matricula;
+        $id = $funcionario->id;
 
         $funcionario->delete();
 
@@ -357,7 +372,7 @@ class RhController extends Controller
             moduleCode: 'rh',
             eventType: 'funcionarios.destroy',
             entityType: 'rh_funcionario',
-            entityId: $matricula,
+            entityId: $id,
             description: "Funcionario '{$name}' (matricula: {$matricula}) excluido permanentemente.",
             metadata: ['matricula' => $matricula, 'name' => $name]
         );
@@ -376,11 +391,25 @@ class RhController extends Controller
             'redirect_to_show' => ['nullable', 'boolean'],
         ]);
 
-        $this->ensureNoAfastamentoOverlap(
-            funcionarioId: $data['funcionario_id'],
-            startDate: $data['start_date'],
-            endDate: $data['end_date'] ?? null,
-        );
+        // Validação anti-sobreposição
+        $afastamentoSobreposto = RhAfastamento::query()
+            ->where('funcionario_id', $data['funcionario_id'])
+            ->where('is_active', true)
+            ->where(function ($q) use ($data) {
+                $q->whereNull('end_date')
+                    ->orWhere(function ($q2) use ($data) {
+                        $q2->where('start_date', '<=', $data['end_date'] ?? $data['start_date'])
+                            ->where(function ($q3) use ($data) {
+                                $q3->whereNull('end_date')
+                                    ->orWhere('end_date', '>=', $data['start_date']);
+                            });
+                    });
+            })
+            ->exists();
+
+        if ($afastamentoSobreposto) {
+            return redirect()->back()->withErrors(['Sobreposição de afastamento detectada para este funcionário.'])->withInput();
+        }
 
         $afastamento = RhAfastamento::query()->create([
             'funcionario_id' => $data['funcionario_id'],
@@ -422,12 +451,26 @@ class RhController extends Controller
             'redirect_to_show'   => ['nullable', 'boolean'],
         ]);
 
-        $this->ensureNoAfastamentoOverlap(
-            funcionarioId: $afastamento->funcionario_id,
-            startDate: $data['start_date'],
-            endDate: $data['end_date'] ?? null,
-            ignoreAfastamentoId: $afastamento->id,
-        );
+        // Validação anti-sobreposição
+        $afastamentoSobreposto = RhAfastamento::query()
+            ->where('funcionario_id', $afastamento->funcionario_id)
+            ->where('id', '!=', $afastamento->id)
+            ->where('is_active', true)
+            ->where(function ($q) use ($data) {
+                $q->whereNull('end_date')
+                    ->orWhere(function ($q2) use ($data) {
+                        $q2->where('start_date', '<=', $data['end_date'] ?? $data['start_date'])
+                            ->where(function ($q3) use ($data) {
+                                $q3->whereNull('end_date')
+                                    ->orWhere('end_date', '>=', $data['start_date']);
+                            });
+                    });
+            })
+            ->exists();
+
+        if ($afastamentoSobreposto) {
+            return redirect()->back()->withErrors(['Sobreposição de afastamento detectada para este funcionário.'])->withInput();
+        }
 
         $afastamento->update([
             'reason'     => trim($data['reason']),
@@ -542,22 +585,39 @@ class RhController extends Controller
         return redirect()->route('rh.index')->with('status', 'Status do feriado atualizado.');
     }
 
-    public function storeDelegadoExterno(Request $request): RedirectResponse
+    // --- Métodos restaurados para Delegados Externos ---
+    public function showDelegadoExterno(RhDelegadoExterno $delegadoExterno): View
+    {
+        $currentPeriodo = $delegadoExterno->currentPeriodo();
+        $periodosSummary = [
+            'total_dias' => $delegadoExterno->periodos->sum(fn($p) => $p->durationInDays() ?? 0),
+            'total_registros' => $delegadoExterno->periodos->count(),
+            'em_vigor' => $delegadoExterno->periodos->where(fn($p) => $p->statusLabel() === 'Em vigor')->count(),
+            'agendados' => $delegadoExterno->periodos->where(fn($p) => $p->statusLabel() === 'Agendado')->count(),
+            'em_aberto' => $delegadoExterno->periodos->whereNull('end_date')->count(),
+        ];
+        return view('rh.delegados-externos.show', [
+            'delegadoExterno' => $delegadoExterno,
+            'currentPeriodo' => $currentPeriodo,
+            'periodosSummary' => $periodosSummary,
+        ]);
+    }
+
+    public function updateDelegadoExterno(Request $request, RhDelegadoExterno $delegadoExterno): RedirectResponse
     {
         $data = $request->validate([
-            'registration_code' => ['nullable', 'string', 'max:100', 'unique:rh_delegados_externos,registration_code'],
+            'registration_code' => ['nullable', 'string', 'max:100', 'unique:rh_delegados_externos,registration_code,'.$delegadoExterno->id],
             'name' => ['required', 'string', 'max:255'],
             'origin_unit' => ['required', 'string', 'max:255'],
             'role_title' => ['required', 'string', 'max:255'],
             'contact' => ['nullable', 'string', 'max:120'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:rh_delegados_externos,email'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:rh_delegados_externos,email,'.$delegadoExterno->id],
             'start_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['required', 'boolean'],
         ]);
-
-        $delegadoExterno = RhDelegadoExterno::query()->create([
+        $delegadoExterno->update([
             'registration_code' => $this->cleanNullable($data['registration_code'] ?? null),
             'name' => trim($data['name']),
             'origin_unit' => trim($data['origin_unit']),
@@ -569,171 +629,44 @@ class RhController extends Controller
             'is_active' => (bool) $data['is_active'],
             'notes' => $this->cleanNullable($data['notes'] ?? null),
         ]);
-
-        AuditLogger::log(
-            moduleCode: 'rh',
-            eventType: 'delegados_externos.create',
-            entityType: 'rh_delegado_externo',
-            entityId: $delegadoExterno->id,
-            description: 'Delegado externo cadastrado no modulo de RH.',
-            metadata: [
-                'registration_code' => $delegadoExterno->registration_code,
-                'origin_unit' => $delegadoExterno->origin_unit,
-                'role_title' => $delegadoExterno->role_title,
-            ]
-        );
-
-        return redirect()->route('rh.index')->with('status', 'Delegado externo cadastrado com sucesso.');
-    }
-
-    public function toggleDelegadoExternoActive(RhDelegadoExterno $delegadoExterno): RedirectResponse
-    {
-        $delegadoExterno->update([
-            'is_active' => ! $delegadoExterno->is_active,
-        ]);
-
-        AuditLogger::log(
-            moduleCode: 'rh',
-            eventType: 'delegados_externos.toggle_active',
-            entityType: 'rh_delegado_externo',
-            entityId: $delegadoExterno->id,
-            description: $delegadoExterno->is_active ? 'Delegado externo reativado.' : 'Delegado externo inativado.',
-            metadata: [
-                'registration_code' => $delegadoExterno->registration_code,
-                'origin_unit' => $delegadoExterno->origin_unit,
-                'role_title' => $delegadoExterno->role_title,
-            ]
-        );
-
-        return redirect()->route('rh.index')->with('status', 'Status do delegado externo atualizado.');
-    }
-
-    public function showDelegadoExterno(RhDelegadoExterno $delegadoExterno): View
-    {
-        $delegadoExterno->load('periodos');
-
-        return view('rh.delegados-externos.show', [
-            'delegadoExterno' => $delegadoExterno,
-            'currentPeriodo'  => $delegadoExterno->currentPeriodo(),
-            'periodosSummary' => $this->buildPeriodosSummary($delegadoExterno->periodos),
-        ]);
-    }
-
-    public function updateDelegadoExterno(Request $request, RhDelegadoExterno $delegadoExterno): RedirectResponse
-    {
-        $data = $request->validate([
-            'registration_code' => ['nullable', 'string', 'max:100', 'unique:rh_delegados_externos,registration_code,' . $delegadoExterno->id],
-            'name'              => ['required', 'string', 'max:255'],
-            'origin_unit'       => ['required', 'string', 'max:255'],
-            'role_title'        => ['required', 'string', 'max:255'],
-            'contact'           => ['nullable', 'string', 'max:120'],
-            'email'             => ['nullable', 'email', 'max:255', 'unique:rh_delegados_externos,email,' . $delegadoExterno->id],
-            'start_date'        => ['required', 'date'],
-            'end_date'          => ['nullable', 'date', 'after_or_equal:start_date'],
-            'notes'             => ['nullable', 'string', 'max:2000'],
-            'is_active'         => ['required', 'boolean'],
-        ]);
-
-        $delegadoExterno->update([
-            'registration_code' => $this->cleanNullable($data['registration_code'] ?? null),
-            'name'              => trim($data['name']),
-            'origin_unit'       => trim($data['origin_unit']),
-            'role_title'        => trim($data['role_title']),
-            'contact'           => $this->cleanNullable($data['contact'] ?? null),
-            'email'             => $this->cleanNullable($data['email'] ?? null),
-            'start_date'        => $data['start_date'],
-            'end_date'          => $data['end_date'] ?? null,
-            'is_active'         => (bool) $data['is_active'],
-            'notes'             => $this->cleanNullable($data['notes'] ?? null),
-        ]);
-
         AuditLogger::log(
             moduleCode: 'rh',
             eventType: 'delegados_externos.update',
             entityType: 'rh_delegado_externo',
             entityId: $delegadoExterno->id,
-            description: 'Delegado externo atualizado no modulo de RH.',
+            description: 'Delegado externo atualizado.',
             metadata: [
                 'registration_code' => $delegadoExterno->registration_code,
-                'origin_unit'       => $delegadoExterno->origin_unit,
-                'role_title'        => $delegadoExterno->role_title,
+                'origin_unit' => $delegadoExterno->origin_unit,
+                'role_title' => $delegadoExterno->role_title,
             ]
         );
-
-        return redirect()->route('rh.delegados-externos.show', $delegadoExterno)
-            ->with('status', 'Dados do delegado externo atualizados.');
+        return redirect()->route('rh.delegados-externos.show', $delegadoExterno)->with('status', 'Delegado externo atualizado com sucesso.');
     }
 
     public function storeDelegadoExternoPeriodo(Request $request, RhDelegadoExterno $delegadoExterno): RedirectResponse
     {
         $data = $request->validate([
-            'motivo'     => ['required', 'string', 'max:255'],
+            'motivo' => ['required', 'string', 'max:255'],
             'start_date' => ['required', 'date'],
-            'end_date'   => ['nullable', 'date', 'after_or_equal:start_date'],
-            'notes'      => ['nullable', 'string', 'max:2000'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
         ]);
-
-        $periodo = $delegadoExterno->periodos()->create([
-            'motivo'     => trim($data['motivo']),
+        $delegadoExterno->periodos()->create([
+            'motivo' => $data['motivo'],
             'start_date' => $data['start_date'],
-            'end_date'   => $data['end_date'] ?? null,
-            'is_active'  => true,
-            'notes'      => $this->cleanNullable($data['notes'] ?? null),
+            'end_date' => $data['end_date'] ?? null,
+            'is_active' => true,
+            'notes' => $this->cleanNullable($data['notes'] ?? null),
         ]);
-
-        AuditLogger::log(
-            moduleCode: 'rh',
-            eventType: 'delegados_externos.periodos.create',
-            entityType: 'rh_delegado_externo_periodo',
-            entityId: $periodo->id,
-            description: 'Periodo de substituicao registrado para delegado externo.',
-            metadata: [
-                'delegado_externo_id' => $delegadoExterno->id,
-                'motivo'              => $periodo->motivo,
-                'start_date'          => $periodo->start_date?->toDateString(),
-                'end_date'            => $periodo->end_date?->toDateString(),
-            ]
-        );
-
-        return redirect()->route('rh.delegados-externos.show', $delegadoExterno)
-            ->with('status', 'Periodo de substituicao registrado com sucesso.');
+        return redirect()->route('rh.delegados-externos.show', $delegadoExterno)->with('status', 'Período registrado com sucesso.');
     }
 
-    public function toggleDelegadoExternoPeriodoActive(
-        RhDelegadoExterno $delegadoExterno,
-        RhDelegadoExternoPeriodo $periodo
-    ): RedirectResponse {
-        $periodo->update(['is_active' => ! $periodo->is_active]);
-
-        AuditLogger::log(
-            moduleCode: 'rh',
-            eventType: 'delegados_externos.periodos.toggle_active',
-            entityType: 'rh_delegado_externo_periodo',
-            entityId: $periodo->id,
-            description: $periodo->is_active ? 'Periodo de substituicao reativado.' : 'Periodo de substituicao inativado.',
-            metadata: [
-                'delegado_externo_id' => $delegadoExterno->id,
-                'motivo'              => $periodo->motivo,
-            ]
-        );
-
-        return redirect()->route('rh.delegados-externos.show', $delegadoExterno)
-            ->with('status', 'Status do periodo atualizado.');
-    }
-
-    /**
-     * @param \Illuminate\Support\Collection<int, RhDelegadoExternoPeriodo> $periodos
-     * @return array{total_registros:int,total_dias:int,em_vigor:int,agendados:int,em_aberto:int}
-     */
-    private function buildPeriodosSummary(Collection $periodos): array
+    public function toggleDelegadoExternoPeriodoActive(RhDelegadoExterno $delegadoExterno, $periodoId): RedirectResponse
     {
-        return [
-            'total_registros' => $periodos->count(),
-            'total_dias'      => $periodos->sum(fn (RhDelegadoExternoPeriodo $p): int => $p->durationInDays() ?? 0),
-            'em_vigor'        => $periodos->filter(fn (RhDelegadoExternoPeriodo $p): bool => $p->statusLabel() === 'Em vigor')->count(),
-            'agendados'       => $periodos->filter(fn (RhDelegadoExternoPeriodo $p): bool => $p->statusLabel() === 'Agendado')->count(),
-            'em_aberto'       => $periodos->filter(fn (RhDelegadoExternoPeriodo $p): bool => $p->durationInDays() === null)->count(),
-        ];
+        $periodo = $delegadoExterno->periodos()->findOrFail($periodoId);
+        $periodo->update(['is_active' => ! $periodo->is_active]);
+        return redirect()->route('rh.delegados-externos.show', $delegadoExterno)->with('status', 'Status do período atualizado.');
     }
 
     public function confrontoAfastamentosImprimir(Request $request): View
@@ -755,6 +688,7 @@ class RhController extends Controller
         $afastamentosQuery = RhAfastamento::query()
             ->with('funcionario.cargo')
             ->where('is_active', true)
+            ->whereHas('funcionario', fn ($q) => $q->where('is_active', true))
             ->where(function ($q) use ($periodoInicio, $periodoFim) {
                 $q->whereDate('start_date', '<=', $periodoFim)
                   ->where(function ($q2) use ($periodoInicio) {
@@ -991,7 +925,6 @@ class RhController extends Controller
             'funcionario' => $funcionario,
             'hoje' => $hoje,
             'currentAfastamento' => $currentAfastamento,
-            'afastamentosSummary' => $this->buildAfastamentosSummary($funcionario->afastamentos),
             'cargos' => RhCargo::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
@@ -1107,63 +1040,6 @@ class RhController extends Controller
         return view('rh.stats-print', $this->buildStatsData());
     }
 
-    private function ensureNoAfastamentoOverlap(
-        string $funcionarioId,
-        string $startDate,
-        ?string $endDate,
-        ?string $ignoreAfastamentoId = null,
-    ): void {
-        $periodStart = Carbon::parse($startDate)->startOfDay();
-        $periodEnd = $endDate
-            ? Carbon::parse($endDate)->endOfDay()
-            : Carbon::create(9999, 12, 31)->endOfDay();
-
-        $conflictingAfastamento = RhAfastamento::query()
-            ->where('funcionario_id', $funcionarioId)
-            ->where('is_active', true)
-            ->when($ignoreAfastamentoId, fn ($query, string $id) => $query->whereKeyNot($id))
-            ->whereDate('start_date', '<=', $periodEnd->toDateString())
-            ->where(function ($query) use ($periodStart): void {
-                $query->whereNull('end_date')
-                    ->orWhereDate('end_date', '>=', $periodStart->toDateString());
-            })
-            ->orderBy('start_date')
-            ->first();
-
-        if (! $conflictingAfastamento) {
-            return;
-        }
-
-        $conflictPeriod = $conflictingAfastamento->start_date?->format('d/m/Y') ?? 'sem inicio';
-        if ($conflictingAfastamento->end_date) {
-            $conflictPeriod .= ' até '.$conflictingAfastamento->end_date->format('d/m/Y');
-        } else {
-            $conflictPeriod .= ' em aberto';
-        }
-
-        throw ValidationException::withMessages([
-            'start_date' => "Já existe um afastamento ativo deste servidor em período conflitante ({$conflictPeriod}).",
-        ]);
-    }
-
-    /**
-     * @param Collection<int, RhAfastamento> $afastamentos
-     * @return array{ferias_registros:int,ferias_dias:int,outros_registros:int,outros_dias:int,registros_em_aberto:int}
-     */
-    private function buildAfastamentosSummary(Collection $afastamentos): array
-    {
-        $ferias = $afastamentos->filter(fn (RhAfastamento $afastamento): bool => $afastamento->isFerias());
-        $outros = $afastamentos->reject(fn (RhAfastamento $afastamento): bool => $afastamento->isFerias());
-
-        return [
-            'ferias_registros' => $ferias->count(),
-            'ferias_dias' => $ferias->sum(fn (RhAfastamento $afastamento): int => $afastamento->durationInDays() ?? 0),
-            'outros_registros' => $outros->count(),
-            'outros_dias' => $outros->sum(fn (RhAfastamento $afastamento): int => $afastamento->durationInDays() ?? 0),
-            'registros_em_aberto' => $afastamentos->filter(fn (RhAfastamento $afastamento): bool => $afastamento->durationInDays() === null)->count(),
-        ];
-    }
-
     private function buildStatsData(): array
     {
         $hoje = Carbon::today();
@@ -1256,73 +1132,6 @@ class RhController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-
-    private function createOrUpdateFuncionarioAccess(RhFuncionario $funcionario, array $roleIds): void
-    {
-        if ($roleIds === []) {
-            throw ValidationException::withMessages([
-                'access_roles' => 'Selecione pelo menos um perfil para ativar o acesso do funcionario.',
-            ]);
-        }
-
-        $cpf = AccessCredentialPolicy::normalizeCpf((string) $funcionario->cpf);
-        if (strlen($cpf) !== 11) {
-            throw ValidationException::withMessages([
-                'cpf' => 'Informe um CPF valido (11 digitos) para ativar o acesso ao sistema.',
-            ]);
-        }
-
-        $funcionario->loadMissing('user');
-
-        $user = $funcionario->user;
-        if (! $user) {
-            $user = User::query()->where('cpf', $cpf)->first();
-        }
-
-        if ($user && $user->funcionario_id && $user->funcionario_id !== $funcionario->id) {
-            throw ValidationException::withMessages([
-                'cpf' => 'O CPF informado já está vinculado a outro usuario no sistema.',
-            ]);
-        }
-
-        $userPayload = [
-            'name' => trim($funcionario->name),
-            'cpf' => $cpf,
-            'rg' => $this->cleanNullable($funcionario->rg),
-            'email' => $this->cleanNullable($funcionario->email),
-            'phone' => $this->cleanNullable($funcionario->phone),
-            'notes' => $this->cleanNullable($funcionario->notes),
-            'tipo_usuario' => 'servidor',
-            'funcionario_id' => $funcionario->id,
-            'is_active' => (bool) $funcionario->is_active,
-        ];
-
-        if (! $user) {
-            $user = User::query()->create(array_merge($userPayload, [
-                'password' => AccessCredentialPolicy::firstAccessPassword($cpf),
-                'must_change_password' => true,
-            ]));
-        } else {
-            $user->update($userPayload);
-        }
-
-        $user->roles()->sync(
-            collect($roleIds)->mapWithKeys(
-                fn (int $roleId): array => [$roleId => ['assigned_by' => Auth::id()]]
-            )->all()
-        );
-    }
-
-    private function ensureCurrentUserCanDefineAccess(): void
-    {
-        $currentUser = Auth::user();
-
-        if (! $currentUser instanceof User || ! $currentUser->isSuperAdmin()) {
-            throw ValidationException::withMessages([
-                'create_access' => 'Somente o super_admin pode ativar ou alterar perfis de acesso.',
-            ]);
-        }
-    }
 
     private function cleanNullable(?string $value): ?string
     {

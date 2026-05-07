@@ -31,12 +31,6 @@
             <p class="muted" style="margin: 4px 0 0;">Servidores, cargos, afastamentos, feriados e delegados externos.</p>
         </div>
         <div class="actions">
-            @if (config('grom_legacy.enabled') && auth()->user()->hasPermission('rh.manage'))
-                <form method="POST" action="{{ route('rh.legacy.sync') }}" style="display:inline;">
-                    @csrf
-                    <button type="submit" class="secondary">Sincronizar legado</button>
-                </form>
-            @endif
             <a href="{{ route('rh.afastamentos.relatorio') }}" class="btn secondary">Rel. Afastamentos</a>
             <a href="{{ route('rh.confronto') }}" class="btn secondary">Confronto</a>
             <a href="{{ route('rh.composicao') }}" class="btn secondary">Composição</a>
@@ -200,6 +194,92 @@
                 <form method="POST" action="{{ route('rh.funcionarios.store') }}" class="grid">
                     @csrf
                     <div class="form-grid">
+                                                                        <div class="field">
+                                                                            <label>Delegada(o) (substituição)</label>
+                                                                            <select name="delegado_externo_id">
+                                                                                <option value="">Nenhum</option>
+                                                                                @foreach ($delegadosExternos as $delegado)
+                                                                                    @if ($delegado->is_active && $delegado->statusLabel() === 'Em vigor')
+                                                                                        <option value="{{ $delegado->id }}">{{ $delegado->name }} ({{ $delegado->origin_unit }})</option>
+                                                                                    @endif
+                                                                                @endforeach
+                                                                            </select>
+                                                                            <small class="muted">Apenas delegados externos ativos e em vigor podem ser selecionados.</small>
+                                                                        </div>
+                                                                        <div class="field">
+                                                                            <label>Escrivão (substituição)</label>
+                                                                            <select name="escrivao_id">
+                                                                                <option value="">Nenhum</option>
+                                                                                @foreach ($funcionarios as $f)
+                                                                                    @if ($f->is_active && !$f->is_delegado_externo)
+                                                                                        <option value="{{ $f->id }}">{{ $f->short_name ?: $f->name }}</option>
+                                                                                    @endif
+                                                                                @endforeach
+                                                                            </select>
+                                                                            <small class="muted">Apenas policiais civis ativos (não delegados externos).</small>
+                                                                        </div>
+                                                                        <div class="field">
+                                                                            <label>Operacional (substituição)</label>
+                                                                            <select name="operacional_id">
+                                                                                <option value="">Nenhum</option>
+                                                                                @foreach ($funcionarios as $f)
+                                                                                    @if ($f->is_active && !$f->is_delegado_externo)
+                                                                                        <option value="{{ $f->id }}">{{ $f->short_name ?: $f->name }}</option>
+                                                                                    @endif
+                                                                                @endforeach
+                                                                            </select>
+                                                                            <small class="muted">Apenas policiais civis ativos (não delegados externos).</small>
+                                                                        </div>
+                                                                        <div class="field">
+                                                                            <label>Fechar (substituição)</label>
+                                                                            <select name="fechar_id">
+                                                                                <option value="">Nenhum</option>
+                                                                                @foreach ($funcionarios as $f)
+                                                                                    @if ($f->is_active && !$f->is_delegado_externo)
+                                                                                        <option value="{{ $f->id }}">{{ $f->short_name ?: $f->name }}</option>
+                                                                                    @endif
+                                                                                @endforeach
+                                                                            </select>
+                                                                            <small class="muted">Apenas policiais civis ativos (não delegados externos).</small>
+                                                                        </div>
+                                                <div class="field">
+                                                    <label>Delegado Externo?</label>
+                                                    <select name="is_delegado_externo" required>
+                                                        <option value="1">Sim</option>
+                                                        <option value="0">Não</option>
+                                                    </select>
+                                                </div>
+                                                <div class="field">
+                                                    <label>Senha SPJ</label>
+                                                    <input name="senha_spj" type="text">
+                                                </div>
+                                                <div class="field">
+                                                    <label>Senha IPE</label>
+                                                    <input name="senha_ipe" type="text">
+                                                </div>
+                                                <div class="field full">
+                                                    <label>Observações Operacionais</label>
+                                                    <textarea name="observacoes_operacionais" rows="2"></textarea>
+                                                </div>
+                                                    <div class="field">
+                                                        <label>Delegado Externo?</label>
+                                                        <select name="is_delegado_externo">
+                                                            <option value="1" @selected($funcionario->is_delegado_externo)>Sim</option>
+                                                            <option value="0" @selected(!$funcionario->is_delegado_externo)>Não</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="field">
+                                                        <label>Senha SPJ</label>
+                                                        <input name="senha_spj" type="text" value="{{ $funcionario->senha_spj }}">
+                                                    </div>
+                                                    <div class="field">
+                                                        <label>Senha IPE</label>
+                                                        <input name="senha_ipe" type="text" value="{{ $funcionario->senha_ipe }}">
+                                                    </div>
+                                                    <div class="field full">
+                                                        <label>Observações Operacionais</label>
+                                                        <textarea name="observacoes_operacionais" rows="2">{{ $funcionario->observacoes_operacionais }}</textarea>
+                                                    </div>
                         <div class="field">
                             <label>Matrícula</label>
                             <input name="matricula" type="text" required>
@@ -262,10 +342,11 @@
                         </div>
                         <div class="field">
                             <label>Concorre à escala</label>
-                            <select name="concorre_escala" required>
-                                <option value="1">Sim</option>
-                                <option value="0">Não</option>
+                            <select name="concorre_escala" required @if(isset($funcionario) && $funcionario->is_delegado_externo) disabled @endif>
+                                <option value="1" @if(isset($funcionario) && $funcionario->is_delegado_externo) disabled @endif>Sim</option>
+                                <option value="0" selected>Não</option>
                             </select>
+                            <small class="muted">Delegados externos nunca concorrem à escala. Só policiais civis podem concorrer nos cargos escrivão, operacional e fechar.</small>
                         </div>
                         <div class="field">
                             <label>Status</label>
@@ -311,6 +392,54 @@
                         <button type="button" class="secondary grom-modal-close" onclick="document.getElementById('edit-func-{{ $funcionario->id }}').close()">x</button>
                     </div>
                     <form method="POST" action="{{ route('rh.funcionarios.update', $funcionario) }}" class="grid">
+                                                <div class="field">
+                                                    <label>Delegada(o) (substituição)</label>
+                                                    <select name="delegado_externo_id">
+                                                        <option value="">Nenhum</option>
+                                                        @foreach ($delegadosExternos as $delegado)
+                                                            @if ($delegado->is_active && $delegado->statusLabel() === 'Em vigor')
+                                                                <option value="{{ $delegado->id }}" @selected($funcionario->delegado_externo_id == $delegado->id)>{{ $delegado->name }} ({{ $delegado->origin_unit }})</option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
+                                                    <small class="muted">Apenas delegados externos ativos e em vigor podem ser selecionados.</small>
+                                                </div>
+                                                <div class="field">
+                                                    <label>Escrivão (substituição)</label>
+                                                    <select name="escrivao_id">
+                                                        <option value="">Nenhum</option>
+                                                        @foreach ($funcionarios as $f)
+                                                            @if ($f->is_active && !$f->is_delegado_externo)
+                                                                <option value="{{ $f->id }}" @selected($funcionario->escrivao_id == $f->id)>{{ $f->short_name ?: $f->name }}</option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
+                                                    <small class="muted">Apenas policiais civis ativos (não delegados externos).</small>
+                                                </div>
+                                                <div class="field">
+                                                    <label>Operacional (substituição)</label>
+                                                    <select name="operacional_id">
+                                                        <option value="">Nenhum</option>
+                                                        @foreach ($funcionarios as $f)
+                                                            @if ($f->is_active && !$f->is_delegado_externo)
+                                                                <option value="{{ $f->id }}" @selected($funcionario->operacional_id == $f->id)>{{ $f->short_name ?: $f->name }}</option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
+                                                    <small class="muted">Apenas policiais civis ativos (não delegados externos).</small>
+                                                </div>
+                                                <div class="field">
+                                                    <label>Fechar (substituição)</label>
+                                                    <select name="fechar_id">
+                                                        <option value="">Nenhum</option>
+                                                        @foreach ($funcionarios as $f)
+                                                            @if ($f->is_active && !$f->is_delegado_externo)
+                                                                <option value="{{ $f->id }}" @selected($funcionario->fechar_id == $f->id)>{{ $f->short_name ?: $f->name }}</option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
+                                                    <small class="muted">Apenas policiais civis ativos (não delegados externos).</small>
+                                                </div>
                         @csrf
                         @method('PUT')
                         <div class="form-grid">
@@ -372,10 +501,11 @@
                             </div>
                             <div class="field">
                                 <label>Concorre à escala</label>
-                                <select name="concorre_escala">
-                                    <option value="1" @selected($funcionario->concorre_escala)>Sim</option>
-                                    <option value="0" @selected(!$funcionario->concorre_escala)>Não</option>
+                                <select name="concorre_escala" @if($funcionario->is_delegado_externo) disabled @endif>
+                                    <option value="1" @selected($funcionario->concorre_escala && !$funcionario->is_delegado_externo)>Sim</option>
+                                    <option value="0" @selected(!$funcionario->concorre_escala || $funcionario->is_delegado_externo)>Não</option>
                                 </select>
+                                <small class="muted">Delegados externos nunca concorrem à escala. Só policiais civis podem concorrer nos cargos escrivão, operacional e fechar.</small>
                             </div>
                             <div class="field">
                                 <label>Status</label>

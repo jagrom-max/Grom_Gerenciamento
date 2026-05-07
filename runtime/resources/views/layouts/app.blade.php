@@ -165,12 +165,12 @@
 </head>
 <body class="app-body">
     <div class="shell">
-        <header class="topbar">
+        <aside class="sidebar">
             <div class="brand">
                 <img src="{{ asset('assets/logo_grom_transparent.png') }}" alt="Logo Grom.Seg">
                 <div>
                     <strong>Grom.Seg</strong>
-                    <span>DDM Rio Claro | Ecossistema institucional</span>
+                    <span>DDM Rio Claro</span>
                 </div>
             </div>
 
@@ -178,7 +178,7 @@
                 <nav class="nav">
                     <a href="{{ route('dashboard') }}" @class(['active' => request()->routeIs('dashboard')])>Dashboard</a>
 
-                    {{-- â”€â”€ Operacional â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+                    {{-- Operacional --}}
                     @if (
                         auth()->user()->hasPermission('produtividade.cartorios.view')
                         || auth()->user()->hasPermission('produtividade.flagrantes.view')
@@ -194,19 +194,19 @@
                                     <a href="{{ route('operacional.index') }}" @class(['active' => request()->routeIs('operacional.index')])>Painel operacional</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('operacional.mandados.view'))
-                                    <a href="{{ route('operacional.mandados.index') }}" @class(['active' => request()->routeIs('operacional.mandados.index')])>Mandados de PrisÃ£o</a>
-                                    <a href="{{ route('operacional.mandados.stats') }}" @class(['active' => request()->routeIs('operacional.mandados.stats')])>EstatÃ­sticas de Mandados</a>
-                                    <a href="{{ route('operacional.mandados.relatorio') }}" @class(['active' => request()->routeIs('operacional.mandados.relatorio')])>RelatÃ³rio de Mandados</a>
+                                    <a href="{{ route('operacional.mandados.index') }}" @class(['active' => request()->routeIs('operacional.mandados.index')])>Mandados de Prisão</a>
+                                    <a href="{{ route('operacional.mandados.stats') }}" @class(['active' => request()->routeIs('operacional.mandados.stats')])>Estatísticas de Mandados</a>
+                                    <a href="{{ route('operacional.mandados.relatorio') }}" @class(['active' => request()->routeIs('operacional.mandados.relatorio')])>Relatório de Mandados</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('operacional.objetos.view'))
                                     <a href="{{ route('operacional.objetos.index') }}" @class(['active' => request()->routeIs('operacional.objetos.*')])>Objetos Apreendidos</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('operacional.ordens.view'))
-                                    <a href="{{ route('operacional.ordens.index') }}" @class(['active' => request()->routeIs('operacional.ordens.*')])>Ordens de ServiÃ§o</a>
+                                    <a href="{{ route('operacional.ordens.index') }}" @class(['active' => request()->routeIs('operacional.ordens.*')])>Ordens de Serviço</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('produtividade.cartorios.view'))
                                     <a href="{{ route('produtividade.hub') }}" @class(['active' => request()->routeIs('produtividade.hub')])>Hub de Produtividade</a>
-                                    <a href="{{ route('produtividade.cartorios.index') }}" @class(['active' => request()->routeIs('produtividade.cartorios.*')])>CartÃ³rios</a>
+                                    <a href="{{ route('produtividade.cartorios.index') }}" @class(['active' => request()->routeIs('produtividade.cartorios.*')])>Cartórios</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('produtividade.boletins.view'))
                                     <a href="{{ route('produtividade.boletins.index') }}" @class(['active' => request()->routeIs('produtividade.boletins.*')])>Boletins / Upload Consolidado</a>
@@ -216,35 +216,35 @@
                                     <a href="{{ route('produtividade.flagrantes.relatorio') }}" @class(['active' => request()->routeIs('produtividade.flagrantes.relatorio')])>Rel. Flagrantes (A4)</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('produtividade.stats.view'))
-                                    <a href="{{ route('produtividade.stats.index') }}" @class(['active' => request()->routeIs('produtividade.stats.*')])>EstatÃ­sticas</a>
+                                    <a href="{{ route('produtividade.stats.index') }}" @class(['active' => request()->routeIs('produtividade.stats.*')])>Estatísticas</a>
                                 @endif
                             </div>
                         </details>
                     @endif
 
-                    {{-- â”€â”€ Pessoas / RH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+                    {{-- Pessoas / RH --}}
                     @if (auth()->user()->hasPermission('rh.view'))
                         <details class="nav-folder" @if (request()->routeIs('funcionarios.*', 'rh.*')) open @endif>
                             <summary>Pessoas</summary>
                             <div class="nav-folder-panel">
-                                <a href="{{ route('funcionarios.index') }}" @class(['active' => request()->routeIs('funcionarios.*')])>FuncionÃ¡rios</a>
-                                <a href="{{ route('rh.index') }}" @class(['active' => request()->routeIs('rh.index')])>RH / AdministraÃ§Ã£o</a>
+                                <a href="{{ route('funcionarios.index') }}" @class(['active' => request()->routeIs('funcionarios.*')])>Funcionários</a>
+                                <a href="{{ route('rh.index') }}" @class(['active' => request()->routeIs('rh.index')])>RH / Administração</a>
                                 <a href="{{ route('rh.confronto') }}" @class(['active' => request()->routeIs('rh.confronto')])>Confronto de Afastamentos</a>
-                                <a href="{{ route('rh.composicao') }}" @class(['active' => request()->routeIs('rh.composicao')])>ComposiÃ§Ã£o dos CartÃ³rios</a>
-                                <a href="{{ route('rh.stats') }}" @class(['active' => request()->routeIs('rh.stats')])>EstatÃ­sticas RH</a>
+                                <a href="{{ route('rh.composicao') }}" @class(['active' => request()->routeIs('rh.composicao')])>Composição dos Cartórios</a>
+                                <a href="{{ route('rh.stats') }}" @class(['active' => request()->routeIs('rh.stats')])>Estatísticas RH</a>
                             </div>
                         </details>
                     @endif
 
-                    {{-- â”€â”€ Escalas / Agenda â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+                    {{-- Escalas / Agenda --}}
                     @if (auth()->user()->hasPermission('escalas.view') || auth()->user()->hasPermission('calendarios.view'))
                         <details class="nav-folder" @if (request()->routeIs('escalas.*', 'calendarios.*')) open @endif>
                             <summary>Escalas</summary>
                             <div class="nav-folder-panel">
                                 @if (auth()->user()->hasPermission('escalas.view'))
                                     <a href="{{ route('escalas.index') }}" @class(['active' => request()->routeIs('escalas.index')])>Escala Mensal</a>
-                                    <a href="{{ route('escalas.plantoes') }}" @class(['active' => request()->routeIs('escalas.plantoes')])>PlantÃµes</a>
-                                    <a href="{{ route('escalas.plantoes.relatorio') }}" @class(['active' => request()->routeIs('escalas.plantoes.relatorio')])>Rel. PlantÃµes (A4)</a>
+                                    <a href="{{ route('escalas.plantoes') }}" @class(['active' => request()->routeIs('escalas.plantoes')])>Plantões</a>
+                                    <a href="{{ route('escalas.plantoes.relatorio') }}" @class(['active' => request()->routeIs('escalas.plantoes.relatorio')])>Rel. Plantões (A4)</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('calendarios.view'))
                                     <a href="{{ route('calendarios.index') }}" @class(['active' => request()->routeIs('calendarios.*')])>Agenda de Afastamentos</a>
@@ -253,25 +253,25 @@
                         </details>
                     @endif
 
-                    {{-- â”€â”€ RelatÃ³rios (menu dedicado) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+                    {{-- Relatórios (menu dedicado) --}}
                     @if (auth()->user()->hasPermission('relatorios.emit') || auth()->user()->hasPermission('analise.view'))
                         <details class="nav-folder" @if (request()->routeIs('relatorios.*', 'analise.*')) open @endif>
-                            <summary>RelatÃ³rios</summary>
+                            <summary>Relatórios</summary>
                             <div class="nav-folder-panel">
                                 @if (auth()->user()->hasPermission('relatorios.emit'))
-                                    <a href="{{ route('relatorios.index') }}" @class(['active' => request()->routeIs('relatorios.index')])>Central de RelatÃ³rios</a>
+                                    <a href="{{ route('relatorios.index') }}" @class(['active' => request()->routeIs('relatorios.index')])>Central de Relatórios</a>
                                     <a href="{{ route('relatorios.produtividade.a4') }}" @class(['active' => request()->routeIs('relatorios.produtividade.a4')])>Produtividade A4</a>
                                     <a href="{{ route('relatorios.operacional.integrado') }}" @class(['active' => request()->routeIs('relatorios.operacional.integrado')])>Acompanhamento Operacional</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('analise.view'))
-                                    <a href="{{ route('analise.index') }}" @class(['active' => request()->routeIs('analise.index')])>AnÃ¡lise de Dados</a>
-                                    <a href="{{ route('analise.estatisticas') }}" @class(['active' => request()->routeIs('analise.estatisticas')])>EstatÃ­sticas de BOs</a>
+                                    <a href="{{ route('analise.index') }}" @class(['active' => request()->routeIs('analise.index')])>Análise de Dados</a>
+                                    <a href="{{ route('analise.estatisticas') }}" @class(['active' => request()->routeIs('analise.estatisticas')])>Estatísticas de BOs</a>
                                 @endif
                             </div>
                         </details>
                     @endif
 
-                    {{-- â”€â”€ ManutenÃ§Ã£o (backup + auditoria + acesso) â”€â”€â”€ --}}
+                    {{-- Manutenção (backup + auditoria + acesso) --}}
                     @if (
                         auth()->user()->hasPermission('backup.view')
                         || auth()->user()->hasPermission('auditoria.view')
@@ -279,7 +279,7 @@
                         || auth()->user()->hasPermission('access.roles.view')
                     )
                         <details class="nav-folder" @if (request()->routeIs('backup.*', 'auditoria.*', 'access.*')) open @endif>
-                            <summary>ManutenÃ§Ã£o</summary>
+                            <summary>Manutenção</summary>
                             <div class="nav-folder-panel">
                                 @if (auth()->user()->hasPermission('backup.view'))
                                     <a href="{{ route('backup.index') }}" @class(['active' => request()->routeIs('backup.*')])>Backup</a>
@@ -288,7 +288,7 @@
                                     <a href="{{ route('auditoria.index') }}" @class(['active' => request()->routeIs('auditoria.*')])>Auditoria</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('access.users.view'))
-                                    <a href="{{ route('access.users.index') }}" @class(['active' => request()->routeIs('access.users.*')])>UsuÃ¡rios</a>
+                                    <a href="{{ route('access.users.index') }}" @class(['active' => request()->routeIs('access.users.*')])>Usuários</a>
                                 @endif
                                 @if (auth()->user()->hasPermission('access.roles.view'))
                                     <a href="{{ route('access.roles.index') }}" @class(['active' => request()->routeIs('access.roles.*')])>Perfis de Acesso</a>
@@ -298,7 +298,7 @@
                     @endif
 
                     @if (app()->environment(['local', 'testing']))
-                        <a href="{{ route('evolucao') }}" @class(['active' => request()->routeIs('homologacao', 'evolucao')])>EvoluÃ§Ã£o</a>
+                        <a href="{{ route('evolucao') }}" @class(['active' => request()->routeIs('homologacao', 'evolucao')])>Evolução</a>
                     @endif
                     <a href="{{ route('password.edit') }}" @class(['active' => request()->routeIs('password.*')])>Minha senha</a>
                     <form method="POST" action="{{ route('logout') }}">
@@ -307,8 +307,9 @@
                     </form>
                 </nav>
             @endauth
-        </header>
+        </aside>
 
+        <div class="content-area">
         @if (session('status'))
             <div class="alert good">{{ session('status') }}</div>
         @endif
@@ -323,13 +324,14 @@
 
         @auth
             @if (config('grom_access.require_password_change') && auth()->user()->must_change_password)
-                <div class="alert bad">A troca inicial de senha e obrigatoria antes de acessar os demais modulos.</div>
+                <div class="alert bad">A troca inicial de senha é obrigatória antes de acessar os demais módulos.</div>
             @endif
         @endauth
 
         <main class="page-card">
             @yield('content')
         </main>
+        </div>{{-- /.content-area --}}
     </div>
 
     <script>
@@ -718,7 +720,7 @@
         (function () {
             const folders = Array.from(document.querySelectorAll('.nav-folder'));
 
-            // Fecha os outros painÃ©is quando um Ã© aberto
+            // Fecha os outros painéis quando um é aberto
             folders.forEach((folder) => {
                 folder.addEventListener('toggle', () => {
                     if (!folder.open) {

@@ -61,11 +61,11 @@
                     </tr>
                     <tr>
                         <th>Tipo de origem</th>
-                        <td>{{ $batch->source_type ?: 'Origem nao informada' }}</td>
+                        <td>{{ $batch->source_type ?: 'Origem não informada' }}</td>
                     </tr>
                     <tr>
                         <th>Planilha</th>
-                        <td>{{ $batch->sheet_name ?: 'Nao informada' }}</td>
+                        <td>{{ $batch->sheet_name ?: 'Não informada' }}</td>
                     </tr>
                     <tr>
                         <th>Linha de cabecalho</th>
@@ -168,7 +168,7 @@
                         </td>
                         <td>
                             {{ $item->cartorio?->name ?: 'Sem cartorio' }}<br>
-                            <span class="muted">{{ $item->cartorio_hint ?: 'Nao mapeado' }}</span>
+                            <span class="muted">{{ $item->cartorio_hint ?: 'Não mapeado' }}</span>
                         </td>
                         <td>
                             <span class="tag {{ $item->import_status->value === 'pending' ? 'warn' : 'good' }}">

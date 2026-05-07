@@ -11,7 +11,7 @@
             </p>
         </div>
         <div class="actions">
-            <a class="btn secondary" href="{{ route('pilot.access') }}">Ver acesso de teste</a>
+            <!-- Link removido: acesso de teste legacy -->
             <a class="btn secondary" href="{{ route('evolucao') }}">Abrir evolucao</a>
             @auth
                 <a class="btn secondary" href="{{ route('dashboard') }}">Abrir dashboard</a>
@@ -130,7 +130,7 @@
             Se o objetivo for aprovar visualmente, estes atalhos mostram o estado atual da construcao sem ir para os testes automatizados.
         </p>
         <div class="actions">
-            <a class="btn" href="{{ route('pilot.access') }}">Credenciais de teste</a>
+            <!-- Link removido: credenciais de teste legacy -->
             <a class="btn secondary" href="{{ route('homologacao') }}">Versao homologacao</a>
             @foreach ($reviewLinks as $link)
                 <a class="btn secondary" href="{{ $link['route'] }}">{{ $link['label'] }}</a>

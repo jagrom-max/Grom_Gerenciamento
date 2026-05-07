@@ -45,16 +45,6 @@
             <span>{{ $rhSummary['funcionarios_ativos'] ?? 0 }} ativos no espelho PHP.</span>
         </article>
         <article class="card">
-            <small>Escala legada</small>
-            <strong>{{ $scaleSummary['dias_total'] ?? 0 }}</strong>
-            <span>Linhas mensais do Python consultadas em leitura.</span>
-        </article>
-        <article class="card">
-            <small>Legado pessoas</small>
-            <strong>{{ $legacySummary['total'] ?? 0 }}</strong>
-            <span>{{ $legacySummary['ativos'] ?? 0 }} ativos no espelho Python.</span>
-        </article>
-        <article class="card">
             <small>Flagrantes no periodo</small>
             <strong>{{ $dashboard['selectedStats']['flagrantes_total'] }}</strong>
             <span>Base consolidada da produtividade.</span>
@@ -85,7 +75,7 @@
                             <span style="color: #5a6a7a;">{{ $row['has_stats'] ? 'Com estatistica' : 'Sem estatistica' }}</span>
                         </td>
                         <td>
-                            {{ $row['cartorio']->manager_name ?: 'Nao informado' }}<br>
+                            {{ $row['cartorio']->manager_name ?: 'Não informado' }}<br>
                             <span style="color: #5a6a7a;">{{ $row['cartorio']->designacao ?: 'Sem designacao' }}</span>
                         </td>
                         <td>{{ $row['period_label'] }}</td>
@@ -148,42 +138,36 @@
             <table style="font-size: 8.2pt; table-layout: fixed;">
                 <thead>
                     <tr>
-                        <th style="width: 28%;">Base</th>
-                        <th style="width: 18%;">Python</th>
-                        <th style="width: 18%;">PHP</th>
+                        <th style="width: 40%;">Indicador RH</th>
+                        <th style="width: 20%;">PHP</th>
                         <th>Leitura</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Funcionarios totais</td>
-                        <td>{{ $legacySummary['total'] ?? 0 }}</td>
                         <td>{{ $rhSummary['funcionarios_total'] ?? 0 }}</td>
-                        <td>Confronto direto do cadastro de pessoas.</td>
+                        <td>Cadastro consolidado no espelho web.</td>
                     </tr>
                     <tr>
                         <td>Funcionarios ativos</td>
-                        <td>{{ $legacySummary['ativos'] ?? 0 }}</td>
                         <td>{{ $rhSummary['funcionarios_ativos'] ?? 0 }}</td>
                         <td>Base operacional disponivel para uso imediato.</td>
                     </tr>
                     <tr>
                         <td>Concorrem a escala</td>
-                        <td>{{ $legacySummary['concorrem_escala'] ?? 0 }}</td>
                         <td>{{ $rhSummary['funcionarios_concorrem'] ?? 0 }}</td>
-                        <td>Critério ja consolidado no legado e no espelho web.</td>
+                        <td>Criterio consolidado no espelho web.</td>
                     </tr>
                     <tr>
                         <td>Afastamentos em vigor</td>
-                        <td>{{ $legacySummary['em_afastamento'] ?? 0 }}</td>
                         <td>{{ $rhSummary['afastamentos_em_vigor'] ?? 0 }}</td>
                         <td>Ausencias ativas e licencas consultadas em leitura.</td>
                     </tr>
                     <tr>
                         <td>Feriados ativos</td>
-                        <td>{{ $scaleSummary['feriados_mes'] ?? 0 }}</td>
                         <td>{{ $rhSummary['feriados_ativos'] ?? 0 }}</td>
-                        <td>Calendario legado e calendario de RH alinhados.</td>
+                        <td>Calendario de RH consolidado.</td>
                     </tr>
                 </tbody>
             </table>
@@ -193,9 +177,8 @@
             <table style="font-size: 8.2pt; table-layout: fixed;">
                 <thead>
                     <tr>
-                        <th style="width: 34%;">Funcionarios do RH</th>
-                        <th style="width: 33%;">Legado Python</th>
-                        <th style="width: 33%;">Escala do periodo</th>
+                        <th style="width: 50%;">Funcionarios do RH</th>
+                        <th style="width: 50%;">Escala do periodo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -211,23 +194,13 @@
                             @endforelse
                         </td>
                         <td>
-                            @forelse (array_slice($legacyEmployees, 0, 4) as $employee)
-                                <div style="margin-bottom: 3mm;">
-                                    <strong>{{ $employee['legacy_key'] ?? 'LEG' }}</strong> - {{ $employee['nome'] ?? 'Nao informado' }}<br>
-                                    <span style="color: #5a6a7a;">{{ $employee['cargo'] ?? 'Sem cargo' }} | {{ $employee['setor'] ?? 'Sem setor' }}</span>
-                                </div>
-                            @empty
-                                Nenhum funcionario legado carregado.
-                            @endforelse
-                        </td>
-                        <td>
                             @forelse (array_slice($legacyScaleRows, 0, 4) as $row)
                                 <div style="margin-bottom: 3mm;">
                                     <strong>{{ $row['date_label'] ?? 'N/D' }}</strong> - {{ $row['escrivao'] ?: 'Livre' }}<br>
                                     <span style="color: #5a6a7a;">Operacional: {{ $row['operacional'] ?: 'Livre' }} | Delegada: {{ $row['delegada'] ?: 'Livre' }}</span>
                                 </div>
                             @empty
-                                Sem leitura da escala legada.
+                                Sem leitura da escala para o periodo.
                             @endforelse
                         </td>
                     </tr>
@@ -253,7 +226,7 @@
                                     <span style="color: #5a6a7a;">{{ $row['item']->cartorio?->name ?: 'Sem cartorio' }} | {{ $row['age_days'] }} dias</span>
                                 </div>
                             @empty
-                                Nenhuma pendencia aberta.
+                                Nenhuma pendência aberta.
                             @endforelse
                         </td>
                         <td>

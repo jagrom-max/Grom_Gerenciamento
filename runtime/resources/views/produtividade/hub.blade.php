@@ -4,7 +4,7 @@
 
 @push('styles')
 <style>
-/* â”€â”€ Barras â”€â”€ */
+/* Barras */
 .hub-bar-track {
     flex: 1; height: 6px;
     background: #e6edf5;
@@ -22,7 +22,7 @@
 .hub-bar-fill.amber  { background: #b7791f; }
 .hub-bar-fill.purple { background: #5b4fb2; }
 
-/* â”€â”€ KPI card â”€â”€ */
+/* KPI card */
 .hub-kpi {
     display: flex;
     flex-direction: column;
@@ -58,7 +58,7 @@
 .delta-badge.down { background: #fdecec; color: #b42318; border-color: #f0c1c1; }
 .delta-badge.flat { background: #edf2f7; color: #5f7388; border-color: rgba(15, 39, 68, 0.08); }
 
-/* â”€â”€ Mini bar chart mensal â”€â”€ */
+/* Mini bar chart mensal */
 .month-chart {
     display: flex;
     align-items: flex-end;
@@ -80,7 +80,7 @@
     cursor: default;
 }
 
-/* â”€â”€ Alertas â”€â”€ */
+/* Alertas */
 .hub-alert {
     display: flex;
     align-items: center;
@@ -98,7 +98,7 @@
 .hub-alert strong { display: block; font-size: 0.88rem; }
 .hub-alert .muted { font-size: 0.78rem; color: var(--grom-ink-soft); }
 
-/* â”€â”€ MÃ³dulo-card â”€â”€ */
+/* Modulo-card */
 .hub-module {
     text-decoration: none;
     color: inherit;
@@ -136,33 +136,33 @@
 
 @section('content')
 
-{{-- â”€â”€ CabeÃ§alho â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- Cabecalho --}}
 <div class="section-head">
     <div>
         <h1>Hub de Produtividade</h1>
         <p class="muted" style="margin: 6px 0 0;">
-            VisÃ£o consolidada &mdash; <strong>{{ $periodoLabel }}</strong>
-            &nbsp;Â·&nbsp; {{ $totalCartorios }} cartÃ³rio{{ $totalCartorios !== 1 ? 's' : '' }}
+            Visão consolidada &mdash; <strong>{{ $periodoLabel }}</strong>
+            &nbsp;·&nbsp; {{ $totalCartorios }} cartório{{ $totalCartorios !== 1 ? 's' : '' }}
             ({{ $cartoriosAtivos }} ativo{{ $cartoriosAtivos !== 1 ? 's' : '' }})
         </p>
     </div>
     <div class="actions">
-        <a class="btn secondary" href="{{ route('produtividade.stats.index') }}">EstatÃ­sticas completas</a>
+        <a class="btn secondary" href="{{ route('produtividade.stats.index') }}">Estatísticas completas</a>
         <a class="btn secondary" href="{{ route('produtividade.boletins.index') }}">Boletins</a>
         <a class="btn secondary" href="{{ route('produtividade.flagrantes.index') }}">Fila de flagrantes</a>
-        <a class="btn" href="{{ route('produtividade.flagrantes.relatorio') }}">RelatÃ³rio A4</a>
+        <a class="btn" href="{{ route('produtividade.flagrantes.relatorio') }}">Relatório A4</a>
     </div>
 </div>
 
-{{-- â”€â”€ Alertas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- Alertas --}}
 @if ($auditoriaPendentes > 0 || $pendingSemCartorio > 0)
 <div style="margin-bottom: 16px;">
     @if ($auditoriaPendentes > 0)
     <div class="hub-alert warn">
-        <div class="icon">âš </div>
+        <div class="icon">⚠</div>
         <div>
-            <strong>{{ $auditoriaPendentes }} flagrante{{ $auditoriaPendentes > 1 ? 's' : '' }} aguardando auditoria de cartÃ³rio</strong>
-            <span class="muted">BOs marcados como flagrante na planilha sem cartÃ³rio do IP vinculado.</span>
+            <strong>{{ $auditoriaPendentes }} flagrante{{ $auditoriaPendentes > 1 ? 's' : '' }} aguardando auditoria de cartório</strong>
+            <span class="muted">BOs marcados como flagrante na planilha sem cartório do IP vinculado.</span>
         </div>
         <a class="btn secondary" style="border-color:#f59e0b; color:#b45309; font-size:0.83rem;"
            href="{{ route('analise.bos.auditoria-flagrantes') }}">Revisar</a>
@@ -170,10 +170,10 @@
     @endif
     @if ($pendingSemCartorio > 0)
     <div class="hub-alert info">
-        <div class="icon">ðŸ“‹</div>
+        <div class="icon">📋</div>
         <div>
-            <strong>{{ $pendingSemCartorio }} sugestÃ£o{{ $pendingSemCartorio > 1 ? 'Ãµes' : '' }} sem cartÃ³rio na fila</strong>
-            <span class="muted">Registros de importaÃ§Ã£o aguardando atribuiÃ§Ã£o de cartÃ³rio.</span>
+            <strong>{{ $pendingSemCartorio }} sugestão{{ $pendingSemCartorio > 1 ? 'ões' : '' }} sem cartório na fila</strong>
+            <span class="muted">Registros de importação aguardando atribuição de cartório.</span>
         </div>
         <a class="btn secondary" style="font-size:0.83rem;"
            href="{{ route('produtividade.flagrantes.index') }}">Ver fila</a>
@@ -183,16 +183,16 @@
 @else
 <div style="margin-bottom: 16px;">
     <div class="hub-alert ok">
-        <div class="icon">âœ“</div>
+        <div class="icon">✓</div>
         <div>
-            <strong>Sem pendÃªncias crÃ­ticas</strong>
+            <strong>Sem pendências críticas</strong>
             <span class="muted">Fila de auditoria e saneamento em dia.</span>
         </div>
     </div>
 </div>
 @endif
 
-{{-- â”€â”€ KPIs do mÃªs atual â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- KPIs do mes atual --}}
 <div class="cards" style="margin-bottom: 18px;">
 
     @php
@@ -214,11 +214,11 @@
     </article>
 
     <article class="card hub-kpi">
-        <small>Flagrantes â€” {{ $periodoLabel }}</small>
+        <small>Flagrantes — {{ $periodoLabel }}</small>
         <div class="kv red">{{ number_format($stats['flagrantes_total']) }}</div>
         @php
             $cls = $difFlag > 0 ? 'up' : ($difFlag < 0 ? 'down' : 'flat');
-            $sym = $difFlag > 0 ? 'â†‘' : ($difFlag < 0 ? 'â†“' : 'â†’');
+            $sym = $difFlag > 0 ? '↑' : ($difFlag < 0 ? '↓' : '→');
         @endphp
         <span class="delta-badge {{ $cls }}">{{ $sym }} {{ abs($difFlag) }} vs {{ $periodoAnteriorLabel }}</span>
         <small>
@@ -231,37 +231,37 @@
     <article class="card hub-kpi">
         <small>IP instaurados</small>
         <div class="kv blue">{{ number_format($stats['ip_instaurados']) }}</div>
-        @php $cls2 = $difIp > 0 ? 'up' : ($difIp < 0 ? 'down' : 'flat'); $sym2 = $difIp > 0 ? 'â†‘' : ($difIp < 0 ? 'â†“' : 'â†’'); @endphp
-        <span class="delta-badge {{ $cls2 }}">{{ $sym2 }} {{ abs($difIp) }} vs mÃªs ant.</span>
+        @php $cls2 = $difIp > 0 ? 'up' : ($difIp < 0 ? 'down' : 'flat'); $sym2 = $difIp > 0 ? '↑' : ($difIp < 0 ? '↓' : '→'); @endphp
+        <span class="delta-badge {{ $cls2 }}">{{ $sym2 }} {{ abs($difIp) }} vs mês ant.</span>
     </article>
 
     <article class="card hub-kpi">
         <small>IP relatados</small>
         <div class="kv green">{{ number_format($stats['ip_relatados']) }}</div>
-        @php $cls3 = $difRel > 0 ? 'up' : ($difRel < 0 ? 'down' : 'flat'); $sym3 = $difRel > 0 ? 'â†‘' : ($difRel < 0 ? 'â†“' : 'â†’'); @endphp
-        <span class="delta-badge {{ $cls3 }}">{{ $sym3 }} {{ abs($difRel) }} vs mÃªs ant.</span>
+        @php $cls3 = $difRel > 0 ? 'up' : ($difRel < 0 ? 'down' : 'flat'); $sym3 = $difRel > 0 ? '↑' : ($difRel < 0 ? '↓' : '→'); @endphp
+        <span class="delta-badge {{ $cls3 }}">{{ $sym3 }} {{ abs($difRel) }} vs mês ant.</span>
     </article>
 
     <article class="card hub-kpi">
-        <small>SugestÃµes pendentes</small>
+        <small>Sugestões pendentes</small>
         <div class="kv {{ $pendingCount > 0 ? 'amber' : 'green' }}">{{ number_format($pendingCount) }}</div>
-        <small>na fila de confirmaÃ§Ã£o</small>
+        <small>na fila de confirmação</small>
     </article>
 
     <article class="card hub-kpi">
         <small>IPs em andamento</small>
         <div class="kv purple">{{ number_format($stats['ips_andamento']) }}</div>
-        <small>registros | concluÃ­dos: {{ $stats['concluidos'] }}</small>
+        <small>registros | concluídos: {{ $stats['concluidos'] }}</small>
     </article>
 
 </div>
 
-{{-- â”€â”€ EvoluÃ§Ã£o de flagrantes (12 meses) + Ranking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- Evolucao de flagrantes (12 meses) + Ranking --}}
 <div class="grid" style="grid-template-columns: 1fr 1.2fr; gap: 16px; margin-bottom: 18px;">
 
     {{-- Mini bar chart mensal --}}
     <section class="card">
-        <h2 style="margin-top: 0;">Flagrantes â€” {{ $year }}</h2>
+        <h2 style="margin-top: 0;">Flagrantes — {{ $year }}</h2>
         <div class="month-chart" style="margin-bottom: 12px;">
             @foreach ($breakdown as $b)
                 @php $h = $maxFlagrante > 0 ? max(round($b['flagrantes_total'] / $maxFlagrante * 50), $b['flagrantes_total'] > 0 ? 3 : 0) : 0; @endphp
@@ -279,16 +279,16 @@
                         {{ substr($b['label'], 0, 3) }}
                     </div>
                     <div style="font-size:0.7rem; font-weight:600;">
-                        {{ $b['flagrantes_total'] > 0 ? $b['flagrantes_total'] : 'â€”' }}
+                        {{ $b['flagrantes_total'] > 0 ? $b['flagrantes_total'] : '—' }}
                     </div>
                 </div>
             @endforeach
         </div>
 
-        {{-- Ãšltimos lotes importados --}}
+        {{-- Ultimos lotes importados --}}
         @if ($recentBatches->isNotEmpty())
         <div style="margin-top: 16px; border-top: 1px solid #f3f4f6; padding-top: 12px;">
-            <p style="font-size:0.78rem; font-weight:600; color:#6b7280; margin:0 0 6px;">Ãšltimas importaÃ§Ãµes</p>
+            <p style="font-size:0.78rem; font-weight:600; color:#6b7280; margin:0 0 6px;">Últimas importações</p>
             @foreach ($recentBatches as $batch)
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
                 <div style="flex:1; font-size:0.78rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
@@ -302,10 +302,10 @@
         @endif
     </section>
 
-    {{-- Ranking de flagrantes por cartÃ³rio --}}
+    {{-- Ranking de flagrantes por cartorio --}}
     <section class="card">
         <h2 style="margin-top: 0;">
-            Ranking cartÃ³rios â€” {{ $periodoLabel }}
+            Ranking cartórios — {{ $periodoLabel }}
             @if($ranking->isEmpty())
                 <small class="muted" style="font-weight:400;">(sem dados)</small>
             @endif
@@ -350,41 +350,41 @@
 
         @if ($ranking->count() === 8)
             <a href="{{ route('produtividade.stats.index', ['year' => $year, 'month' => $month]) }}"
-               style="font-size:0.8rem; color:#2563eb;">Ver todos â†’</a>
+               style="font-size:0.8rem; color:#2563eb;">Ver todos →</a>
         @endif
     </section>
 
 </div>
 
-{{-- â”€â”€ MÃ³dulos de acesso rÃ¡pido â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
-<h2 style="margin: 0 0 12px; font-size: 1rem; color: #374151;">Acesso rÃ¡pido</h2>
+{{-- Modulos de acesso rapido --}}
+<h2 style="margin: 0 0 12px; font-size: 1rem; color: #374151;">Acesso rápido</h2>
 <div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px;">
 
     <a class="hub-module" href="{{ route('produtividade.cartorios.index') }}">
-        <div class="mod-icon">ðŸ›</div>
-        <div class="mod-title">CartÃ³rios</div>
-        <div class="mod-desc">Cadastro, responsÃ¡vel, histÃ³rico de designaÃ§Ãµes</div>
+        <div class="mod-icon">🏛</div>
+        <div class="mod-title">Cartórios</div>
+        <div class="mod-desc">Cadastro, responsável, histórico de designações</div>
         <span class="mod-badge ok">{{ $cartoriosAtivos }} ativos</span>
     </a>
 
     <a class="hub-module" href="{{ route('produtividade.cartorios.index') }}">
-        <div class="mod-icon">ðŸ“</div>
+        <div class="mod-icon">📝</div>
         <div class="mod-title">Fechamento Mensal</div>
-        <div class="mod-desc">LanÃ§ar IP instaurados, relatados, cotas e despachos por cartÃ³rio</div>
+        <div class="mod-desc">Lançar IP instaurados, relatados, cotas e despachos por cartório</div>
         <span class="mod-badge ok">{{ now()->format('m/Y') }}</span>
     </a>
 
     <a class="hub-module" href="{{ route('produtividade.boletins.index') }}">
-        <div class="mod-icon">ðŸ—‚</div>
+        <div class="mod-icon">🗂</div>
         <div class="mod-title">Boletins / Upload Consolidado</div>
-        <div class="mod-desc">Ponto unico de upload do arquivo de consolidacao e gestao de todos os BOs</div>
+        <div class="mod-desc">Ponto único de upload do arquivo de consolidação e gestão de todos os BOs</div>
         <span class="mod-badge ok">Entrada principal</span>
     </a>
 
     <a class="hub-module" href="{{ route('produtividade.flagrantes.index') }}">
-        <div class="mod-icon">âš¡</div>
+        <div class="mod-icon">⚡</div>
         <div class="mod-title">Fila de flagrantes</div>
-        <div class="mod-desc">SugestÃµes, confirmacao e saneamento dos flagrantes detectados no arquivo unico</div>
+        <div class="mod-desc">Sugestões, confirmação e saneamento dos flagrantes detectados no arquivo único</div>
         @if ($pendingCount > 0)
             <span class="mod-badge">{{ $pendingCount }} pendente{{ $pendingCount > 1 ? 's' : '' }}</span>
         @else
@@ -393,23 +393,23 @@
     </a>
 
     <a class="hub-module" href="{{ route('produtividade.stats.index') }}">
-        <div class="mod-icon">ðŸ“Š</div>
-        <div class="mod-title">EstatÃ­sticas</div>
-        <div class="mod-desc">IP instaurados, relatados, concluÃ­dos, fechamento mensal</div>
+        <div class="mod-icon">📊</div>
+        <div class="mod-title">Estatísticas</div>
+        <div class="mod-desc">IP instaurados, relatados, concluídos, fechamento mensal</div>
         <span class="mod-badge ok">{{ $summary['stats_registros'] }} registros</span>
     </a>
 
     <a class="hub-module" href="{{ route('produtividade.flagrantes.relatorio') }}">
-        <div class="mod-icon">ðŸ“„</div>
-        <div class="mod-title">RelatÃ³rio A4</div>
-        <div class="mod-desc">RelatÃ³rio de flagrantes por cartÃ³rio para impressÃ£o</div>
+        <div class="mod-icon">📄</div>
+        <div class="mod-title">Relatório A4</div>
+        <div class="mod-desc">Relatório de flagrantes por cartório para impressão</div>
         <span class="mod-badge ok">Pronto para imprimir</span>
     </a>
 
     <a class="hub-module" href="{{ route('analise.bos.import') }}">
-        <div class="mod-icon">ðŸ“¥</div>
+        <div class="mod-icon">📥</div>
         <div class="mod-title">Importar BOs</div>
-        <div class="mod-desc">Upload de planilha XLSX/CSV de ocorrÃªncias</div>
+        <div class="mod-desc">Upload de planilha XLSX/CSV de ocorrências</div>
         @if ($summary['lotes_com_erro_30d'] > 0)
             <span class="mod-badge">{{ $summary['lotes_com_erro_30d'] }} lote(s) c/ erro</span>
         @else
@@ -418,41 +418,41 @@
     </a>
 
     <a class="hub-module" href="{{ route('analise.bos.auditoria-flagrantes') }}">
-        <div class="mod-icon">ðŸ”</div>
+        <div class="mod-icon">🔍</div>
         <div class="mod-title">Auditoria de flagrantes</div>
-        <div class="mod-desc">Flagrantes sem cartÃ³rio aguardando revisÃ£o</div>
+        <div class="mod-desc">Flagrantes sem cartório aguardando revisão</div>
         @if ($auditoriaPendentes > 0)
             <span class="mod-badge">{{ $auditoriaPendentes }} pendente{{ $auditoriaPendentes > 1 ? 's' : '' }}</span>
         @else
-            <span class="mod-badge ok">Sem pendÃªncias</span>
+            <span class="mod-badge ok">Sem pendências</span>
         @endif
     </a>
 
     <a class="hub-module" href="{{ route('analise.estatisticas') }}">
-        <div class="mod-icon">ðŸ“ˆ</div>
-        <div class="mod-title">EstatÃ­sticas de BOs</div>
-        <div class="mod-desc">AnÃ¡lise avanÃ§ada do banco legado de ocorrÃªncias</div>
+        <div class="mod-icon">📈</div>
+        <div class="mod-title">Estatísticas de BOs</div>
+        <div class="mod-desc">Análise avançada do banco consolidado de ocorrências</div>
         <span class="mod-badge ok">Somente leitura</span>
     </a>
 
     <a class="hub-module" href="{{ route('analise.index') }}">
-        <div class="mod-icon">ðŸ—‚</div>
-        <div class="mod-title">AnÃ¡lise de dados</div>
-        <div class="mod-desc">Painel principal de anÃ¡lise, lotes e pesquisa nominal</div>
+        <div class="mod-icon">🗂</div>
+        <div class="mod-title">Análise de dados</div>
+        <div class="mod-desc">Painel principal de análise, lotes e pesquisa nominal</div>
         <span class="mod-badge ok">Painel</span>
     </a>
 
 </div>
 
-{{-- â”€â”€ CartÃ³rios com maior demanda na fila â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- Cartorios com maior demanda na fila --}}
 @if ($cartoriosComPendencia->isNotEmpty())
 <section class="card" style="margin-bottom: 16px;">
-    <h2 style="margin-top:0;">CartÃ³rios com mais sugestÃµes pendentes</h2>
+    <h2 style="margin-top:0;">Cartórios com mais sugestões pendentes</h2>
     <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
         <thead>
             <tr style="border-bottom:2px solid #e5e7eb;">
-                <th style="padding:8px 12px; text-align:left;">CartÃ³rio</th>
-                <th style="padding:8px 12px; text-align:right;">SugestÃµes pendentes</th>
+                <th style="padding:8px 12px; text-align:left;">Cartório</th>
+                <th style="padding:8px 12px; text-align:right;">Sugestões pendentes</th>
                 <th style="padding:8px 12px;">Volume</th>
             </tr>
         </thead>
@@ -478,7 +478,7 @@
     </table>
     <div style="margin-top:10px;">
         <a href="{{ route('produtividade.flagrantes.index') }}" style="font-size:0.82rem; color:#2563eb;">
-            Ver fila completa â†’
+            Ver fila completa →
         </a>
     </div>
 </section>

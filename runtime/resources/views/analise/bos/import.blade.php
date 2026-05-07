@@ -7,7 +7,7 @@
         <div>
             <h1>Importar planilha de BOs</h1>
             <p class="muted" style="margin: 6px 0 0;">
-                Mesmo formato aceito pelo sistema Python â€” XLSX gerado pelo mÃ³dulo de AnÃ¡lise de Dados.
+                Mesmo formato aceito pelo sistema Python â€” XLSX gerado pelo módulo de Análise de Dados.
             </p>
         </div>
     </div>
@@ -41,7 +41,7 @@
                        accept=".xlsx,.csv,.txt"
                        style="display:block; width:100%; padding:8px 0;">
                 <p class="muted" style="margin:6px 0 0; font-size: 0.85em;">
-                    Tamanho mÃ¡ximo: 20 MB.
+                    Tamanho máximo: 20 MB.
                 </p>
             </div>
 
@@ -58,30 +58,30 @@
             <thead>
                 <tr>
                     <th>Coluna no XLSX</th>
-                    <th>ObrigatÃ³ria</th>
+                    <th>Obrigatória</th>
                 </tr>
             </thead>
             <tbody>
                 <tr><td>NÂº RDO</td><td>Sim</td></tr>
-                <tr><td>Data da OcorrÃªncia</td><td>Sim</td></tr>
-                <tr><td>Lavrado</td><td>NÃ£o</td></tr>
-                <tr><td>Flagrante</td><td>NÃ£o</td></tr>
-                <tr><td>Ato Infracional</td><td>NÃ£o</td></tr>
-                <tr><td>Ãrea do Fato</td><td>NÃ£o</td></tr>
-                <tr><td>MPU</td><td>NÃ£o</td></tr>
-                <tr><td>NÂº CNJ MPU</td><td>NÃ£o</td></tr>
-                <tr><td>BO designado (CartÃ³rio)</td><td>NÃ£o</td></tr>
-                <tr><td>NÂº IP</td><td>NÃ£o</td></tr>
-                <tr><td>CartÃ³rio do IP (final)</td><td>NÃ£o</td></tr>
-                <tr><td>Natureza 1 â€¦ Natureza 6</td><td>NÃ£o</td></tr>
-                <tr><td>Consumo/Tentativa 1 â€¦ 6</td><td>NÃ£o</td></tr>
-                <tr><td>VÃ­tima 1 (Nome) â€¦ VÃ­tima 6 (Nome)</td><td>NÃ£o</td></tr>
-                <tr><td>VÃ­tima 1 (Tipo) â€¦ VÃ­tima 6 (Tipo)</td><td>NÃ£o</td></tr>
-                <tr><td>Autor 1 â€¦ Autor 3</td><td>NÃ£o</td></tr>
+                <tr><td>Data da Ocorrência</td><td>Sim</td></tr>
+                <tr><td>Lavrado</td><td>Não</td></tr>
+                <tr><td>Flagrante</td><td>Não</td></tr>
+                <tr><td>Ato Infracional</td><td>Não</td></tr>
+                <tr><td>Ãrea do Fato</td><td>Não</td></tr>
+                <tr><td>MPU</td><td>Não</td></tr>
+                <tr><td>NÂº CNJ MPU</td><td>Não</td></tr>
+                <tr><td>BO designado (Cartório)</td><td>Não</td></tr>
+                <tr><td>NÂº IP</td><td>Não</td></tr>
+                <tr><td>Cartório do IP (final)</td><td>Não</td></tr>
+                <tr><td>Natureza 1 â€¦ Natureza 6</td><td>Não</td></tr>
+                <tr><td>Consumo/Tentativa 1 â€¦ 6</td><td>Não</td></tr>
+                <tr><td>Vítima 1 (Nome) â€¦ Vítima 6 (Nome)</td><td>Não</td></tr>
+                <tr><td>Vítima 1 (Tipo) â€¦ Vítima 6 (Tipo)</td><td>Não</td></tr>
+                <tr><td>Autor 1 â€¦ Autor 3</td><td>Não</td></tr>
             </tbody>
         </table>
         <p class="muted" style="margin: 10px 0 0; font-size: 0.85em;">
-            BOs duplicados (mesmo NÂº RDO) serÃ£o <strong>atualizados</strong>, nÃ£o duplicados.
+            BOs duplicados (mesmo NÂº RDO) serão <strong>atualizados</strong>, não duplicados.
         </p>
     </section>
 @endsection

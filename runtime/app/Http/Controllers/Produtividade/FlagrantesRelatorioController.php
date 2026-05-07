@@ -14,6 +14,10 @@ use Illuminate\Support\Carbon;
  * Rota: GET /produtividade/flagrantes/relatorio
  */
 class FlagrantesRelatorioController extends Controller
+    public function index(Request $request): View
+    {
+        return $this->__invoke($request);
+    }
 {
     public function __invoke(Request $request): View
     {

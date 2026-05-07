@@ -202,7 +202,7 @@
                    style="border-color:#f59e0b; color:#b45309;">Auditoria de flagrantes</a>
             </div>
             <p class="muted" style="margin: 0;">
-                Esta tela funciona como o ponto de leitura da migracao de Analise de Dados, sem duplicar timbrado ou regra visual.
+                Esta tela funciona como o ponto de leitura da migração de Análise de Dados, sem duplicar timbrado ou regra visual.
             </p>
         </section>
     </div>
@@ -442,7 +442,7 @@
                         <td>{{ $batch->imported_at?->format('d/m/Y H:i') ?? $batch->created_at?->format('d/m/Y H:i') }}</td>
                         <td>
                             <strong>{{ $batch->source_name }}</strong><br>
-                            <span class="muted">{{ $batch->source_type ?: 'Origem nao informada' }}</span>
+                            <span class="muted">{{ $batch->source_type ?: 'Origem não informada' }}</span>
                         </td>
                         <td>{{ (int) $batch->items_count }}</td>
                         <td>{{ (int) $batch->quality_complete_items_count }}</td>
@@ -482,14 +482,14 @@
                         <td>
                             <strong>{{ $item->spj ?: $item->source_process_key }}</strong><br>
                             <span class="muted">{{ $item->batch?->source_name }}</span><br>
-                            <span class="muted">{{ $item->batch?->source_type ?: 'Origem nao informada' }}</span>
+                            <span class="muted">{{ $item->batch?->source_type ?: 'Origem não informada' }}</span>
                         </td>
                         <td>
                             {{ $item->cartorio?->name ?: 'Sem cartorio' }}<br>
-                            <span class="muted">{{ $item->cartorio_hint ?: 'Nao informado' }}</span>
+                            <span class="muted">{{ $item->cartorio_hint ?: 'Não informado' }}</span>
                         </td>
                         <td>
-                            {{ $item->status_origem ?: 'Nao informado' }}<br>
+                            {{ $item->status_origem ?: 'Não informado' }}<br>
                             <span class="muted">{{ data_get($item->payload, 'kind') ?: 'Sem payload tipado' }}</span>
                         </td>
                         <td>
@@ -500,7 +500,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">Nenhuma pendencia recente.</td>
+                        <td colspan="5">Nenhuma pendência recente.</td>
                     </tr>
                 @endforelse
             </tbody>

@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Troca obrigatÃ³ria de senha | Grom.Seg')
+@section('title', 'Troca obrigatória de senha | Grom.Seg')
 
 @section('content')
     <div class="grid">
         <div class="section-head">
             <div>
-                <h1>AtualizaÃ§Ã£o de senha</h1>
+                <h1>Atualização de senha</h1>
                 <p class="muted">
                     @if ($mustChangePassword)
-                        Este Ã© o primeiro acesso ou sua senha foi redefinida por um administrador.
+                        Este é o primeiro acesso ou sua senha foi redefinida por um administrador.
                     @else
                         Mantenha sua credencial atualizada para preservar o acesso seguro ao Grom.Seg.
                     @endif
@@ -24,7 +24,7 @@
             <div class="form-grid">
                 @if ($mustChangePassword)
                     <div class="alert good" style="grid-column: 1 / -1;">
-                        No primeiro acesso, basta definir a nova senha. A senha atual jÃ¡ foi validada no login.
+                        No primeiro acesso, basta definir a nova senha. A senha atual já foi validada no login.
                     </div>
                 @else
                     <div class="field full">
@@ -45,7 +45,7 @@
             </div>
 
             <div class="alert good">
-                Use ao menos 12 caracteres com letras maiÃºsculas, minÃºsculas, nÃºmeros e sÃ­mbolos.
+                Use ao menos 12 caracteres com letras maiúsculas, minúsculas, números e símbolos.
             </div>
 
             <div class="actions">

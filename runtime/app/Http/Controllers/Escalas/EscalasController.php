@@ -8,7 +8,9 @@ use App\Models\EscalaDia;
 use App\Models\EscalaPlantaoExterno;
 use App\Models\EscalaPlantaoFuncionario;
 use App\Models\EscalaVersao;
+
 use App\Models\RhFuncionario;
+use App\Models\RhHoliday;
 use App\Services\Escalas\GeradorEscalaMensalService;
 use App\Services\Escalas\LegacyEscalasReader;
 use App\Services\Escalas\LegacyEscalasSyncService;
@@ -24,7 +26,28 @@ class EscalasController extends Controller
     // Visualização — Escala mensal
     // -------------------------------------------------------
 
-    public function index(Request $request, LegacyEscalasReader $reader): View
+    /**
+     * Retorna as substituições da Delegada DDM para o mês/ano informado.
+     */
+    protected function getSubstituicoesDdm(array $filters)
+    {
+        // Busca substituições que tenham interseção com o mês/ano
+        $inicioMes = sprintf('%04d-%02d-01', $filters['ano'], $filters['mes']);
+        $fimMes = date('Y-m-t', strtotime($inicioMes));
+        return \App\Models\EscalaSubstituicaoDdm::query()
+            ->where(function($q) use ($inicioMes, $fimMes) {
+                $q->whereBetween('data_inicio', [$inicioMes, $fimMes])
+                  ->orWhereBetween('data_fim', [$inicioMes, $fimMes])
+                  ->orWhere(function($q2) use ($inicioMes, $fimMes) {
+                      $q2->where('data_inicio', '<=', $inicioMes)
+                         ->where('data_fim', '>=', $fimMes);
+                  });
+            })
+            ->orderBy('data_inicio')
+            ->get();
+    }
+
+    public function index(Request $request): View
     {
         $filters = $this->resolveFilters($request);
 
@@ -36,35 +59,31 @@ class EscalasController extends Controller
             ->get();
 
         // Versão requisitada (parâmetro opcional) ou a mais recente
-        $versaoSolicitada = $filters['versao'];
-
-        if ($versaoSolicitada) {
-            $phpDias = EscalaDia::query()
-                ->where('ano', $filters['ano'])
-                ->where('mes', $filters['mes'])
-                ->where('versao', $versaoSolicitada)
-                ->orderBy('data')
-                ->get();
-            $phpVersao = $phpDias->isNotEmpty() ? $versaoSolicitada : null;
-        } else {
+        // SEMPRE força leitura da versão mais recente
+        $phpDias   = EscalaDia::diasDoMes($filters['ano'], $filters['mes']);
+        $phpVersao = $phpDias->max('versao');
+        if ($phpDias->isEmpty()) {
+            $this->tryAutoSyncLegacy($request->user()?->id);
             $phpDias   = EscalaDia::diasDoMes($filters['ano'], $filters['mes']);
             $phpVersao = $phpDias->max('versao');
         }
 
-        $snapshot = null;
-        if ($phpDias->isEmpty()) {
-            try {
-                $snapshot = $reader->snapshotForMonth($request->user(), $filters['ano'], $filters['mes']);
-            } catch (\Throwable) {
-                $snapshot = null;
-            }
-        }
+        $snapshot = $phpDias->isEmpty()
+            ? $this->loadLegacySnapshot($request, $filters['ano'], $filters['mes'])
+            : $this->emptyLegacySnapshot();
+        $snapshot['year'] = $filters['ano'];
+        $snapshot['month'] = $filters['mes'];
 
-        $snapshot ??= $this->emptyLegacySnapshot();
+        $phpHolidays = $this->buildMonthHolidays($filters['ano'], $filters['mes']);
+        if (! empty($phpHolidays) || empty($snapshot['holidays'])) {
+            $snapshot['holidays'] = $phpHolidays;
+        }
 
         $phpFuncionarios = RhFuncionario::query()
             ->with(['cargo', 'afastamentos' => fn ($q) => $q->orderByDesc('start_date')])
-            ->orderByDesc('is_active')->orderBy('name')->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $catalogo = EscalaPlantaoExterno::query()->ativos()->get();
         $catalogoTodos = EscalaPlantaoExterno::query()->orderBy('id')->get();
@@ -89,6 +108,9 @@ class EscalasController extends Controller
             ->orderByDesc('ano')
             ->pluck('ano')
             ->toArray();
+        $snapshot['available_years'] = ! empty($anosPhp)
+            ? array_values(array_unique(array_merge($anosPhp, $snapshot['available_years'] ?? [])))
+            : ($snapshot['available_years'] ?? [$filters['ano']]);
 
         $delegadosExternos = EscalaDelegadoExterno::ativos()->get();
 
@@ -111,11 +133,13 @@ class EscalasController extends Controller
 
                 return [
                     'source' => 'php',
+                    'id' => $dia->id,
                     'date_label' => $dtCarbon->format('d/m'),
                     'date' => $dtCarbon->toDateString(),
                     'day_label' => $dtCarbon->locale('pt_BR')->isoFormat('ddd'),
                     'display_mode' => 'normal',
                     'is_weekend' => $dtCarbon->isWeekend(),
+                    'is_fechada' => (bool) $dia->is_fechada,
                     'escrivao' => trim((string) ($dia->escrivao ?? '')),
                     'operacional' => trim((string) ($dia->operacional ?? '')),
                     'fechar' => trim((string) ($dia->fechar_nome ?? '')),
@@ -175,6 +199,20 @@ class EscalasController extends Controller
             })->values();
         }
 
+        $snapshot['summary'] = [
+            'dias_total' => $phpDias->count(),
+            'dias_com_escrivao' => $phpDias->whereNotNull('escrivao')->whereNotIn('escrivao', [''])->count(),
+            'dias_com_delegada' => $phpDias->whereNotNull('delegada')->whereNotIn('delegada', [''])->count(),
+            'dias_com_operacional' => $phpDias->whereNotNull('operacional')->whereNotIn('operacional', [''])->count(),
+            'dias_com_plantao_externo' => $phpDias->whereNotNull('plantao_externo')->whereNotIn('plantao_externo', [''])->count(),
+            'plantoes_atribuicoes' => collect($plantoesMes)->flatten(1)->count(),
+            'plantoes_catalogo_ativos' => $catalogo->count(),
+            'funcionarios_total' => $phpFuncionarios->count(),
+            'funcionarios_ativos' => $phpFuncionarios->count(),
+            'funcionarios_concorrem' => $phpFuncionarios->where('concorre_escala', true)->count(),
+            'funcionarios_em_afastamento' => $phpFuncionarios->filter(fn (RhFuncionario $f): bool => $f->currentAfastamento() !== null)->count(),
+        ];
+
         return view('escalas.index', [
             'filters'           => $filters,
             'snapshot'          => $snapshot,
@@ -193,7 +231,7 @@ class EscalasController extends Controller
             'plantaoLinhas'     => $plantaoLinhas,
             'phpMirrorSummary'  => [
                 'total'               => $phpFuncionarios->count(),
-                'ativos'              => $phpFuncionarios->where('is_active', true)->count(),
+                'ativos'              => $phpFuncionarios->count(),
                 'concorrem_escala'    => $phpFuncionarios->where('concorre_escala', true)->count(),
                 'em_afastamento'      => $phpFuncionarios->filter(fn (RhFuncionario $f): bool => $f->currentAfastamento() !== null)->count(),
             ],
@@ -204,44 +242,100 @@ class EscalasController extends Controller
     // Visualização — Plantões
     // -------------------------------------------------------
 
-    public function plantoes(Request $request, LegacyEscalasReader $reader): View
+    public function plantoes(Request $request): View
     {
         $filters = $this->resolveFilters($request);
 
-        $phpDias = EscalaDia::diasDoMes($filters['ano'], $filters['mes']);
-        $snapshot = null;
-        if ($phpDias->isEmpty()) {
-            try {
-                $snapshot = $reader->snapshotForMonth($request->user(), $filters['ano'], $filters['mes']);
-            } catch (\Throwable) {
-                $snapshot = null;
-            }
-        }
 
-        $snapshot ??= $this->emptyLegacySnapshot();
+
+        // Busca todos os plantões externos do mês/ano diretamente da tabela de plantões
+        $atribs = \App\Models\EscalaPlantaoFuncionario::query()
+            ->with(['funcionario', 'plantaoExterno'])
+            ->whereYear('data', $filters['ano'])
+            ->whereMonth('data', $filters['mes'])
+            ->orderBy('data')
+            ->get();
+
+        $phpDias = collect();
+        $legacySnapshot = $this->loadLegacySnapshot($request, $filters['ano'], $filters['mes']);
+
+        $snapshot = $this->emptyLegacySnapshot();
+        $snapshot['year'] = $filters['ano'];
+        $snapshot['month'] = $filters['mes'];
+
+        $phpHolidays = $this->buildMonthHolidays($filters['ano'], $filters['mes']);
+        if (! empty($phpHolidays) || empty($snapshot['holidays'])) {
+            $snapshot['holidays'] = $phpHolidays;
+        }
 
         $phpFuncionarios = RhFuncionario::query()
             ->with(['cargo', 'afastamentos' => fn ($q) => $q->orderByDesc('start_date')])
-            ->orderByDesc('is_active')->orderBy('name')->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $catalogo = EscalaPlantaoExterno::query()->ativos()->get();
 
         // Plantões do mês agrupados por funcionário
         $plantoesPorFuncionario = [];
-        if ($phpDias->isNotEmpty()) {
-            $datas = $phpDias->pluck('data')->map(fn ($d) => $d->toDateString())->toArray();
-            $atribs = EscalaPlantaoFuncionario::query()
-                ->with(['funcionario', 'plantaoExterno'])
-                ->whereIn('data', $datas)
-                ->orderBy('data')
-                ->get();
-            foreach ($atribs as $a) {
-                $fId = $a->funcionario_id;
-                $plantoesPorFuncionario[$fId][] = $a;
-            }
+        foreach ($atribs as $a) {
+            $fId = $a->funcionario_id;
+            $plantoesPorFuncionario[$fId][] = $a;
+        }
+
+        $snapshot['plantoes'] = $atribs->map(function (\App\Models\EscalaPlantaoFuncionario $item): array {
+            return [
+                'id' => $item->id,
+                'date_label' => $item->data?->format('d/m/Y') ?? 'N/A',
+                'funcionario_nome' => $item->funcionario?->short_name ?? $item->funcionario?->name ?? '—',
+                'funcionario_setor' => $item->funcionario?->sector ?? 'Setor não informado',
+                'plantao_sigla' => $item->plantaoExterno?->sigla ?? '',
+                'plantao_nome' => $item->plantaoExterno?->nome ?? '',
+                'plantao_unidade' => $item->plantaoExterno?->unidade ?? 'N/A',
+                'plantao_regra' => $item->plantaoExterno?->regra ?? 'N/A',
+            ];
+        })->values()->all();
+
+        if (empty($snapshot['plantoes']) && ! empty($legacySnapshot['plantoes'])) {
+            $snapshot['plantoes'] = $legacySnapshot['plantoes'];
         }
 
         $anosPhp = EscalaDia::query()->selectRaw('DISTINCT ano')->orderByDesc('ano')->pluck('ano')->toArray();
+        $snapshot['available_years'] = ! empty($anosPhp)
+            ? array_values(array_unique(array_merge($anosPhp, $snapshot['available_years'] ?? [])))
+            : ($snapshot['available_years'] ?? [$filters['ano']]);
+        $anosDisp = ! empty($anosPhp) ? $anosPhp : ($snapshot['available_years'] ?? [$filters['ano']]);
+
+        if (empty($snapshot['plantao_catalog']) && ! empty($legacySnapshot['plantao_catalog'])) {
+            $snapshot['plantao_catalog'] = $legacySnapshot['plantao_catalog'];
+        }
+
+        if (empty($snapshot['available_months']) && ! empty($legacySnapshot['available_months'])) {
+            $snapshot['available_months'] = $legacySnapshot['available_months'];
+        }
+        $snapshot['plantao_catalog'] = $catalogo->map(function (EscalaPlantaoExterno $item): array {
+            return [
+                'sigla' => $item->sigla,
+                'nome' => $item->nome,
+                'unidade' => $item->unidade,
+                'ativo' => (bool) $item->is_active,
+            ];
+        })->values()->all();
+        $snapshot['version'] = $phpDias->max('versao') ?: '—';
+        $snapshot['source_name'] = 'Base PHP';
+        $snapshot['summary'] = [
+            'dias_total' => $phpDias->count(),
+            'dias_com_escrivao' => $phpDias->whereNotNull('escrivao')->whereNotIn('escrivao', [''])->count(),
+            'dias_com_delegada' => $phpDias->whereNotNull('delegada')->whereNotIn('delegada', [''])->count(),
+            'dias_com_operacional' => $phpDias->whereNotNull('operacional')->whereNotIn('operacional', [''])->count(),
+            'dias_com_plantao_externo' => $phpDias->whereNotNull('plantao_externo')->whereNotIn('plantao_externo', [''])->count(),
+            'plantoes_atribuicoes' => count($snapshot['plantoes']),
+            'plantoes_catalogo_ativos' => $catalogo->count(),
+            'funcionarios_total' => $phpFuncionarios->count(),
+            'funcionarios_ativos' => $phpFuncionarios->count(),
+            'funcionarios_concorrem' => $phpFuncionarios->where('concorre_escala', true)->count(),
+            'funcionarios_em_afastamento' => $phpFuncionarios->filter(fn (RhFuncionario $f): bool => $f->currentAfastamento() !== null)->count(),
+        ];
 
         return view('escalas.plantoes', [
             'filters'                 => $filters,
@@ -251,10 +345,10 @@ class EscalasController extends Controller
             'phpAtivos'               => $phpFuncionarios->where('is_active', true)->values(),
             'catalogo'                => $catalogo,
             'plantoesPorFuncionario'  => $plantoesPorFuncionario,
-            'anosPhp'                 => $anosPhp,
+            'anosPhp'                 => $anosDisp,
             'phpMirrorSummary'        => [
                 'total'            => $phpFuncionarios->count(),
-                'ativos'           => $phpFuncionarios->where('is_active', true)->count(),
+                'ativos'           => $phpFuncionarios->count(),
                 'concorrem_escala' => $phpFuncionarios->where('concorre_escala', true)->count(),
                 'em_afastamento'   => $phpFuncionarios->filter(fn (RhFuncionario $f): bool => $f->currentAfastamento() !== null)->count(),
             ],
@@ -325,29 +419,58 @@ class EscalasController extends Controller
         $data = $request->validate([
             'funcionario_id'     => ['required', 'uuid', 'exists:rh_funcionarios,id'],
             'plantao_externo_id' => ['required', 'integer', 'exists:escalas_plantoes_externos,id'],
-            'data'               => ['required', 'date'],
+            'data'               => ['nullable', 'date', 'required_without:datas'],
+            'datas'              => ['nullable', 'array', 'required_without:data'],
+            'datas.*'            => ['required', 'date'],
         ]);
 
         $userId = $request->user()->id;
+        $datas = collect($data['datas'] ?? [$data['data'] ?? null])
+            ->filter()
+            ->map(fn (string $date): string => Carbon::parse($date)->toDateString())
+            ->unique()
+            ->values();
 
-        $existing = EscalaPlantaoFuncionario::query()
-            ->where('funcionario_id', $data['funcionario_id'])
-            ->where('plantao_externo_id', $data['plantao_externo_id'])
-            ->where('data', $data['data'])
-            ->first();
+        $criados = 0;
+        $ignorados = 0;
 
-        if ($existing) {
-            return back()->with('status-warning', 'Plantão já registrado para este funcionário nesta data.');
+        foreach ($datas as $dataPlantao) {
+            $existing = EscalaPlantaoFuncionario::query()
+                ->where('funcionario_id', $data['funcionario_id'])
+                ->where('plantao_externo_id', $data['plantao_externo_id'])
+                ->whereDate('data', $dataPlantao)
+                ->first();
+
+            if ($existing) {
+                $ignorados++;
+                continue;
+            }
+
+            $p = EscalaPlantaoFuncionario::query()->create([
+                'funcionario_id' => $data['funcionario_id'],
+                'plantao_externo_id' => $data['plantao_externo_id'],
+                'data' => $dataPlantao,
+                'created_by' => $userId,
+            ]);
+
+            $this->refreshPlantaoTextoByDate($dataPlantao, $userId);
+
+            AuditLogger::log('escalas', 'plantao_func_criado', 'EscalaPlantaoFuncionario', (string) $p->id,
+                "Plantão id={$p->plantao_externo_id} para funcionario {$data['funcionario_id']} em {$dataPlantao}");
+
+            $criados++;
         }
 
-        $p = EscalaPlantaoFuncionario::query()->create(array_merge($data, ['created_by' => $userId]));
+        if ($criados === 0 && $ignorados > 0) {
+            return back()->with('status-warning', 'Os plantões selecionados já estavam registrados para este funcionário.');
+        }
 
-        $this->refreshPlantaoTextoByDate($data['data'], $userId);
+        $msg = $criados === 1 ? '1 plantão registrado.' : "{$criados} plantões registrados.";
+        if ($ignorados > 0) {
+            $msg .= " {$ignorados} duplicado(s) ignorado(s).";
+        }
 
-        AuditLogger::log('escalas', 'plantao_func_criado', 'EscalaPlantaoFuncionario', (string) $p->id,
-            "Plantão id={$p->plantao_externo_id} para funcionario {$data['funcionario_id']} em {$data['data']}");
-
-        return back()->with('status-success', 'Plantão registrado.');
+        return back()->with('status-success', $msg);
     }
 
     public function destroyPlantaoFuncionario(EscalaPlantaoFuncionario $plantao, Request $request): RedirectResponse
@@ -460,23 +583,27 @@ class EscalasController extends Controller
     // Impressão A4 institucional
     // -------------------------------------------------------
 
-    public function printView(Request $request, LegacyEscalasReader $reader): View
+    public function printView(Request $request): View
     {
         $filters   = $this->resolveFilters($request);
         $phpDias   = EscalaDia::diasDoMes($filters['ano'], $filters['mes']);
+        if ($phpDias->isEmpty()) {
+            $this->tryAutoSyncLegacy($request->user()?->id);
+            $phpDias = EscalaDia::diasDoMes($filters['ano'], $filters['mes']);
+        }
         $phpVersao = $phpDias->max('versao');
 
-        // Sempre tenta legado para ter feriados e fallback da escala
-        $snapshot = null;
-        try {
-            $snapshot = $reader->snapshotForMonth($request->user(), $filters['ano'], $filters['mes']);
-        } catch (\Throwable) {
-            // fonte legada indisponível — ok
+        $snapshot = $phpDias->isEmpty()
+            ? $this->loadLegacySnapshot($request, $filters['ano'], $filters['mes'])
+            : $this->emptyLegacySnapshot();
+        $snapshot['year'] = $filters['ano'];
+        $snapshot['month'] = $filters['mes'];
+        $feriados = $this->buildMonthHolidays($filters['ano'], $filters['mes']);
+        if (! empty($feriados) || empty($snapshot['holidays'])) {
+            $snapshot['holidays'] = $feriados;
+        } else {
+            $feriados = $snapshot['holidays'];
         }
-
-        $snapshot ??= $this->emptyLegacySnapshot();
-
-        $feriados = $snapshot['holidays'] ?? [];
 
         // Todos os ativos (inclui quem não concorre) para exibir afastamentos
         $phpFuncionarios = RhFuncionario::query()
@@ -510,26 +637,31 @@ class EscalasController extends Controller
             'escalaVersao'    => $phpDias->isNotEmpty()
                 ? EscalaVersao::maisRecente($filters['ano'], $filters['mes'])
                 : null,
+            'substituicoesDdm' => $this->getSubstituicoesDdm($filters),
         ]);
     }
 
-    public function proofView(Request $request, LegacyEscalasReader $reader): View
+    public function proofView(Request $request): View
     {
         $filters   = $this->resolveFilters($request);
         $phpDias   = EscalaDia::diasDoMes($filters['ano'], $filters['mes']);
+        if ($phpDias->isEmpty()) {
+            $this->tryAutoSyncLegacy($request->user()?->id);
+            $phpDias = EscalaDia::diasDoMes($filters['ano'], $filters['mes']);
+        }
         $phpVersao = $phpDias->max('versao');
 
-        // Sempre tenta legado para ter feriados e fallback da escala
-        $snapshot = null;
-        try {
-            $snapshot = $reader->snapshotForMonth($request->user(), $filters['ano'], $filters['mes']);
-        } catch (\Throwable) {
-            // fonte legada indisponível — ok
+        $snapshot = $phpDias->isEmpty()
+            ? $this->loadLegacySnapshot($request, $filters['ano'], $filters['mes'])
+            : $this->emptyLegacySnapshot();
+        $snapshot['year'] = $filters['ano'];
+        $snapshot['month'] = $filters['mes'];
+        $feriados = $this->buildMonthHolidays($filters['ano'], $filters['mes']);
+        if (! empty($feriados) || empty($snapshot['holidays'])) {
+            $snapshot['holidays'] = $feriados;
+        } else {
+            $feriados = $snapshot['holidays'];
         }
-
-        $snapshot ??= $this->emptyLegacySnapshot();
-
-        $feriados = $snapshot['holidays'] ?? [];
 
         // Todos os ativos (inclui quem não concorre) para exibir afastamentos
         $phpFuncionarios = RhFuncionario::query()
@@ -617,13 +749,29 @@ class EscalasController extends Controller
      */
     public function gerarProvisoria(Request $request, GeradorEscalaMensalService $gerador): RedirectResponse
     {
-        $data = $request->validate([
-            'ano' => ['required', 'integer', 'min:2020', 'max:2100'],
-            'mes' => ['required', 'integer', 'min:1', 'max:12'],
-        ]);
-
-        $ano = (int) $data['ano'];
-        $mes = (int) $data['mes'];
+        // Validação explícita dos plantões externos antes de gerar
+        try {
+            $validador = new \App\Services\Escalas\ValidadorPlantoesExternosService();
+            $data = $request->validate([
+                'ano' => ['required', 'integer', 'min:2020', 'max:2100'],
+                'mes' => ['required', 'integer', 'min:1', 'max:12'],
+            ]);
+            $ano = (int) $data['ano'];
+            $mes = (int) $data['mes'];
+            $conflitos = $validador->validar($ano, $mes);
+            if (!empty($conflitos)) {
+                $msgs = collect($conflitos)->map(function($c) {
+                    return ($c['data'] ?? '') . ' — ' . ($c['funcionario'] ?? '') . ': ' . ($c['msg'] ?? '');
+                })->implode("\n");
+                return redirect()
+                    ->route('escalas.plantoes', ['ano' => $ano, 'mes' => $mes])
+                    ->with('status-error', "Conflitos nos plantões externos:\n" . $msgs);
+            }
+        } catch (\Throwable $e) {
+            return redirect()
+                ->route('escalas.plantoes', ['ano' => $ano ?? null, 'mes' => $mes ?? null])
+                ->with('status-error', 'Erro ao validar plantões externos: ' . $e->getMessage());
+        }
 
         try {
             $resultado = $gerador->gerar($ano, $mes, $request->user()->id);
@@ -652,6 +800,7 @@ class EscalasController extends Controller
                 $msg .= ' (e mais ' . (count($resultado['alertas']) - 5) . ' alertas)';
             }
         }
+
 
         return redirect()
             ->route('escalas.index', ['ano' => $ano, 'mes' => $mes])
@@ -691,6 +840,11 @@ class EscalasController extends Controller
 
         if ($header->status === 'definitiva') {
             return back()->with('status-warning', 'Esta versão já é definitiva. Crie uma nova versão para emendas.');
+        }
+
+        // TRAVA DE CONFERÊNCIA OBRIGATÓRIA
+        if (empty($header->conferida_em)) {
+            return back()->with('status-error', 'É obrigatório realizar a conferência da escala (visualização tela ou PDF) antes de aprovar.');
         }
 
         $header->update([
@@ -817,15 +971,19 @@ class EscalasController extends Controller
         $valorAnt   = $dia->{$campo};
 
         $dia->update([$campo => $valorNovo, 'updated_by' => $request->user()->id]);
-
+        // Auditoria explícita
         AuditLogger::log(
             'escalas',
             'dia_campo_alterado',
             'EscalaDia',
             (string) $dia->id,
-            "Campo '{$campo}': '{$valorAnt}' → '{$valorNovo}' — dia {$dia->data->toDateString()}"
+            "Campo '{$campo}': '{$valorAnt}' → '{$valorNovo}' — dia {$dia->data->toDateString()} (versao: {$dia->versao})"
         );
-
+        // Confirma persistência
+        $dia->refresh();
+        if ($dia->{$campo} !== $valorNovo) {
+            return back()->with('status-error', "Falha ao salvar alteração. Tente novamente ou contate o suporte.");
+        }
         return back()->with('status-success', "{$campo} atualizado para o dia {$dia->data->format('d/m/Y')}.");
     }
 
@@ -877,6 +1035,45 @@ class EscalasController extends Controller
             'scale_rows' => [],
             'version' => '–',
         ];
+    }
+
+    private function loadLegacySnapshot(Request $request, int $ano, int $mes): array
+    {
+        try {
+            return app(LegacyEscalasReader::class)->snapshotForMonth($request->user(), $ano, $mes);
+        } catch (\Throwable $e) {
+            $snapshot = $this->emptyLegacySnapshot();
+            $snapshot['year'] = $ano;
+            $snapshot['month'] = $mes;
+            $snapshot['warnings'][] = 'Nao foi possivel consultar o espelho legado da escala.';
+
+            return $snapshot;
+        }
+    }
+
+    private function buildMonthHolidays(int $ano, int $mes): array
+    {
+        $inicio = Carbon::create($ano, $mes, 1)->startOfDay();
+        $fim = $inicio->copy()->endOfMonth();
+
+        return RhHoliday::query()
+            ->where('is_active', true)
+            ->whereDate('holiday_date', '>=', $inicio->toDateString())
+            ->whereDate('holiday_date', '<=', $fim->toDateString())
+            ->orderBy('holiday_date')
+            ->get()
+            ->map(function (RhHoliday $holiday): array {
+                $data = $holiday->holiday_date?->toDateString() ?? '';
+
+                return [
+                    'date' => $data,
+                    'date_label' => $holiday->holiday_date?->format('d/m') ?? '',
+                    'descricao' => $holiday->name,
+                    'tipo' => $holiday->scope,
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     /**
@@ -934,6 +1131,19 @@ class EscalasController extends Controller
             ]);
     }
 
+    private function tryAutoSyncLegacy(?string $userId): void
+    {
+        if (! config('grom_legacy.enabled') || empty($userId)) {
+            return;
+        }
+
+        try {
+            app(LegacyEscalasSyncService::class)->syncAll($userId);
+        } catch (\Throwable) {
+            // Mantém leitura por fallback legado quando sincronização não estiver disponível.
+        }
+    }
+
     private function buildProofChecks(): array
     {
         return [
@@ -976,34 +1186,49 @@ class EscalasController extends Controller
                 ];
 
                 if (count($items) >= 2) {
-                    return $row;
-                }
+                    try {
+                        $resultado = $gerador->gerar($ano, $mes, $request->user()->id);
+                    } catch (\RuntimeException $e) {
+                        return redirect()
+                            ->route('escalas.index', ['ano' => $ano, 'mes' => $mes])
+                            ->with('status-warning', $e->getMessage());
+                    } catch (\Throwable $e) {
+                        return redirect()
+                            ->route('escalas.index', ['ano' => $ano, 'mes' => $mes])
+                            ->with('status-error', 'Erro ao gerar escala: ' . $e->getMessage());
+                    }
 
-                $fallback ??= $row;
-            }
+                    // Se houver conflitos de plantões externos, aborta e exibe relatório
+                    if (isset($resultado['conflitos']) && !empty($resultado['conflitos'])) {
+                        $msg = "Conflitos encontrados nos plantões externos.\n\n";
+                        foreach ($resultado['conflitos'] as $c) {
+                            $msg .= ($c['msg'] ?? 'Conflito') .
+                                (isset($c['data']) ? ' - Data: ' . $c['data'] : '') .
+                                (isset($c['funcionario']) ? ' - Funcionário: ' . $c['funcionario'] : '') .
+                                (isset($c['datas']) ? ' - Dias: ' . implode(' e ', $c['datas']) : '') .
+                                "\n";
+                        }
+                        return redirect()
+                            ->route('escalas.index', ['ano' => $ano, 'mes' => $mes])
+                            ->with('status-error', $msg);
+                    }
 
-            return $fallback;
-        }
+                    $nomeMes = Carbon::create()->month($mes)->locale('pt_BR')->isoFormat('MMMM');
+                    $msg = sprintf(
+                        'Escala provisória de %s/%d gerada (v%d): %d dias úteis criados.',
+                        ucfirst($nomeMes),
+                        $ano,
+                        $resultado['versao'],
+                        $resultado['dias_criados']
+                    );
 
-        if (! empty($data['snapshot']['scale_rows'])) {
-            $fallback = null;
+                    if (! empty($resultado['alertas'])) {
+                        $msg .= "\n\n" . implode("\n", $resultado['alertas']);
+                    }
 
-            foreach ($data['snapshot']['scale_rows'] as $rowData) {
-                $plantaoTexto = trim((string) ($rowData['plantao_externo'] ?? ''));
-                $items = $this->splitPlantaoTexto($plantaoTexto);
-
-                if ($plantaoTexto === '') {
-                    continue;
-                }
-
-                $row = [
-                    'date' => (string) ($rowData['date_label'] ?? ''),
-                    'day' => (string) ($rowData['day_label'] ?? ''),
-                    'plantao_text' => implode(', ', $items),
-                    'items' => $items,
-                ];
-
-                if (count($items) >= 2) {
+                    return redirect()
+                        ->route('escalas.index', ['ano' => $ano, 'mes' => $mes])
+                        ->with('status-success', $msg);
                     return $row;
                 }
 

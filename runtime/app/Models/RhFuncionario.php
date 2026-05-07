@@ -35,6 +35,10 @@ class RhFuncionario extends Model
         'departure_date',
         'removal_date',
         'concorre_escala',
+        'is_delegado_externo',
+        'senha_spj',
+        'senha_ipe',
+        'observacoes_operacionais',
         'is_active',
         'notes',
     ];
@@ -47,6 +51,7 @@ class RhFuncionario extends Model
         'departure_date' => 'date',
         'removal_date' => 'date',
         'concorre_escala' => 'boolean',
+        'is_delegado_externo' => 'boolean',
         'is_active' => 'boolean',
     ];
 

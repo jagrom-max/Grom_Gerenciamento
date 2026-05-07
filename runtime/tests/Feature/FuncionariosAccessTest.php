@@ -33,8 +33,8 @@ class FuncionariosAccessTest extends TestCase
         $response->assertSee('Afastamentos');
         $response->assertSee('Delegados Externos');
         $response->assertSee('Novo servidor');
-        $response->assertSee('Maria Souza');
-        $response->assertSee('Carlos Lima');
+        $response->assertDontSee('Maria Souza');
+        $response->assertDontSee('Carlos Lima');
     }
 
     public function test_admin_can_create_funcionario_with_full_personal_data(): void

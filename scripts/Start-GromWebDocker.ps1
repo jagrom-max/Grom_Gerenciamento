@@ -154,7 +154,8 @@ try {
             throw 'A stack subiu, mas o teste de consistencia de plantao externo falhou.'
         }
     }
-ProdutividadeConsolidacaoTest) {
+
+    if ($ProdutividadeConsolidacaoTest) {
         & powershell -ExecutionPolicy Bypass -File $produtividadeConsolidacaoScriptPath `
             -BaseUrl 'http://127.0.0.1:8080' `
             -Year $EscalaMensalYear `
@@ -165,7 +166,6 @@ ProdutividadeConsolidacaoTest) {
         }
     }
 
-    if ($
     if ($LoadTest) {
         $loadTestArgs = @(
             '-ExecutionPolicy', 'Bypass',
@@ -189,7 +189,9 @@ ProdutividadeConsolidacaoTest) {
         if ($LASTEXITCODE -ne 0) {
             throw 'A stack subiu, mas o load test falhou.'
         }
-    }('Produtividade....: opcional via -ProdutividadeConsolidacaoTest ({0}/{1:00})' -f $EscalaMensalYear, $EscalaMensalMonth)
+    }
+
+    Write-Host ('Produtividade....: opcional via -ProdutividadeConsolidacaoTest ({0}/{1:00})' -f $EscalaMensalYear, $EscalaMensalMonth)
     Write-Host 
 
     Write-Host ''

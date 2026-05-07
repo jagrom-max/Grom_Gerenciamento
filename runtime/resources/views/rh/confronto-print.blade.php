@@ -5,7 +5,7 @@
 @endphp
 
 <x-report.default
-    title="Confronto de Afastamentos"
+    title="Confronto de Afastamentos — {{ mb_strtoupper($meses[$mes]) }} / {{ $ano }}"
     :period="$meses[$mes] . ' de ' . $ano"
     :generatedAt="now()"
     origin="RH / Recursos Humanos"
@@ -46,32 +46,39 @@
     <style>
         .rh-table {
             table-layout: fixed;
-            font-size: 8pt;
-            margin-bottom: 4mm;
+            font-size: 7.5pt;
+            margin-bottom: 8mm;
         }
         .rh-table th {
-            font-size: 7.6pt;
+            font-size: 7pt;
             text-transform: none;
             letter-spacing: 0;
         }
+        .rh-table td, .rh-table th {
+            padding: 1.5mm 2mm;
+        }
         .colisao-alert {
-            border: 1px solid #c0392b;
-            background: #fdf2f2;
-            padding: 5px 10px;
-            margin-bottom: 4mm;
-            font-size: 8.5pt;
-            border-radius: 3px;
+            display: none;
         }
         .cal-section {
-            margin-top: 5mm;
-            break-before: page;
-            page-break-before: always;
+            margin-top: 3mm;
+        }
+        @media screen {
+            .rh-table { display: none; }
+        }
+        @media print {
+            .rh-table { display: table; }
+            .cal-af { font-size: 6.5pt; line-height: 1.4; padding-top: 1px; color: #333; }
         }
         .cal-title {
-            font-size: 10.5pt;
+            font-size: 9pt;
             font-weight: 700;
             text-align: center;
-            margin-bottom: 2.5mm;
+            margin-bottom: 2mm;
+            background: #eef3f8;
+            padding: 2.5mm 3mm;
+            border-radius: 4px;
+            color: #213547;
         }
         .cal-grid {
             display: grid;
@@ -96,19 +103,10 @@
         .cal-day.colisao { background: #fff3cd; }
         .cal-day.tem-afastamento { background: #eef6fb; }
         .cal-day-num { font-weight: 700; font-size: 8pt; margin-bottom: 2px; }
-        .cal-af { font-size: 6.5pt; line-height: 1.4; border-top: 0.5px dotted #bbb; padding-top: 1px; color: #333; }
+        .cal-af { font-size: 6.5pt; line-height: 1.4; padding-top: 1px; color: #333; }
     </style>
 
     <section>
-        @if ($colisoesCriticas->count() > 0)
-            <div class="colisao-alert">
-                <strong>⚠ ATENÇÃO — Colisões de cargo crítico:</strong>
-                Dias {{ $colisoesCriticas->map(fn($d) => sprintf('%02d', $d))->implode(', ') }}
-                com 2+ afastamentos simultâneos em cargo Delegado/Escrivão.
-                Cobertura de escala recomendada.
-            </div>
-        @endif
-
         <table class="rh-table">
             <thead>
                 <tr>
@@ -135,9 +133,9 @@
                             @php
                                 $inicio = \Carbon\Carbon::parse($af->start_date);
                                 $fim = $af->end_date ? \Carbon\Carbon::parse($af->end_date) : null;
-                                $iNoMes = $inicio->lt($pIni) ? $pIni->copy() : $inicio;
-                                $fNoMes = ($fim === null || $fim->gt($pFim)) ? $pFim->copy() : $fim;
-                                $dias = $iNoMes->diffInDays($fNoMes) + 1;
+                                $iNoMes = $inicio->lt($pIni) ? $pIni->copy()->startOfDay() : $inicio->startOfDay();
+                                $fNoMes = ($fim === null || $fim->gt($pFim)) ? $pFim->copy()->startOfDay() : $fim->startOfDay();
+                                $dias = (int) $iNoMes->diffInDays($fNoMes) + 1;
                             @endphp
                             <tr @class(['critico' => $critico])>
                                 <td><strong>{{ $func->name }}</strong></td>
@@ -149,20 +147,13 @@
                                 <td style="text-align:center; font-weight:bold;">{{ $dias }}d</td>
                             </tr>
                         @endforeach
-                    @else
-                        <tr>
-                            <td>{{ $func->name }}</td>
-                            <td>{{ $func->cargo?->name ?? '—' }}</td>
-                            <td>{{ $func->sector ?: '—' }}</td>
-                            <td colspan="4" style="color:#aaa; font-style:italic; font-size:8pt;">Sem afastamento no período</td>
-                        </tr>
                     @endif
                 @endforeach
             </tbody>
         </table>
 
         <div class="cal-section">
-            <div class="cal-title">Grade Diária — {{ $meses[$mes] }}/{{ $ano }}</div>
+            <div class="cal-title">Grade Diária</div>
             <div class="cal-grid">
                 @foreach (['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as $ds)
                     <div class="cal-header">{{ $ds }}</div>

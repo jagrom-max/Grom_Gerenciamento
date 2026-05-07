@@ -42,14 +42,14 @@
 
 <div class="section-head">
     <div>
-        <h1>Auditoria â€” Flagrantes sem cartÃ³rio</h1>
+        <h1>Auditoria â€” Flagrantes sem cartório</h1>
         <p class="muted" style="margin:6px 0 0;">
-            Flagrantes identificados na importaÃ§Ã£o com o campo <em>CartÃ³rio do IP</em> vazio ou ausente.
-            Atribua o cartÃ³rio correto ou dispense o registro.
+            Flagrantes identificados na importação com o campo <em>Cartório do IP</em> vazio ou ausente.
+            Atribua o cartório correto ou dispense o registro.
         </p>
     </div>
     <div class="actions">
-        <a class="btn secondary" href="{{ route('analise.bos.import') }}">Nova importaÃ§Ã£o</a>
+        <a class="btn secondary" href="{{ route('analise.bos.import') }}">Nova importação</a>
         <a class="btn secondary" href="{{ route('analise.index') }}">â† Painel</a>
     </div>
 </div>
@@ -109,7 +109,7 @@
     </form>
 </section>
 
-{{-- â”€â”€ AÃ§Ã£o em lote â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- â”€â”€ Ação em lote â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
 @if ($status === 'pending' && $pendencias->total() > 0)
 <section class="card" style="margin-bottom:16px; padding:12px 16px; background:#fffbeb; border:1px solid #f59e0b;">
     <form method="POST" action="{{ route('analise.bos.auditoria-flagrantes.bulk') }}"
@@ -117,15 +117,15 @@
         @csrf
         @method('PATCH')
         <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
-            <strong style="font-size:0.88rem;">AÃ§Ã£o em lote:</strong>
+            <strong style="font-size:0.88rem;">Ação em lote:</strong>
             <select name="acao" id="bulk-acao" required style="padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:0.83rem;">
                 <option value="">â€” Selecione â€”</option>
-                <option value="approved">Aprovar (confirmar cartÃ³rio)</option>
-                <option value="corrected">Corrigir cartÃ³rio</option>
+                <option value="approved">Aprovar (confirmar cartório)</option>
+                <option value="corrected">Corrigir cartório</option>
                 <option value="dismissed">Dispensar todos</option>
             </select>
             <select name="cartorio_id" id="bulk-cartorio" style="padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:0.83rem; display:none;">
-                <option value="">â€” CartÃ³rio â€”</option>
+                <option value="">â€” Cartório â€”</option>
                 @foreach ($cartorios as $cart)
                     <option value="{{ $cart->id }}">{{ $cart->number }} â€” {{ $cart->name }}</option>
                 @endforeach
@@ -139,7 +139,7 @@
 </section>
 @endif
 
-{{-- â”€â”€ Tabela de pendÃªncias â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+{{-- â”€â”€ Tabela de pendências â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
 <section class="card" style="padding:0; overflow:hidden;">
     @if ($pendencias->isEmpty())
         <p style="padding:24px; text-align:center; color:#9ca3af;">
@@ -160,15 +160,15 @@
                     <th style="padding:10px 12px; text-align:left;">Naturezas</th>
                     <th style="padding:10px 12px; text-align:left;">Lavrado</th>
                     <th style="padding:10px 12px; text-align:left;">NÂº IP</th>
-                    <th style="padding:10px 12px; text-align:left;">CartÃ³rio planilha</th>
+                    <th style="padding:10px 12px; text-align:left;">Cartório planilha</th>
                     <th style="padding:10px 12px; text-align:left;">Status</th>
                     @if ($status !== 'pending')
-                    <th style="padding:10px 12px; text-align:left;">CartÃ³rio atribuÃ­do</th>
+                    <th style="padding:10px 12px; text-align:left;">Cartório atribuído</th>
                     <th style="padding:10px 12px; text-align:left;">Revisado por</th>
                     <th style="padding:10px 12px; text-align:left;">Obs.</th>
                     @endif
                     @if ($status === 'pending')
-                    <th style="padding:10px 12px; text-align:center;">AÃ§Ã£o</th>
+                    <th style="padding:10px 12px; text-align:center;">Ação</th>
                     @endif
                 </tr>
             </thead>
@@ -207,7 +207,7 @@
 
                     @if ($status === 'pending')
                     <td style="padding:8px 12px;">
-                        {{-- Mini-formulÃ¡rio inline de aÃ§Ã£o --}}
+                        {{-- Mini-formulário inline de ação --}}
                         <form method="POST"
                               action="{{ route('analise.bos.auditoria-flagrantes.update', $p) }}"
                               class="aud-form">
@@ -216,15 +216,15 @@
 
                             <select name="acao" required onchange="toggleCartorioField(this)"
                                     style="padding:4px 8px; border:1px solid #d1d5db; border-radius:5px; font-size:0.8rem;">
-                                <option value="">â€” aÃ§Ã£o â€”</option>
+                                <option value="">â€” ação â€”</option>
                                 <option value="approved">Aprovar</option>
-                                <option value="corrected">Corrigir cartÃ³rio</option>
+                                <option value="corrected">Corrigir cartório</option>
                                 <option value="dismissed">Dispensar</option>
                             </select>
 
                             <select name="cartorio_id" class="cart-select"
                                     style="display:none; padding:4px 8px; border:1px solid #d1d5db; border-radius:5px; font-size:0.8rem;">
-                                <option value="">â€” cartÃ³rio â€”</option>
+                                <option value="">â€” cartório â€”</option>
                                 @foreach ($cartorios as $cart)
                                     <option value="{{ $cart->id }}">{{ $cart->number }} â€” {{ $cart->name }}</option>
                                 @endforeach
@@ -243,7 +243,7 @@
         </table>
     </div>
 
-    {{-- PaginaÃ§Ã£o --}}
+    {{-- Paginação --}}
     @if ($pendencias->hasPages())
     <div style="padding:14px 16px; border-top:1px solid #e5e7eb;">
         {{ $pendencias->links() }}
@@ -300,8 +300,8 @@ function confirmarBulk() {
         return false;
     }
     const acao = document.getElementById('bulk-acao').value;
-    if (!acao) { alert('Selecione uma aÃ§Ã£o.'); return false; }
-    return confirm(`Aplicar aÃ§Ã£o "${acao}" em ${ids} registro(s)?`);
+    if (!acao) { alert('Selecione uma ação.'); return false; }
+    return confirm(`Aplicar ação "${acao}" em ${ids} registro(s)?`);
 }
 </script>
 @endpush

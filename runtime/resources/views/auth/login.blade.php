@@ -428,7 +428,6 @@
 
                     @if (app()->environment(['local', 'testing']))
                         <div class="test-links">
-                            <a href="{{ route('pilot.access') }}">Ver credenciais</a>
                             <a href="{{ route('evolucao') }}">Evolução</a>
                         </div>
                     @endif

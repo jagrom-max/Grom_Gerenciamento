@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Operacional;
 
 use App\Http\Controllers\Controller;
 use App\Models\RhFuncionario;
-use App\Services\Escalas\LegacyEscalasReader;
-use App\Services\Rh\LegacyFuncionariosReader;
 use App\Support\Produtividade\ProdutividadeStatsDashboardData;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class OperacionalController extends Controller
 {
+    public function index(Request $request): View
+    {
+        return $this->__invoke($request);
+    }
     public function __construct(
         private readonly ProdutividadeStatsDashboardData $dashboardData,
-        private readonly LegacyEscalasReader $legacyEscalasReader,
-        private readonly LegacyFuncionariosReader $legacyFuncionariosReader,
     )
     {
     }
@@ -43,34 +43,6 @@ class OperacionalController extends Controller
 
         $legacyMonth = $month > 0 ? $month : (int) now()->month;
         $legacyYear = $year;
-        $operationalLegacy = null;
-        $operationalLegacyWarnings = [];
-
-        try {
-            $operationalLegacy = $this->legacyEscalasReader->snapshotForMonth($request->user(), $legacyYear, $legacyMonth);
-        } catch (\Throwable $exception) {
-            $operationalLegacyWarnings[] = $exception->getMessage();
-        }
-
-        try {
-            $legacyFuncionarios = $this->legacyFuncionariosReader->snapshot();
-        } catch (\Throwable $exception) {
-            $legacyFuncionarios = [
-                'available' => false,
-                'source_name' => null,
-                'employees' => [],
-                'summary' => [
-                    'total' => 0,
-                    'ativos' => 0,
-                    'concorrem_escala' => 0,
-                    'em_afastamento' => 0,
-                    'cargos_total' => 0,
-                    'afastamentos_total' => 0,
-                    'afastamentos_em_vigor' => 0,
-                ],
-                'warnings' => [$exception->getMessage()],
-            ];
-        }
 
         $phpFuncionarios = RhFuncionario::query()
             ->with(['cargo', 'afastamentos' => fn ($query) => $query->orderByDesc('start_date')])
@@ -81,9 +53,9 @@ class OperacionalController extends Controller
 
         return view('operacional.index', $data + [
             'filters' => $filters,
-            'operationalLegacy' => $operationalLegacy,
-            'operationalLegacyWarnings' => $operationalLegacyWarnings,
-            'legacyFuncionarios' => $legacyFuncionarios,
+            'operationalLegacy' => null,
+            'operationalLegacyWarnings' => [],
+            'legacyFuncionarios' => null,
             'phpFuncionarios' => $phpFuncionarios,
             'phpFuncionariosSummary' => [
                 'total' => $phpFuncionarios->count(),

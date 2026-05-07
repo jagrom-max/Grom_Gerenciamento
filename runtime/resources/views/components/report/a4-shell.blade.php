@@ -37,9 +37,9 @@
             size: A4;
             margin: 10mm 8mm 5mm 8mm;
             @bottom-right {
-                content: "PÃ¡g. " counter(page) " / " counter(pages);
+                content: "";
                 font-family: "Segoe UI", Tahoma, sans-serif;
-                font-size: 7.5pt;
+                font-size: 8pt;
                 color: #5a6a7a;
             }
         }
@@ -131,12 +131,12 @@
             line-height: 1.45;
         }
         .title-band {
-            margin: 20mm 0 7mm;
+            margin: 20mm 0 0.8mm;
             background: var(--soft);
             border: 1px solid var(--line);
-            padding: 4mm 5mm;
+            padding: 2.6mm 4mm;
             font-weight: 700;
-            font-size: 11pt;
+            font-size: 10pt;
             text-transform: uppercase;
             letter-spacing: .05em;
             text-align: center;
@@ -181,7 +181,7 @@
             color: var(--ink-soft);
         }
         .report-body {
-            margin-top: 14mm;
+            margin-top: 0;
         }
         table {
             width: 100%;
@@ -231,10 +231,32 @@
             text-align: center;
             font-weight: 600;
             color: var(--ink);
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            line-height: 1.2;
+        }
+        .footer-center-main {
+            display: block;
+        }
+        .footer-center-site {
+            display: block;
+            font-size: 8pt;
+            font-weight: 500;
+            color: var(--ink-soft);
         }
         .footer-right {
             text-align: right;
             white-space: nowrap;
+            line-height: 1.2;
+            min-width: 30mm;
+        }
+        .footer-right-date {
+            display: block;
+            margin-bottom: 1px;
+        }
+        .footer-right-page {
+            display: block;
         }
         /* page-number e total-pages preenchidos pelo servidor */
         @media (max-width: 900px) {
@@ -248,12 +270,11 @@
             *, *::before, *::after {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                color-adjust: exact !important;
             }
             body { padding: 0 !important; background: #fff !important; }
             .toolbar { display: none !important; }
             .watermark { display: none !important; }
-            /* Folha sem altura mÃ­nima forÃ§ada */
+            /* Folha sem altura mínima forçada */
             .sheet { box-shadow: none !important; max-width: none !important; min-height: auto !important; overflow: visible !important; }
             .page-frame {
                 min-height: auto !important;
@@ -296,39 +317,18 @@
             .head-text span { font-size: 8pt !important; line-height: 1.35 !important; }
             /* Title band centralizada e compacta */
             .title-band {
-                margin: 4mm 0 2mm !important;
+                margin: 2.5mm 0 0.4mm !important;
                 padding: 2mm 4mm !important;
                 text-align: center !important;
-                font-size: 10pt !important;
+                font-size: 9.5pt !important;
                 background: var(--soft) !important;
                 border: 1px solid var(--line) !important;
             }
-            /* Restaura grids colapsados pelo breakpoint 900px */
-            .meta {
-                display: grid !important;
-                grid-template-columns: repeat(3, 1fr) !important;
-                margin-bottom: 1.5mm !important;
-                font-size: 8pt !important;
-                color: var(--ink-soft) !important;
-            }
+            .meta,
             .cards {
-                display: grid !important;
-                grid-template-columns: repeat(auto-fit, minmax(48mm, 1fr)) !important;
-                gap: 2mm !important;
-                margin-bottom: 2mm !important;
+                display: none !important;
             }
-            .card {
-                border: 1px solid var(--line) !important;
-                background: #fff !important;
-                border-radius: 10px;
-                min-height: auto !important;
-                padding: 2.5mm !important;
-            }
-            .card { padding: 2mm !important; }
-            .card small { margin-bottom: 1mm !important; font-size: 7pt !important; }
-            .card strong { font-size: 12pt !important; }
-            .card span { margin-top: 0.5mm !important; font-size: 7pt !important; }
-            .report-body { margin-top: 4mm !important; }
+            .report-body { margin-top: 0 !important; }
             /* Tabela compacta â€” sem word-break nas colunas */
             table { font-size: 7pt !important; }
             th {
@@ -344,7 +344,7 @@
             tbody tr:nth-child(even) td { background: #fbfdff !important; }
             tfoot tr td { background: var(--soft) !important; }
             tfoot tr td strong { font-weight: 700; }
-            /* RodapÃ© fixo no fim da pÃ¡gina fÃ­sica â€” nÃ£o quebra em 2Âª folha */
+            /* Rodapé fixo no fim da página física â€” não quebra em 2Âª folha */
             .footer {
                 position: fixed !important;
                 bottom: -1mm !important;
@@ -356,7 +356,7 @@
                 gap: 5mm !important;
             }
             .footer img { width: 22mm !important; height: 22mm !important; }
-            .footer-right { display: none !important; }
+            .footer-right-page { display: block !important; }
         }
     </style>
 </head>
@@ -386,18 +386,6 @@
 
             <div class="title-band">{{ $title }}</div>
 
-            <section class="meta">
-                <div><strong>PerÃ­odo:</strong> {{ $period }}</div>
-                <div><strong>EmissÃ£o:</strong> {{ $generatedAt->format('d/m/Y H:i') }}</div>
-                <div><strong>Origem:</strong> {{ $origin }}</div>
-            </section>
-
-            @isset($summary)
-                <section class="cards">
-                    {{ $summary }}
-                </section>
-            @endisset
-
             <section class="report-body">
                 {{ $slot }}
             </section>
@@ -406,13 +394,24 @@
                 <div class="footer-brand">
                     <img src="{{ $logoSrc }}" alt="Logo GROM">
                 </div>
-                <div class="footer-center">{{ $footerNote }}</div>
+                <div class="footer-center">
+                    <span class="footer-center-main">Cartório Central - Gerenciamento</span>
+                    <span class="footer-center-site">grom.seg.br</span>
+                </div>
                 <div class="footer-right">
-                    <span>1/{{ $totalPages }}</span>
+                    <span class="footer-right-date">{{ $generatedAt->format('d/m/Y') }}</span>
+                    <span class="footer-right-page" aria-label="Pagina">1/1</span>
                 </div>
             </div>
         </div>
     </article>
+    <script>
+        window.addEventListener('load', function () {
+            if (new URLSearchParams(window.location.search).get('noprint') !== '1') {
+                window.print();
+            }
+        });
+    </script>
 </body>
 </html>
 

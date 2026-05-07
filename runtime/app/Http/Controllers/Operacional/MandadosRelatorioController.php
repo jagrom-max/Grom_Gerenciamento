@@ -9,6 +9,10 @@ use App\Support\Reports\MandadosReportData;
 
 class MandadosRelatorioController extends Controller
 {
+    public function index(Request $request): View
+    {
+        return $this->__invoke($request);
+    }
     public function __construct(
         private readonly MandadosReportData $reportData,
     ) {

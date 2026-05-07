@@ -9,19 +9,19 @@
 
         $executiveCards = [
             [
-                'eyebrow' => 'Governanca',
+                'eyebrow' => 'Governança',
                 'value' => $stats['usuarios'],
-                'label' => 'Usuarios ativos na base de acesso central.',
+                'label' => 'Usuários ativos na base de acesso central.',
                 'tone' => 'neutral',
             ],
             [
-                'eyebrow' => 'Permissoes',
+                'eyebrow' => 'Permissões',
                 'value' => $stats['permissoes'],
-                'label' => 'Permissoes efetivamente carregadas para o seu perfil.',
+                'label' => 'Permissões efetivamente carregadas para o seu perfil.',
                 'tone' => 'neutral',
             ],
             [
-                'eyebrow' => 'Cartorios',
+                'eyebrow' => 'Cartórios',
                 'value' => $stats['cartorios'],
                 'label' => 'Unidades operacionais presentes no ecossistema web.',
                 'tone' => 'neutral',
@@ -41,7 +41,7 @@
             $executiveCards[] = [
                 'eyebrow' => 'Escalas',
                 'value' => $stats['escalas_plantoes'],
-                'label' => 'Atribuicoes de plantoes consolidadas no mes corrente.',
+                'label' => 'Atribuições de plantões consolidadas no mês corrente.',
                 'tone' => 'neutral',
             ];
         }
@@ -50,7 +50,7 @@
             $executiveCards[] = [
                 'eyebrow' => 'Fila operacional',
                 'value' => $produtividadeStats['fila_pendente'],
-                'label' => 'Pendencias aguardando conferencia manual.',
+                'label' => 'Pendências aguardando conferência manual.',
                 'tone' => $produtividadeStats['fila_pendente'] > 0 ? 'alert' : 'good',
             ];
         }
@@ -83,12 +83,12 @@
             }
 
             $moduleCards[] = [
-                'eyebrow' => 'Nucleo operacional',
+                'eyebrow' => 'Núcleo operacional',
                 'title' => 'Operacional e produtividade',
-                'description' => 'Coordena cartorios, flagrantes, mandados e indicadores taticos da atividade policial.',
+                'description' => 'Coordena cartórios, flagrantes, mandados e indicadores táticos da atividade policial.',
                 'accent' => 'blue',
                 'kpis' => [
-                    ['label' => 'Cartorios', 'value' => $stats['cartorios']],
+                    ['label' => 'Cartórios', 'value' => $stats['cartorios']],
                     ['label' => 'Fila', 'value' => $produtividadeStats['fila_pendente'] ?? 0],
                 ],
                 'primary' => $operationalLinks[0] ?? null,
@@ -98,20 +98,20 @@
 
         if ($canViewRh) {
             $moduleCards[] = [
-                'eyebrow' => 'Gestao institucional',
+                'eyebrow' => 'Gestão institucional',
                 'title' => 'Recursos humanos',
-                'description' => 'Concentra efetivo, afastamentos, confrontos, composicao de cartorios e leitura gerencial de pessoal.',
+                'description' => 'Concentra efetivo, afastamentos, confrontos, composição de cartórios e leitura gerencial de pessoal.',
                 'accent' => 'gold',
                 'kpis' => [
                     ['label' => 'Ativos', 'value' => $rhHoje['total_ativos'] ?? 0],
                     ['label' => 'Afastados hoje', 'value' => $rhHoje['afastados_hoje'] ?? 0],
                 ],
-                'primary' => ['label' => 'Abrir RH / Administracao', 'url' => route('rh.index')],
+                'primary' => ['label' => 'Abrir RH / Administração', 'url' => route('rh.index')],
                 'links' => [
-                    ['label' => 'Funcionarios', 'url' => route('funcionarios.index')],
+                    ['label' => 'Funcionários', 'url' => route('funcionarios.index')],
                     ['label' => 'Confronto de afastamentos', 'url' => route('rh.confronto')],
-                    ['label' => 'Composicao dos cartorios', 'url' => route('rh.composicao')],
-                    ['label' => 'Estatisticas RH', 'url' => route('rh.stats')],
+                    ['label' => 'Composição dos cartórios', 'url' => route('rh.composicao')],
+                    ['label' => 'Estatísticas RH', 'url' => route('rh.stats')],
                 ],
             ];
         }
@@ -127,13 +127,13 @@
             }
 
             $moduleCards[] = [
-                'eyebrow' => 'Coordenacao de servico',
+                'eyebrow' => 'Coordenação de serviço',
                 'title' => 'Escalas e agendas',
-                'description' => 'Orquestra escalas mensais, plantoes, agenda de afastamentos e leitura do legado operacional.',
+                'description' => 'Orquestra escalas mensais, plantões, agenda de afastamentos e gestão operacional integrada.',
                 'accent' => 'emerald',
                 'kpis' => [
-                    ['label' => 'Dias no mes', 'value' => $stats['escalas_dias']],
-                    ['label' => 'Plantoes', 'value' => $stats['escalas_plantoes']],
+                    ['label' => 'Dias no mês', 'value' => $stats['escalas_dias']],
+                    ['label' => 'Plantões', 'value' => $stats['escalas_plantoes']],
                 ],
                 'primary' => $scaleLinks[0],
                 'links' => $scaleLinks,
@@ -153,13 +153,13 @@
             }
 
             $moduleCards[] = [
-                'eyebrow' => 'Inteligencia e saida',
-                'title' => 'Relatorios e analise',
-                'description' => 'Expande a visao institucional com relatorios formais, acompanhamento integrado e leitura analitica.',
+                'eyebrow' => 'Inteligência e saída',
+                'title' => 'Relatórios e análise',
+                'description' => 'Expande a visão institucional com relatórios formais, acompanhamento integrado e leitura analítica.',
                 'accent' => 'slate',
                 'kpis' => [
                     ['label' => 'Lotes recentes', 'value' => $latestBatchesPreview->count()],
-                    ['label' => 'Pendencias', 'value' => $pendingItemsPreview->count()],
+                    ['label' => 'Pendências', 'value' => $pendingItemsPreview->count()],
                 ],
                 'primary' => $reportLinks[0] ?? null,
                 'links' => $reportLinks,
@@ -198,23 +198,21 @@
         ];
 
         $capabilityTags = [
-            'RBAC com roles e permissions',
+            'RBAC com roles e permissões',
             'Auditoria de login e logout',
             'Painel operacional',
-            'Mandados de Prisao',
+            'Mandados de Prisão',
             'Objetos apreendidos',
-            'Cartorios no modulo web',
+            'Cartórios no módulo web',
             'Flagrantes com fila controlada',
-            'Sincronizacao com legado',
-            'Funcionarios e RH',
-            'Confronto mensal',
-            'Composicao por cartorio',
-            'Escalas e plantoes',
+            'Funcionários e RH',
+            'Composição por cartório',
+            'Escalas e plantões',
             'Agenda de afastamentos',
-            'Analise de dados',
-            'Central de relatorios',
+            'Análise de dados',
+            'Central de relatórios',
             'Backup observado',
-            'Auditoria consultavel',
+            'Auditoria consultável',
         ];
     @endphp
 
@@ -723,7 +721,7 @@
                     <div class="hero-eyebrow">Painel institucional</div>
                     <h1>Painel do Grom.Seg</h1>
                     <p>
-                        Centro executivo do ecossistema GROM. A entrada principal agora destaca a operacao, a governanca e os modulos institucionais com a densidade visual que o sistema exige.
+                        Centro executivo do ecossistema GROM. A entrada principal destaca a operação, a governança e os módulos institucionais com a densidade visual que o sistema exige.
                     </p>
                     <div class="hero-meta">
                         <div class="hero-chip">{{ $user->name }} ({{ $user->username }})</div>
@@ -733,13 +731,13 @@
 
                 <aside class="hero-aside">
                     <small>Leitura executiva</small>
-                    <strong>Acesso central por perfil, com expansao de modulos conforme permissao institucional.</strong>
+                    <strong>Acesso central por perfil, com expansão de módulos conforme permissão institucional.</strong>
                     <p>
-                        O Grom.Seg concentra operacao, RH, escalas, relatorios, auditoria e governanca em uma unica plataforma, com acesso liberado conforme o nivel definido pela administracao.
+                        O Grom.Seg concentra operação, RH, escalas, relatórios, auditoria e governança em uma única plataforma, com acesso liberado conforme o nível definido pela administração.
                     </p>
                     <div class="hero-aside-grid">
                         <div class="hero-stat">
-                            <span>Modulos visiveis</span>
+                            <span>Módulos visíveis</span>
                             <strong>{{ count($moduleCards) }}</strong>
                         </div>
                         <div class="hero-stat">
@@ -747,11 +745,11 @@
                             <strong>{{ $stats['permissoes'] }}</strong>
                         </div>
                         <div class="hero-stat">
-                            <span>Usuarios</span>
+                            <span>Usuários</span>
                             <strong>{{ $stats['usuarios'] }}</strong>
                         </div>
                         <div class="hero-stat">
-                            <span>Cartorios</span>
+                            <span>Cartórios</span>
                             <strong>{{ $stats['cartorios'] }}</strong>
                         </div>
                     </div>
@@ -763,7 +761,7 @@
             <div class="dashboard-section-head">
                 <div>
                     <h2>Panorama executivo</h2>
-                    <p>Indicadores de primeira leitura para mostrar porte operacional, governanca de acesso e situacao corrente da plataforma.</p>
+                    <p>Indicadores de primeira leitura para mostrar porte operacional, governança de acesso e situação corrente da plataforma.</p>
                 </div>
             </div>
             <div class="executive-grid">
@@ -780,8 +778,8 @@
         <section>
             <div class="dashboard-section-head">
                 <div>
-                    <h2>Modulos institucionais</h2>
-                    <p>Os acessos deixaram de ser apenas uma lista de links. Cada frente agora aparece como unidade funcional do sistema, com entrada principal e leitura rapida de volume.</p>
+                    <h2>Módulos institucionais</h2>
+                    <p>Os acessos deixaram de ser apenas uma lista de links. Cada frente agora aparece como unidade funcional do sistema, com entrada principal e leitura rápida de volume.</p>
                 </div>
             </div>
             <div class="module-grid">
@@ -820,8 +818,8 @@
 
         <div class="insight-grid">
             <section class="dashboard-panel">
-                <h2>Situacao hoje</h2>
-                <p>Leitura operacional imediata para o dia corrente, com foco em disponibilidade do efetivo e saude da fila.</p>
+                <h2>Situação hoje</h2>
+                <p>Leitura operacional imediata para o dia corrente, com foco em disponibilidade do efetivo e saúde da fila.</p>
 
                 <div class="signal-grid">
                     <div class="signal-card">
@@ -829,19 +827,19 @@
                         <strong>{{ $rhHoje['total_ativos'] ?? $stats['usuarios'] }}</strong>
                     </div>
                     <div class="signal-card">
-                        <small>Pendencias</small>
+                        <small>Pendências</small>
                         <strong>{{ $produtividadeStats['fila_pendente'] ?? 0 }}</strong>
                     </div>
                     <div class="signal-card">
-                        <small>BOs no mes</small>
+                        <small>BOs no mês</small>
                         <strong>{{ $produtividadeStats['boletins_mes'] ?? 0 }}</strong>
                     </div>
                     <div class="signal-card">
-                        <small>Flagrantes no mes</small>
+                        <small>Flagrantes no mês</small>
                         <strong>{{ $produtividadeStats['flagrantes_mes'] ?? 0 }}</strong>
                     </div>
                     <div class="signal-card">
-                        <small>BOs nao-flagrante</small>
+                        <small>BOs não-flagrante</small>
                         <strong>{{ $produtividadeStats['boletins_nao_flagrantes_mes'] ?? 0 }}</strong>
                     </div>
                     <div class="signal-card">
@@ -849,7 +847,7 @@
                         <strong>{{ $produtividadeStats['boletins_mpu_sem_ip_mes'] ?? 0 }}</strong>
                     </div>
                     <div class="signal-card">
-                        <small>Plantoes atribuidos</small>
+                        <small>Plantões atribuídos</small>
                         <strong>{{ $stats['escalas_plantoes'] }}</strong>
                     </div>
                 </div>
@@ -859,7 +857,7 @@
                         @if ($afastadosHojePreview->isEmpty())
                             <div class="status-row">
                                 <strong>Efetivo completo em atividade</strong>
-                                <span>Nao ha afastamentos ativos no recorte do dia atual.</span>
+                                <span>Não há afastamentos ativos no recorte do dia atual.</span>
                             </div>
                         @else
                             @foreach ($afastadosHojePreview->take(3) as $af)
@@ -868,7 +866,7 @@
                                     <span>
                                         {{ $af->reason }}
                                         @if ($af->end_date)
-                                            | ate {{ $af->end_date->format('d/m') }}
+                                            | até {{ $af->end_date->format('d/m') }}
                                         @endif
                                     </span>
                                 </div>
@@ -890,7 +888,7 @@
                     @else
                         <div class="status-row">
                             <strong>Leitura operacional restrita</strong>
-                            <span>Seu perfil nao possui acesso ao detalhamento de RH no dashboard principal.</span>
+                            <span>Seu perfil não possui acesso ao detalhamento de RH no dashboard principal.</span>
                         </div>
                     @endif
                 </div>
@@ -911,20 +909,20 @@
             <div class="dashboard-section-head">
                 <div>
                     <h2>Dados carregados do sistema</h2>
-                    <p>Amostras vivas das bases implementadas, organizadas em blocos mais legiveis para acompanhamento institucional.</p>
+                    <p>Amostras vivas das bases implementadas, organizadas em blocos mais legíveis para acompanhamento institucional.</p>
                 </div>
             </div>
 
             <div class="details-grid">
                 <div class="details-stack">
                     <details open>
-                        <summary>Cartorios em uso</summary>
+                        <summary>Cartórios em uso</summary>
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Cartorio</th>
-                                    <th>Responsavel</th>
-                                    <th>Mes corrente</th>
+                                    <th>Cartório</th>
+                                    <th>Responsável</th>
+                                    <th>Mês corrente</th>
                                     <th>Pendentes</th>
                                 </tr>
                             </thead>
@@ -938,22 +936,22 @@
                                             <span class="tag {{ $cartorio->is_active ? 'good' : 'warn' }}">{{ $cartorio->is_active ? 'Ativo' : 'Inativo' }}</span>
                                         </td>
                                         <td>
-                                            {{ $cartorio->manager_name ?: 'Nao informado' }}<br>
-                                            <span class="muted">{{ $cartorio->designacao ?: 'Sem designacao' }}</span>
+                                            {{ $cartorio->manager_name ?: 'Não informado' }}<br>
+                                            <span class="muted">{{ $cartorio->designacao ?: 'Sem designação' }}</span>
                                         </td>
                                         <td>
                                             IP: {{ $currentMonthStat->ip_instaurados ?? 0 }}<br>
                                             Relatados: {{ $currentMonthStat->ip_relatados ?? 0 }}<br>
-                                            Concluidos: {{ $currentMonthStat->concluidos ?? 0 }}
+                                            Concluídos: {{ $currentMonthStat->concluidos ?? 0 }}
                                         </td>
                                         <td>
-                                            {{ $cartorio->pending_import_items_count }} pendencias<br>
+                                            {{ $cartorio->pending_import_items_count }} pendências<br>
                                             {{ $cartorio->import_items_total_count }} itens importados
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4">Nenhum cartorio carregado na visao atual.</td>
+                                        <td colspan="4">Nenhum cartório carregado na visão atual.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -961,7 +959,7 @@
                     </details>
 
                     <details>
-                        <summary>Analise e importacao</summary>
+                        <summary>Análise e importação</summary>
                         <table>
                             <thead>
                                 <tr>
@@ -978,7 +976,7 @@
                                             <strong>{{ $batch->source_name }}</strong><br>
                                             <span class="muted">{{ $batch->imported_at?->format('d/m/Y H:i') }}</span>
                                         </td>
-                                        <td>{{ $batch->source_type ?: 'Nao informada' }}</td>
+                                        <td>{{ $batch->source_type ?: 'Não informada' }}</td>
                                         <td>{{ (int) $batch->pending_items_count }}</td>
                                         <td>{{ (int) $batch->confirmed_items_count }}</td>
                                     </tr>
@@ -993,7 +991,7 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Pendencia</th>
+                                    <th>Pendência</th>
                                     <th>Cartorio</th>
                                     <th>Origem</th>
                                     <th>Data</th>
@@ -1006,13 +1004,13 @@
                                             <strong>{{ $item->spj ?: $item->source_process_key }}</strong><br>
                                             <span class="muted">{{ $item->batch?->source_name }}</span>
                                         </td>
-                                        <td>{{ $item->cartorio?->name ?: 'Sem cartorio' }}</td>
-                                        <td>{{ $item->status_origem ?: 'Nao informado' }}</td>
+                                        <td>{{ $item->cartorio?->name ?: 'Sem cartório' }}</td>
+                                        <td>{{ $item->status_origem ?: 'Não informado' }}</td>
                                         <td>{{ $item->data_fato?->format('d/m/Y') ?? 'N/A' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4">Nenhuma pendencia recente.</td>
+                                        <td colspan="4">Nenhuma pendência recente.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -1023,13 +1021,13 @@
                 <div class="details-stack">
                     @if ($canViewRh)
                         <details>
-                            <summary>Funcionarios em destaque</summary>
+                            <summary>Funcionários em destaque</summary>
                             <table>
                                 <thead>
                                     <tr>
                                         <th>Funcionario</th>
                                         <th>Cargo</th>
-                                        <th>Admissao</th>
+                                        <th>Admissão</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -1058,7 +1056,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4">Nenhum funcionario carregado.</td>
+                                            <td colspan="4">Nenhum funcionário carregado.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -1066,13 +1064,13 @@
                         </details>
 
                         <details>
-                            <summary>Afastamentos e licencas</summary>
+                            <summary>Afastamentos e licenças</summary>
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Funcionario</th>
+                                        <th>Funcionário</th>
                                         <th>Motivo</th>
-                                        <th>Vigencia</th>
+                                        <th>Vigência</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -1083,7 +1081,7 @@
                                             <td>{{ $afastamento->reason }}</td>
                                             <td>
                                                 {{ $afastamento->start_date?->format('d/m/Y') }}<br>
-                                                <span class="muted">ate {{ $afastamento->end_date?->format('d/m/Y') ?: 'aberto' }}</span>
+                                                <span class="muted">até {{ $afastamento->end_date?->format('d/m/Y') ?: 'aberto' }}</span>
                                             </td>
                                             <td><span class="tag {{ $afastamento->statusTone() }}">{{ $afastamento->statusLabel() }}</span></td>
                                         </tr>
@@ -1103,7 +1101,7 @@
                                     <tr>
                                         <th>Nome</th>
                                         <th>Origem</th>
-                                        <th>Funcao</th>
+                                        <th>Função</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -1112,7 +1110,7 @@
                                         <tr>
                                             <td>
                                                 <strong>{{ $delegado->name }}</strong><br>
-                                                <span class="muted">{{ $delegado->registration_code ?: 'Sem codigo' }}</span>
+                                                <span class="muted">{{ $delegado->registration_code ?: 'Sem código' }}</span>
                                             </td>
                                             <td>{{ $delegado->origin_unit }}</td>
                                             <td>{{ $delegado->role_title }}</td>
@@ -1156,59 +1154,6 @@
                         </details>
                     @endif
 
-                    @if ($canViewEscalas && $escalaSnapshot)
-                        <details>
-                            <summary>Escalas do legado</summary>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Versao</th>
-                                        <th>Dias</th>
-                                        <th>Plantoes</th>
-                                        <th>Feriados</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>{{ $escalaSnapshot['version'] ?? 'N/D' }}</td>
-                                        <td>{{ $escalaSnapshot['summary']['dias_total'] }}</td>
-                                        <td>{{ $escalaSnapshot['summary']['plantoes_atribuicoes'] }}</td>
-                                        <td>{{ $escalaSnapshot['summary']['feriados_mes'] }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Escrivao</th>
-                                        <th>Operacional</th>
-                                        <th>Delegada</th>
-                                        <th>Plantao externo</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse (array_slice($escalaSnapshot['scale_rows'], 0, 5) as $row)
-                                        <tr>
-                                            <td>
-                                                <strong>{{ $row['date_label'] }}</strong><br>
-                                                <span class="muted">{{ $row['day_label'] }}</span>
-                                            </td>
-                                            <td>{{ $row['escrivao'] ?: '-' }}</td>
-                                            <td>{{ $row['operacional'] ?: '-' }}</td>
-                                            <td>{{ $row['delegada'] ?: '-' }}</td>
-                                            <td>{{ $row['plantao_externo'] ?: '-' }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5">Nenhuma linha de escala carregada.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </details>
-                    @endif
                 </div>
             </div>
         </section>

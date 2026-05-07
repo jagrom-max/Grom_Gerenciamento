@@ -13,8 +13,8 @@ class RequirePermission
         $user = $request->user();
 
         abort_unless($user && $user->hasPermission($permission), 403);
+        abort_if($permission === 'escalas.manage' && ! $user->isSuperAdmin(), 403);
 
         return $next($request);
     }
 }
-

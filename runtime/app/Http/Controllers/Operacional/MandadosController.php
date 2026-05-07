@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Operacional;
 
 use App\Http\Controllers\Controller;
 use App\Models\OperacionalMandado;
-use App\Services\Operacional\LegacyMandadosReader;
-use App\Services\Operacional\LegacyMandadosSyncService;
 use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +15,7 @@ class MandadosController extends Controller
     // -------------------------------------------------------
     // Index
     // -------------------------------------------------------
-    public function index(Request $request, LegacyMandadosReader $legacyReader): View
+    public function index(Request $request): View
     {
         $filters = $request->validate([
             'q'           => ['nullable', 'string', 'max:120'],
@@ -57,14 +55,6 @@ class MandadosController extends Controller
 
         $mandados = $query->get();
 
-        $legacySnapshot = null;
-        $legacyWarnings = [];
-        try {
-            $legacySnapshot = $legacyReader->snapshot();
-        } catch (\Throwable $e) {
-            $legacyWarnings[] = $e->getMessage();
-        }
-
         $today = Carbon::today();
 
         return view('operacional.mandados.index', [
@@ -75,8 +65,8 @@ class MandadosController extends Controller
             'cumprido_por'    => OperacionalMandado::CUMPRIDO_POR,
             'regimes'         => OperacionalMandado::REGIMES,
             'leis'            => OperacionalMandado::LEIS,
-            'legacySnapshot'  => $legacySnapshot,
-            'legacyWarnings'  => $legacyWarnings,
+            'legacySnapshot'  => null,
+            'legacyWarnings'  => [],
             'summary' => [
                 'total'         => OperacionalMandado::query()->count(),
                 'em_aberto'     => OperacionalMandado::query()->where('procedimento', 'Em Aberto')->count(),
@@ -87,8 +77,8 @@ class MandadosController extends Controller
                     ->whereDate('validade', '<', $today)
                     ->count(),
                 'exibidos'      => $mandados->count(),
-                'legacy_total'  => $legacySnapshot['total'] ?? 0,
-                'legacy_synced' => OperacionalMandado::query()->whereNotNull('legacy_id')->count(),
+                'legacy_total'  => 0,
+                'legacy_synced' => 0,
             ],
         ]);
     }
@@ -195,29 +185,12 @@ class MandadosController extends Controller
     }
 
     // -------------------------------------------------------
-    // Sync do legado
+    // Sync do legado (desativado — base Python removida)
     // -------------------------------------------------------
-    public function syncLegacy(LegacyMandadosSyncService $syncService): RedirectResponse
+    public function syncLegacy(): RedirectResponse
     {
-        try {
-            $result = $syncService->sync(auth()->id());
-
-            AuditLogger::log(
-                moduleCode: 'operacional',
-                eventType: 'mandados.sync_legacy',
-                entityType: 'operacional_mandados',
-                entityId: 'batch',
-                description: 'Sincronização do legado de mandados concluída.',
-                metadata: $result
-            );
-
-            $msg = "Legado sincronizado: {$result['inserted']} novos, {$result['updated']} atualizados, {$result['skipped']} sem alteração.";
-        } catch (\Throwable $e) {
-            $msg = 'Falha na sincronização: ' . $e->getMessage();
-            return redirect()->route('operacional.mandados.index')->with('error', $msg);
-        }
-
-        return redirect()->route('operacional.mandados.index')->with('status', $msg);
+        return redirect()->route('operacional.mandados.index')
+            ->with('error', 'Sincronização com legado Python foi desativada.');
     }
 
     // -------------------------------------------------------
