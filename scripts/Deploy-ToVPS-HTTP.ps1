@@ -116,9 +116,12 @@ Write-Step "Preparando arquivos..."
 
 $TarPath = Join-Path $env:TEMP $TarName
 $excludes = @(
+    '--exclude=./vendor',
+    '--exclude=./.venv',
     '--exclude=./runtime/vendor',
     '--exclude=./runtime/node_modules',
     '--exclude=./runtime/storage/app/*.sqlite*',
+    '--exclude=./runtime/storage/logs',
     '--exclude=./runtime/.env',
     '--exclude=./_toolchain',
     '--exclude=./.git',
