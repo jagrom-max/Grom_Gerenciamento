@@ -15,12 +15,13 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class ProdutividadeHubController extends Controller
+{
+    public function __construct(private readonly ProdutividadeStatsDashboardData $dashboardData) {}
+
     public function index(Request $request): View
     {
         return $this->__invoke($request);
     }
-{
-    public function __construct(private readonly ProdutividadeStatsDashboardData $dashboardData) {}
 
     public function __invoke(Request $request): View
     {

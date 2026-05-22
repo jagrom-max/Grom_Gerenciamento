@@ -14,8 +14,6 @@ class GromRhHolidaySeeder extends Seeder
     {
         if ($this->legacyAvailable()) {
             $this->importLegacyHolidays();
-
-            return;
         }
 
         foreach ([$this->currentYear(), $this->currentYear() + 1] as $year) {
@@ -150,14 +148,16 @@ class GromRhHolidaySeeder extends Seeder
         $easter = $this->easterSunday($year);
 
         return [
-            ['name' => 'Confraternizacao Universal', 'date' => Carbon::create($year, 1, 1), 'scope' => 'nacional', 'notes' => null],
-            ['name' => 'Paixao de Cristo', 'date' => $easter->copy()->subDays(2), 'scope' => 'nacional', 'notes' => 'Feriado movel do calendario civil.'],
+            ['name' => 'Confraternização Universal', 'date' => Carbon::create($year, 1, 1), 'scope' => 'nacional', 'notes' => null],
+            ['name' => 'Paixão de Cristo', 'date' => $easter->copy()->subDays(2), 'scope' => 'nacional', 'notes' => 'Feriado móvel do calendário civil.'],
             ['name' => 'Tiradentes', 'date' => Carbon::create($year, 4, 21), 'scope' => 'nacional', 'notes' => null],
             ['name' => 'Dia do Trabalho', 'date' => Carbon::create($year, 5, 1), 'scope' => 'nacional', 'notes' => null],
-            ['name' => 'Independencia do Brasil', 'date' => Carbon::create($year, 9, 7), 'scope' => 'nacional', 'notes' => null],
+            ['name' => 'Corpus Christi', 'date' => $easter->copy()->addDays(60), 'scope' => 'municipal', 'notes' => 'Feriado movel observado no municipio de Rio Claro/SP.'],
+            ['name' => 'Aniversário de Rio Claro / São João Batista', 'date' => Carbon::create($year, 6, 24), 'scope' => 'municipal', 'notes' => 'Feriado municipal de Rio Claro/SP.'],
+            ['name' => 'Independência do Brasil', 'date' => Carbon::create($year, 9, 7), 'scope' => 'nacional', 'notes' => null],
             ['name' => 'Nossa Senhora Aparecida', 'date' => Carbon::create($year, 10, 12), 'scope' => 'nacional', 'notes' => null],
             ['name' => 'Finados', 'date' => Carbon::create($year, 11, 2), 'scope' => 'nacional', 'notes' => null],
-            ['name' => 'Proclamacao da Republica', 'date' => Carbon::create($year, 11, 15), 'scope' => 'nacional', 'notes' => null],
+            ['name' => 'Proclamação da República', 'date' => Carbon::create($year, 11, 15), 'scope' => 'nacional', 'notes' => null],
             ['name' => 'Natal', 'date' => Carbon::create($year, 12, 25), 'scope' => 'nacional', 'notes' => null],
         ];
     }

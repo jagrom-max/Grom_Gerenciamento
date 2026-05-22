@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\File;
 
 class BackupController extends Controller
+{
     /**
      * Compatibilidade com rotas explícitas: delega para __invoke().
      */
@@ -15,7 +16,6 @@ class BackupController extends Controller
     {
         return $this->__invoke();
     }
-{
     public function __invoke(): View
     {
         $storagePath = storage_path('app');

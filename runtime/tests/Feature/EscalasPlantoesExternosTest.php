@@ -59,7 +59,50 @@ class EscalasPlantoesExternosTest extends TestCase
         $response = $this->actingAs($user)->get('/escalas/print?ano=2026&mes=5');
         $response->assertOk();
         $response->assertSee('PLT');
-        $response->assertSee('Plantão Externo');
+        $response->assertSee('Servidor Plantonista (PLT)');
         $response->assertSee('Dia do Trabalho');
+    }
+
+    public function test_aba_escala_exibe_plantoes_sem_linha_de_expediente(): void
+    {
+        $this->seed();
+
+        $user = User::query()->firstOrFail();
+        $user->update(['must_change_password' => false]);
+
+        $funcionario = RhFuncionario::factory()->create([
+            'name' => 'Servidor Plantonista',
+            'short_name' => 'Servidor Plantonista',
+            'is_active' => true,
+        ]);
+
+        $plantao = EscalaPlantaoExterno::factory()->create([
+            'nome' => 'Plantao Externo',
+            'sigla' => 'PLT',
+            'is_active' => true,
+        ]);
+
+        foreach (['2026-05-01', '2026-05-02', '2026-05-03'] as $data) {
+            EscalaPlantaoFuncionario::create([
+                'data' => $data,
+                'funcionario_id' => $funcionario->id,
+                'plantao_externo_id' => $plantao->id,
+            ]);
+        }
+
+        \App\Models\RhHoliday::factory()->create([
+            'date' => '2026-05-01',
+            'descricao' => 'Dia do Trabalho',
+        ]);
+
+        $response = $this->actingAs($user)->get('/escalas?ano=2026&mes=5');
+
+        $response->assertOk();
+        $response->assertSee('01/05');
+        $response->assertSee('02/05');
+        $response->assertSee('03/05');
+        $response->assertSee('Servidor Plantonista (PLT)');
+        $response->assertSee('FERIADO');
+        $response->assertSee('Fim de semana');
     }
 }

@@ -98,6 +98,14 @@ Dropdowns fecham automaticamente ao selecionar um item.
 .\executar_piloto_local.cmd
 ```
 
+**EndereÃ§o local fixo para testes:**
+```cmd
+.\iniciar_grom_local_fixo.cmd
+.\acessar_grom_local.cmd
+```
+
+Acesso fixo: http://127.0.0.1:8088/login
+
 Ou diretamente:
 ```powershell
 $env:PATH = "C:\grom_gerenciamento_final\grom_web_php\_toolchain\php83;" + $env:PATH

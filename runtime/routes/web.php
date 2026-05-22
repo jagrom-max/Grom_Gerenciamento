@@ -233,6 +233,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
             Route::get('/plantoes/relatorio', [PlantaoRelatorioController::class, 'index'])->name('plantoes.relatorio');
             Route::get('/prova', [EscalasController::class, 'proofView'])->name('prova');
             Route::get('/imprimir', [EscalasController::class, 'printView'])->name('print');
+            Route::get('/print', [EscalasController::class, 'printView'])->name('print.legacy');
             Route::get('/imprimir/pdf', [EscalasPrintPdfController::class, 'index'])->name('print.pdf');
 
             // CRUD — requer manage

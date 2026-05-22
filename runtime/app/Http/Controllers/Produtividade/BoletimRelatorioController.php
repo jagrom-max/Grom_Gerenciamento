@@ -12,11 +12,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class BoletimRelatorioController extends Controller
+{
     public function index(Request $request): View
     {
         return $this->__invoke($request);
     }
-{
+
     public function __invoke(Request $request): View
     {
         $filters = $request->validate(BoletimQueryFilters::validatedRules());

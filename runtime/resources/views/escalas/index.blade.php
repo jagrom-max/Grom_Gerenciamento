@@ -363,6 +363,12 @@
                                 <td>
                                     @if ($canManageEscalas)
                                         @if ($canEditRow)
+                                            @php
+                                                $fecharOpcoes = collect([$row['escrivao'] ?? '', $row['operacional'] ?? ''])
+                                                    ->filter(fn ($nome) => trim((string) $nome) !== '')
+                                                    ->unique()
+                                                    ->values();
+                                            @endphp
                                             <form class="scale-edit-form" method="POST" action="{{ route('escalas.dias.update', $row['id']) }}">
                                                 @csrf
                                                 <input type="hidden" name="_method" value="PATCH">
@@ -370,10 +376,10 @@
                                                 <input type="hidden" name="valor" value="{{ $row['fechar'] }}">
                                                 <select name="valor" required onchange="this.form.valor.value=this.value;">
                                                     <option value="">—</option>
-                                                    @if ($row['fechar'] && ! $funcionarioOpcoes->contains($row['fechar']))
+                                                    @if ($row['fechar'] && ! $fecharOpcoes->contains($row['fechar']))
                                                         <option value="{{ $row['fechar'] }}" selected>{{ $row['fechar'] }}</option>
                                                     @endif
-                                                    @foreach ($funcionarioOpcoes as $nomeOpcao)
+                                                    @foreach ($fecharOpcoes as $nomeOpcao)
                                                         <option value="{{ $nomeOpcao }}" @selected($row['fechar'] === $nomeOpcao)>{{ $nomeOpcao }}</option>
                                                     @endforeach
                                                 </select>

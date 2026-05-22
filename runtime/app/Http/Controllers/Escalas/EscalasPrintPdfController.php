@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Escalas;
 
 use App\Http\Controllers\Controller;
 use App\Models\EscalaDia;
+use App\Models\EscalaDelegadoExterno;
 use App\Models\EscalaPlantaoFuncionario;
+use App\Models\EscalaSubstituicaoDdm;
 use App\Models\EscalaVersao;
 use App\Models\RhFuncionario;
 use App\Models\RhHoliday;
@@ -12,17 +14,19 @@ use App\Support\Pdf\HeadlessBrowserPdfRenderer;
 use App\Support\ReportAsset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EscalasPrintPdfController extends Controller
-    public function index(Request $request): BinaryFileResponse
-    {
-        return $this->__invoke($request);
-    }
 {
     public function __construct(
         private readonly HeadlessBrowserPdfRenderer $pdfRenderer,
     ) {
+    }
+
+    public function index(Request $request): BinaryFileResponse
+    {
+        return $this->__invoke($request);
     }
 
     public function __invoke(Request $request): BinaryFileResponse
@@ -83,18 +87,22 @@ class EscalasPrintPdfController extends Controller
             ->get();
 
         $plantoesMes = [];
-        if ($phpDias->isNotEmpty()) {
-            $datas = $phpDias->pluck('data')->map(fn ($d) => $d->toDateString())->toArray();
-            $atribs = EscalaPlantaoFuncionario::query()
-                ->with(['funcionario.cargo', 'plantaoExterno'])
-                ->whereIn('data', $datas)
-                ->orderBy('data')
-                ->get();
+        $ids = DB::table('escalas_plantoes_funcionarios')
+            ->where('data', 'like', sprintf('%04d-%02d-%%', $filters['ano'], $filters['mes']))
+            ->orderBy('data')
+            ->pluck('id')
+            ->all();
+        $atribs = EscalaPlantaoFuncionario::query()
+            ->with(['funcionario.cargo', 'plantaoExterno'])
+            ->whereIn('id', $ids)
+            ->orderBy('data')
+            ->get();
 
-            foreach ($atribs as $a) {
-                $plantoesMes[$a->data->toDateString()][] = $a;
-            }
+        foreach ($atribs as $a) {
+            $plantoesMes[$a->data->toDateString()][] = $a;
         }
+
+        $substituicoesDdm = $this->getSubstituicoesDdm($filters);
 
         $pdfPath = $this->pdfRenderer->renderBlade(
             'escalas.print',
@@ -109,6 +117,8 @@ class EscalasPrintPdfController extends Controller
                 'escalaVersao' => $phpDias->isNotEmpty()
                     ? EscalaVersao::maisRecente($filters['ano'], $filters['mes'])
                     : null,
+                'substituicoesDdm' => $substituicoesDdm,
+                'delegadosExternos' => EscalaDelegadoExterno::ativos()->get(),
                 'brasaoSrc' => ReportAsset::dataUri('assets/brasao.png'),
                 'logoSrc' => ReportAsset::dataUri('assets/logo_grom.png'),
                 'watermarkSrc' => ReportAsset::dataUri('assets/marca_dagua.png'),
@@ -121,5 +131,23 @@ class EscalasPrintPdfController extends Controller
                 'Content-Type' => 'application/pdf',
             ])
             ->deleteFileAfterSend(true);
+    }
+
+    private function getSubstituicoesDdm(array $filters)
+    {
+        $inicioMes = sprintf('%04d-%02d-01', $filters['ano'], $filters['mes']);
+        $fimMes = date('Y-m-t', strtotime($inicioMes));
+
+        return EscalaSubstituicaoDdm::query()
+            ->where(function ($q) use ($inicioMes, $fimMes): void {
+                $q->whereBetween('data_inicio', [$inicioMes, $fimMes])
+                    ->orWhereBetween('data_fim', [$inicioMes, $fimMes])
+                    ->orWhere(function ($q2) use ($inicioMes, $fimMes): void {
+                        $q2->where('data_inicio', '<=', $inicioMes)
+                            ->where('data_fim', '>=', $fimMes);
+                    });
+            })
+            ->orderBy('data_inicio')
+            ->get();
     }
 }

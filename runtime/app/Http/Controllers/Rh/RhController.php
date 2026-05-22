@@ -7,15 +7,20 @@ use App\Models\AuditEvent;
 use App\Models\RhAfastamento;
 use App\Models\RhCargo;
 use App\Models\RhDelegadoExterno;
+use App\Models\RhDelegadoExternoPeriodo;
 use App\Models\RhFuncionario;
 use App\Models\RhHoliday;
 use App\Models\Role;
+use App\Models\User;
+use App\Support\AccessCredentialPolicy;
 use App\Support\AuditLogger;
+use App\Support\SqliteDatabaseBackup;
 use App\Services\Rh\LegacyFuncionariosReader;
 use App\Services\Rh\LegacyFuncionariosSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class RhController extends Controller
@@ -222,16 +227,19 @@ class RhController extends Controller
             'departure_date' => ['nullable', 'date', 'after_or_equal:admission_date'],
             'removal_date' => ['nullable', 'date'],
             'concorre_escala' => ['required', 'boolean'],
-            'is_delegado_externo' => ['required', 'boolean'],
+            'is_delegado_externo' => ['nullable', 'boolean'],
             'senha_spj' => ['nullable', 'string', 'max:255'],
             'senha_ipe' => ['nullable', 'string', 'max:255'],
             'observacoes_operacionais' => ['nullable', 'string', 'max:2000'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['required', 'boolean'],
+            'create_access' => ['nullable', 'boolean'],
+            'access_roles' => ['array'],
+            'access_roles.*' => ['integer', 'exists:roles,id'],
         ]);
 
         // Se for delegado externo, nunca concorre à escala
-        $isDelegadoExterno = (bool) $data['is_delegado_externo'];
+        $isDelegadoExterno = (bool) ($data['is_delegado_externo'] ?? false);
         $concorreEscala = $isDelegadoExterno ? false : (bool) $data['concorre_escala'];
 
         $funcionario = RhFuncionario::query()->create([
@@ -271,6 +279,10 @@ class RhController extends Controller
             ]
         );
 
+        if ((bool) ($data['create_access'] ?? false)) {
+            $this->createOrUpdateAccessForFuncionario($funcionario, $data['access_roles'] ?? []);
+        }
+
         return redirect()->route('rh.index')->with('status', 'Funcionario criado com sucesso.');
     }
 
@@ -292,16 +304,19 @@ class RhController extends Controller
             'departure_date'   => ['nullable', 'date', 'after_or_equal:admission_date'],
             'removal_date'     => ['nullable', 'date'],
             'concorre_escala'  => ['required', 'boolean'],
-            'is_delegado_externo' => ['required', 'boolean'],
+            'is_delegado_externo' => ['nullable', 'boolean'],
             'senha_spj' => ['nullable', 'string', 'max:255'],
             'senha_ipe' => ['nullable', 'string', 'max:255'],
             'observacoes_operacionais' => ['nullable', 'string', 'max:2000'],
             'notes'            => ['nullable', 'string', 'max:2000'],
             'is_active'        => ['required', 'boolean'],
+            'create_access' => ['nullable', 'boolean'],
+            'access_roles' => ['array'],
+            'access_roles.*' => ['integer', 'exists:roles,id'],
         ]);
 
         // Se for delegado externo, nunca concorre à escala
-        $isDelegadoExterno = (bool) $data['is_delegado_externo'];
+        $isDelegadoExterno = (bool) ($data['is_delegado_externo'] ?? false);
         $concorreEscala = $isDelegadoExterno ? false : (bool) $data['concorre_escala'];
 
         $funcionario->update([
@@ -335,6 +350,12 @@ class RhController extends Controller
             description: 'Dados do funcionario atualizados.',
             metadata: ['matricula' => $funcionario->matricula, 'cargo_id' => $funcionario->cargo_id]
         );
+
+        if ((bool) ($data['create_access'] ?? false)) {
+            $this->createOrUpdateAccessForFuncionario($funcionario, $data['access_roles'] ?? []);
+        } elseif ($funcionario->user) {
+            $funcionario->user->update(['is_active' => false]);
+        }
 
         return redirect()->route('rh.index')->with('status', 'Funcionario atualizado com sucesso.');
     }
@@ -408,8 +429,10 @@ class RhController extends Controller
             ->exists();
 
         if ($afastamentoSobreposto) {
-            return redirect()->back()->withErrors(['Sobreposição de afastamento detectada para este funcionário.'])->withInput();
+            return redirect()->back()->withErrors(['start_date' => 'Sobreposicao de afastamento detectada para este funcionario.'])->withInput();
         }
+
+        SqliteDatabaseBackup::backup('rh-afastamento-create');
 
         $afastamento = RhAfastamento::query()->create([
             'funcionario_id' => $data['funcionario_id'],
@@ -469,8 +492,10 @@ class RhController extends Controller
             ->exists();
 
         if ($afastamentoSobreposto) {
-            return redirect()->back()->withErrors(['Sobreposição de afastamento detectada para este funcionário.'])->withInput();
+            return redirect()->back()->withErrors(['start_date' => 'Sobreposicao de afastamento detectada para este funcionario.'])->withInput();
         }
+
+        SqliteDatabaseBackup::backup('rh-afastamento-update');
 
         $afastamento->update([
             'reason'     => trim($data['reason']),
@@ -504,6 +529,8 @@ class RhController extends Controller
 
     public function toggleAfastamentoActive(Request $request, RhAfastamento $afastamento): RedirectResponse
     {
+        SqliteDatabaseBackup::backup('rh-afastamento-toggle');
+
         $afastamento->update([
             'is_active' => ! $afastamento->is_active,
         ]);
@@ -586,8 +613,74 @@ class RhController extends Controller
     }
 
     // --- Métodos restaurados para Delegados Externos ---
+    public function storeDelegadoExterno(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'registration_code' => ['nullable', 'string', 'max:100', 'unique:rh_delegados_externos,registration_code'],
+            'name' => ['required', 'string', 'max:255'],
+            'origin_unit' => ['required', 'string', 'max:255'],
+            'role_title' => ['required', 'string', 'max:255'],
+            'contact' => ['nullable', 'string', 'max:120'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:rh_delegados_externos,email'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $delegadoExterno = RhDelegadoExterno::query()->create([
+            'registration_code' => $this->cleanNullable($data['registration_code'] ?? null),
+            'name' => trim($data['name']),
+            'origin_unit' => trim($data['origin_unit']),
+            'role_title' => trim($data['role_title']),
+            'contact' => $this->cleanNullable($data['contact'] ?? null),
+            'email' => $this->cleanNullable($data['email'] ?? null),
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'] ?? null,
+            'is_active' => (bool) $data['is_active'],
+            'notes' => $this->cleanNullable($data['notes'] ?? null),
+        ]);
+
+        AuditLogger::log(
+            moduleCode: 'rh',
+            eventType: 'delegados_externos.create',
+            entityType: 'rh_delegado_externo',
+            entityId: $delegadoExterno->id,
+            description: 'Delegado externo cadastrado.',
+            metadata: [
+                'registration_code' => $delegadoExterno->registration_code,
+                'origin_unit' => $delegadoExterno->origin_unit,
+                'role_title' => $delegadoExterno->role_title,
+            ]
+        );
+
+        return redirect()->route('rh.index')->with('status', 'Delegado externo cadastrado com sucesso.');
+    }
+
+    public function toggleDelegadoExternoActive(RhDelegadoExterno $delegadoExterno): RedirectResponse
+    {
+        $delegadoExterno->update([
+            'is_active' => ! $delegadoExterno->is_active,
+        ]);
+
+        AuditLogger::log(
+            moduleCode: 'rh',
+            eventType: 'delegados_externos.toggle_active',
+            entityType: 'rh_delegado_externo',
+            entityId: $delegadoExterno->id,
+            description: $delegadoExterno->is_active ? 'Delegado externo reativado.' : 'Delegado externo inativado.',
+            metadata: [
+                'registration_code' => $delegadoExterno->registration_code,
+                'origin_unit' => $delegadoExterno->origin_unit,
+            ]
+        );
+
+        return redirect()->route('rh.index')->with('status', 'Status do delegado externo atualizado.');
+    }
+
     public function showDelegadoExterno(RhDelegadoExterno $delegadoExterno): View
     {
+        $delegadoExterno->load('periodos');
         $currentPeriodo = $delegadoExterno->currentPeriodo();
         $periodosSummary = [
             'total_dias' => $delegadoExterno->periodos->sum(fn($p) => $p->durationInDays() ?? 0),
@@ -1132,6 +1225,37 @@ class RhController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+
+    private function createOrUpdateAccessForFuncionario(RhFuncionario $funcionario, array $roleIds): User
+    {
+        $cpf = AccessCredentialPolicy::normalizeCpf((string) $funcionario->cpf);
+
+        abort_if(strlen($cpf) !== 11, 422, 'CPF invalido para criar acesso do funcionario.');
+
+        $user = User::query()->updateOrCreate(
+            ['funcionario_id' => $funcionario->id],
+            [
+                'name' => $funcionario->name,
+                'cpf' => $cpf,
+                'rg' => $this->cleanNullable($funcionario->rg),
+                'email' => $this->cleanNullable($funcionario->email),
+                'phone' => $this->cleanNullable($funcionario->phone),
+                'password' => AccessCredentialPolicy::firstAccessPassword($cpf),
+                'is_active' => (bool) $funcionario->is_active,
+                'must_change_password' => true,
+                'tipo_usuario' => 'servidor',
+                'notes' => $this->cleanNullable($funcionario->notes),
+            ]
+        );
+
+        $user->roles()->sync(
+            collect($roleIds)->mapWithKeys(
+                fn (int $roleId): array => [$roleId => ['assigned_by' => Auth::id()]]
+            )->all()
+        );
+
+        return $user;
+    }
 
     private function cleanNullable(?string $value): ?string
     {

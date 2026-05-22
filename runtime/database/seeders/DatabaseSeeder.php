@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             GromAccessSeeder::class,
             GromRhSeeder::class,
+            GromRhLegacySeeder::class,
             GromRhHolidaySeeder::class,
             GromRhDelegadoExternoSeeder::class,
         ]);

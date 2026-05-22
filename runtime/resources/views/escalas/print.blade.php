@@ -318,6 +318,8 @@ foreach ($allDays as $dayRow) {
                         $isHoliday = $day['is_holiday'];
                         $holiday = $day['holiday'];
                         $scaleEntry = $day['scale'];
+                        $dataRef = $carbon->toDateString();
+                        $plantaoExtConsolidado = trim((string) ($plantoesTextoPorData[$dataRef] ?? ''));
 
                         if ($scaleEntry && $scaleEntry['src'] === 'php') {
                             $obj = $scaleEntry['obj'];
@@ -325,16 +327,16 @@ foreach ($allDays as $dayRow) {
                             $operacional = $obj->operacional ?? '';
                             $fechar = $obj->fechar_nome ?? '';
                             $delegada = $obj->delegada ?? '';
-                            $dataRef = $carbon->toDateString();
-                            $plantaoExt = trim((string) ($plantoesTextoPorData[$dataRef] ?? ''));
+                            $plantaoExt = $plantaoExtConsolidado;
                             if ($plantaoExt === '') {
                                 $plantaoExt = $obj->plantao_externo ?? '';
                             }
                             $plantaoItens = $splitPlantaoTexto((string) $plantaoExt);
                             $isDeclHoliday = strtoupper(trim($escrivao)) === 'FERIADO';
                         } else {
-                            $escrivao = $operacional = $fechar = $delegada = $plantaoExt = '';
-                            $plantaoItens = [];
+                            $escrivao = $operacional = $fechar = $delegada = '';
+                            $plantaoExt = $plantaoExtConsolidado;
+                            $plantaoItens = $splitPlantaoTexto((string) $plantaoExt);
                             $isDeclHoliday = false;
                         }
                         $isEffHoliday = $isHoliday || $isDeclHoliday;

@@ -12,8 +12,10 @@ class RhHolidayFactory extends Factory
     public function definition(): array
     {
         return [
-            'date' => $this->faker->date(),
-            'descricao' => $this->faker->sentence(2),
+            'holiday_date' => $this->faker->date(),
+            'name' => $this->faker->sentence(2),
+            'scope' => 'municipal',
+            'is_active' => true,
         ];
     }
 }

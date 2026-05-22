@@ -7,6 +7,7 @@ use App\Models\EscalaPlantaoFuncionario;
 use App\Models\EscalaVersao;
 use App\Models\RhAfastamento;
 use App\Models\RhFuncionario;
+use App\Models\RhHoliday;
 use App\Support\AuditLogger;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -23,8 +24,9 @@ use Illuminate\Support\Facades\DB;
  *      · com plantão externo no dia ANTERIOR (DIA_SEGUINTE ou AMBOS)
  *  - Atribui por regras de distribuição por cargo:
  *      · Delegada(o)  → cargo LEG-001        → 1 slot (delegada)
- *      · Escrivã(o)   → cargo LEG-005/RH-001 → 2 slots (escrivao + fechar_nome)
+ *      · Escrivã(o)   → cargo LEG-005/RH-001 → 1 slot (escrivao)
  *      · Operacional  → cargo LEG-002/LEG-003 → 1 slot (operacional)
+ *      · Fechar       → pool proporcional de escrivães + operacionais
  *  - Delegada(o): fixa(o) no titular da DDM do cadastro RH (LEG-001);
  *    em afastamento/impedimento, fica NULL para atribuição manual via Delegado Externo.
  *  - Se outros slots não tiverem disponíveis, o campo fica NULL + alerta.
@@ -120,6 +122,14 @@ class GeradorEscalaMensalService
             // ── Plantões externos do mês ──────────────────────────────────
             $primeiroDia = Carbon::create($ano, $mes, 1);
             $ultimoDia   = $primeiroDia->copy()->endOfMonth();
+            $feriados = RhHoliday::query()
+                ->where('is_active', true)
+                ->whereDate('holiday_date', '>=', $primeiroDia->toDateString())
+                ->whereDate('holiday_date', '<=', $ultimoDia->toDateString())
+                ->pluck('holiday_date')
+                ->map(fn ($date): string => Carbon::parse($date)->toDateString())
+                ->flip()
+                ->all();
 
             // Carrega todos os plantões do mês (+1 dia antes para DIA_SEGUINTE)
             $plantoesMes = EscalaPlantaoFuncionario::query()
@@ -162,7 +172,7 @@ class GeradorEscalaMensalService
 
             $diaElegibilidade = $primeiroDia->copy();
             while ($diaElegibilidade->lte($ultimoDia)) {
-                if ($diaElegibilidade->isWeekend()) {
+                if ($diaElegibilidade->isWeekend() || isset($feriados[$diaElegibilidade->toDateString()])) {
                     $diaElegibilidade->addDay();
                     continue;
                 }
@@ -220,8 +230,8 @@ class GeradorEscalaMensalService
 
             $dia = $primeiroDia->copy();
             while ($dia->lte($ultimoDia)) {
-                // Pula fins de semana
-                if ($dia->isWeekend()) {
+                // Pula dias sem expediente: sabados, domingos e feriados cadastrados.
+                if ($dia->isWeekend() || isset($feriados[$dia->toDateString()])) {
                     $dia->addDay();
                     continue;
                 }
@@ -271,13 +281,20 @@ class GeradorEscalaMensalService
                     $alertas[] = "{$dataStr}: operacional sem alternativa disponível.";
                 }
 
-                // ── Fechar: escrivão OU operacional do dia com menor contagem global ──
+                // ── Fechar: pool global proporcional de escrivães + operacionais ──
                 $fecharFunc = $this->selecionarFechar(
-                    $escrivaoFunc, $operacionalFunc, $contagemFechar, $ultimoDiaFechar, $weekdayFechar, $diasElegiveisFechar, $dia
+                    $poolFechar,
+                    $impedidos,
+                    array_values(array_filter([$escrivaoFunc?->id, $operacionalFunc?->id])),
+                    $contagemFechar,
+                    $ultimoDiaFechar,
+                    $weekdayFechar,
+                    $diasElegiveisFechar,
+                    $dia
                 );
                 $fecharNome = $fecharFunc ? ($fecharFunc->short_name ?: $fecharFunc->name) : null;
 
-                if ($fecharNome === null && ($escrivaoFunc !== null || $operacionalFunc !== null)) {
+                if ($fecharNome === null && $poolFechar->isNotEmpty()) {
                     $alertas[] = "{$dataStr}: sem candidato para «fechar» no dia.";
                 }
 
@@ -462,20 +479,24 @@ class GeradorEscalaMensalService
     }
 
     /**
-     * Seleciona quem "fecha" o dia: obrigatoriamente o escrivão ou o operacional
-     * do mesmo dia, usando índice proporcional de fechamentos (escrivães + operacionais)
-     * e evitando dias consecutivos e repetição do mesmo dia da semana.
+     * Seleciona quem "fecha" o dia obrigatoriamente entre os dois servidores
+     * já escalados no respectivo dia, usando a proporcionalidade acumulada
+     * do grupo completo de escrivães e operacionais concorrentes.
      */
     private function selecionarFechar(
-        ?RhFuncionario $escrivao,
-        ?RhFuncionario $operacional,
+        Collection $pool,
+        array $impedidos,
+        array $idsJaEscaladosNoDia,
         array &$contagemFechar,
         array &$ultimoDiaFechar,
         array &$weekdayCountFechar,
         array $diasElegiveisFechar,
         Carbon $dia
     ): ?RhFuncionario {
-        $candidatos = collect(array_filter([$escrivao, $operacional]));
+        $candidatos = $pool->filter(
+            fn (RhFuncionario $f): bool => ! in_array($f->id, $impedidos, true)
+                && in_array($f->id, $idsJaEscaladosNoDia, true)
+        )->values();
 
         if ($candidatos->isEmpty()) {
             return null;
@@ -485,7 +506,12 @@ class GeradorEscalaMensalService
         $anteriorStr = $dia->copy()->subDay()->toDateString();
 
         $melhor = $candidatos->map(function (RhFuncionario $f) use (
-            $contagemFechar, $ultimoDiaFechar, $weekdayCountFechar, $diasElegiveisFechar, $anteriorStr, $diaSemana
+            $contagemFechar,
+            $ultimoDiaFechar,
+            $weekdayCountFechar,
+            $diasElegiveisFechar,
+            $anteriorStr,
+            $diaSemana
         ): array {
             $ultimo      = $ultimoDiaFechar[$f->id] ?? null;
             $consecutivo = ($ultimo !== null && $ultimo->toDateString() === $anteriorStr) ? 1 : 0;
