@@ -242,6 +242,8 @@ class RhController extends Controller
         $isDelegadoExterno = (bool) ($data['is_delegado_externo'] ?? false);
         $concorreEscala = $isDelegadoExterno ? false : (bool) $data['concorre_escala'];
 
+        SqliteDatabaseBackup::backup('rh-funcionario-create');
+
         $funcionario = RhFuncionario::query()->create([
             'legacy_id' => null,
             'matricula' => strtoupper(trim($data['matricula'])),
@@ -319,6 +321,8 @@ class RhController extends Controller
         $isDelegadoExterno = (bool) ($data['is_delegado_externo'] ?? false);
         $concorreEscala = $isDelegadoExterno ? false : (bool) $data['concorre_escala'];
 
+        SqliteDatabaseBackup::backup('rh-funcionario-update');
+
         $funcionario->update([
             'name'             => trim($data['name']),
             'short_name'       => $this->cleanNullable($data['short_name'] ?? null),
@@ -362,6 +366,8 @@ class RhController extends Controller
 
     public function toggleFuncionarioActive(RhFuncionario $funcionario): RedirectResponse
     {
+        SqliteDatabaseBackup::backup('rh-funcionario-toggle');
+
         $funcionario->update([
             'is_active' => ! $funcionario->is_active,
         ]);
@@ -387,18 +393,28 @@ class RhController extends Controller
         $matricula = $funcionario->matricula;
         $id = $funcionario->id;
 
-        $funcionario->delete();
+        SqliteDatabaseBackup::backup('rh-funcionario-archive');
+
+        $funcionario->update([
+            'is_active' => false,
+            'concorre_escala' => false,
+            'departure_date' => $funcionario->departure_date ?? Carbon::today(),
+        ]);
+
+        if ($funcionario->user) {
+            $funcionario->user->update(['is_active' => false]);
+        }
 
         AuditLogger::log(
             moduleCode: 'rh',
-            eventType: 'funcionarios.destroy',
+            eventType: 'funcionarios.archive',
             entityType: 'rh_funcionario',
             entityId: $id,
-            description: "Funcionario '{$name}' (matricula: {$matricula}) excluido permanentemente.",
+            description: "Funcionario '{$name}' (matricula: {$matricula}) arquivado sem exclusao permanente.",
             metadata: ['matricula' => $matricula, 'name' => $name]
         );
 
-        return redirect()->route('rh.index')->with('status', "Funcionário '{$name}' excluído com sucesso.");
+        return redirect()->route('rh.index')->with('status', "Funcionario '{$name}' arquivado. O historico foi preservado.");
     }
 
     public function storeAfastamento(Request $request): RedirectResponse
@@ -566,6 +582,15 @@ class RhController extends Controller
             'is_active' => ['required', 'boolean'],
         ]);
 
+        if (RhHoliday::query()->whereDate('holiday_date', $data['holiday_date'])->exists()) {
+            return redirect()
+                ->back()
+                ->withErrors(['holiday_date' => 'Ja existe feriado cadastrado nesta data.'])
+                ->withInput();
+        }
+
+        SqliteDatabaseBackup::backup('rh-holiday-create');
+
         $holiday = RhHoliday::query()->create([
             'holiday_date' => $data['holiday_date'],
             'name' => trim($data['name']),
@@ -592,6 +617,8 @@ class RhController extends Controller
 
     public function toggleHolidayActive(RhHoliday $holiday): RedirectResponse
     {
+        SqliteDatabaseBackup::backup('rh-holiday-toggle');
+
         $holiday->update([
             'is_active' => ! $holiday->is_active,
         ]);

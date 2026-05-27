@@ -18,47 +18,53 @@
 -- ---------------------------------------------------------------------------
 -- 1. Cargos
 -- ---------------------------------------------------------------------------
-create table if not exists grom.rh_cargos (
-    id          uuid        primary key default gen_random_uuid(),
+if not exists (select * from sys.objects where object_id = object_id(N'grom.rh_cargos') and type in (N'U'))
+create table grom.rh_cargos (
+    id          uniqueidentifier primary key default NEWID(),
     codigo      text        not null unique,
     nome        text        not null,
     descricao   text,
     nivel       text        not null default 'OPERACIONAL',
     is_active   boolean     not null default true,
-    created_at  timestamptz not null default now(),
-    updated_at  timestamptz not null default now(),
+    created_at  datetime2 not null default sysutcdatetime(),
+    updated_at  datetime2 not null default sysutcdatetime(),
 
     constraint ck_cargo_nivel check (
         nivel in ('DIRECAO', 'MEDIO', 'OPERACIONAL', 'APOIO')
     )
 );
 
-create trigger trg_rh_cargos_touch
-    before update on grom.rh_cargos
-    for each row execute function grom.touch_updated_at();
 
-insert into grom.rh_cargos (codigo, nome, nivel) values
-    ('DEL',  'Delegado de Polícia',            'DIRECAO'),
-    ('INV',  'Investigador de Polícia',         'OPERACIONAL'),
-    ('ESC',  'Escrivão de Polícia',             'OPERACIONAL'),
-    ('AGP',  'Agente de Polícia',               'OPERACIONAL'),
-    ('PER',  'Perito Criminal',                 'MEDIO'),
-    ('ADM',  'Auxiliar Administrativo',         'APOIO'),
-    ('EST',  'Estagiário',                      'APOIO')
-on conflict (codigo) do nothing;
+-- Trigger deve ser criada em T-SQL se necessário
+
+if not exists (select 1 from grom.rh_cargos where codigo = 'DEL')
+    insert into grom.rh_cargos (codigo, nome, nivel) values ('DEL',  'Delegado de Polícia',            'DIRECAO');
+if not exists (select 1 from grom.rh_cargos where codigo = 'INV')
+    insert into grom.rh_cargos (codigo, nome, nivel) values ('INV',  'Investigador de Polícia',         'OPERACIONAL');
+if not exists (select 1 from grom.rh_cargos where codigo = 'ESC')
+    insert into grom.rh_cargos (codigo, nome, nivel) values ('ESC',  'Escrivão de Polícia',             'OPERACIONAL');
+if not exists (select 1 from grom.rh_cargos where codigo = 'AGP')
+    insert into grom.rh_cargos (codigo, nome, nivel) values ('AGP',  'Agente de Polícia',               'OPERACIONAL');
+if not exists (select 1 from grom.rh_cargos where codigo = 'PER')
+    insert into grom.rh_cargos (codigo, nome, nivel) values ('PER',  'Perito Criminal',                 'MEDIO');
+if not exists (select 1 from grom.rh_cargos where codigo = 'ADM')
+    insert into grom.rh_cargos (codigo, nome, nivel) values ('ADM',  'Auxiliar Administrativo',         'APOIO');
+if not exists (select 1 from grom.rh_cargos where codigo = 'EST')
+    insert into grom.rh_cargos (codigo, nome, nivel) values ('EST',  'Estagiário',                      'APOIO');
 
 -- ---------------------------------------------------------------------------
 -- 2. Funcionários
 -- ---------------------------------------------------------------------------
-create table if not exists grom.rh_funcionarios (
-    id              uuid        primary key default gen_random_uuid(),
+if not exists (select * from sys.objects where object_id = object_id(N'grom.rh_funcionarios') and type in (N'U'))
+create table grom.rh_funcionarios (
+    id              uniqueidentifier primary key default NEWID(),
     matricula       text        not null unique,
     nome_completo   text        not null,
     nome_social     text,
-    cargo_id        uuid        references grom.rh_cargos(id) on delete restrict,
+    cargo_id        uniqueidentifier foreign key references grom.rh_cargos(id),
 
     -- Contato
-    email           citext,
+    email           varchar(255),
     telefone        text,
 
     -- Vínculo funcional
@@ -67,15 +73,15 @@ create table if not exists grom.rh_funcionarios (
     situacao        text        not null default 'ATIVO',
 
     -- Lotação
-    cartorio_id     uuid        references grom.cartorios(id) on delete set null,
+    cartorio_id     uniqueidentifier null foreign key references grom.cartorios(id),
     turno           text,
 
     -- Controle
-    is_active       boolean     not null default true,
+    is_active       bit         not null default 1,
     notes           text,
-    created_by      uuid        references grom.app_users(id),
-    created_at      timestamptz not null default now(),
-    updated_at      timestamptz not null default now(),
+    created_by      uniqueidentifier foreign key references grom.app_users(id),
+    created_at      datetime2 not null default sysutcdatetime(),
+    updated_at      datetime2 not null default sysutcdatetime(),
 
     constraint ck_func_situacao check (
         situacao in ('ATIVO', 'AFASTADO', 'EXONERADO', 'APOSENTADO', 'CEDIDO')
@@ -89,56 +95,57 @@ create table if not exists grom.rh_funcionarios (
     )
 );
 
-create index if not exists idx_rh_func_cartorio
-    on grom.rh_funcionarios (cartorio_id)
-    where is_active = true;
+create index idx_rh_func_cartorio on grom.rh_funcionarios (cartorio_id);
 
-create index if not exists idx_rh_func_situacao
-    on grom.rh_funcionarios (situacao)
-    where is_active = true;
+create index idx_rh_func_situacao on grom.rh_funcionarios (situacao);
 
-create trigger trg_rh_funcionarios_touch
-    before update on grom.rh_funcionarios
-    for each row execute function grom.touch_updated_at();
+
+-- Trigger deve ser criada em T-SQL se necessário
 
 -- ---------------------------------------------------------------------------
 -- 3. Tipos de afastamento
 --    Exatamente as hipóteses reconhecidas pelo GROM.
 --    exige_fundamentacao = true → campo fundamentacao obrigatório no registro.
 -- ---------------------------------------------------------------------------
-create table if not exists grom.rh_tipos_afastamento (
-    id                    uuid        primary key default gen_random_uuid(),
-    codigo                text        not null unique,
-    nome                  text        not null,
+if not exists (select * from sys.objects where object_id = object_id(N'grom.rh_tipos_afastamento') and type in (N'U'))
+create table grom.rh_tipos_afastamento (
+    id                    uniqueidentifier primary key default NEWID(),
+    codigo                varchar(50) not null unique,
+    nome                  varchar(100) not null,
     descricao             text,
-    afeta_escala          boolean     not null default true,
-    exige_fundamentacao   boolean     not null default false,
-    created_at            timestamptz not null default now()
+    afeta_escala          bit         not null default 1,
+    exige_fundamentacao   bit         not null default 0,
+    created_at            datetime2   not null default sysutcdatetime()
 );
 
 -- Férias, Licença Prêmio e Licença Saúde: sem fundamentacao obrigatória.
 -- Curso, Folga e Outros: fundamentacao obrigatória (exige_fundamentacao = true).
-insert into grom.rh_tipos_afastamento (codigo, nome, afeta_escala, exige_fundamentacao) values
-    ('FERIAS',      'Férias',            true,  false),
-    ('LIC_PREMIO',  'Licença Prêmio',    true,  false),
-    ('LIC_SAUDE',   'Licença Saúde',     true,  false),
-    ('CURSO',       'Curso',             true,  true),
-    ('FOLGA',       'Folga',             true,  true),
-    ('OUTROS',      'Outros',            true,  true)
-on conflict (codigo) do nothing;
+if not exists (select 1 from grom.rh_tipos_afastamento where codigo = 'FERIAS')
+    insert into grom.rh_tipos_afastamento (codigo, nome, afeta_escala, exige_fundamentacao) values ('FERIAS',      'Férias',            1,  0);
+if not exists (select 1 from grom.rh_tipos_afastamento where codigo = 'LIC_PREMIO')
+    insert into grom.rh_tipos_afastamento (codigo, nome, afeta_escala, exige_fundamentacao) values ('LIC_PREMIO',  'Licença Prêmio',    1,  0);
+if not exists (select 1 from grom.rh_tipos_afastamento where codigo = 'LIC_SAUDE')
+    insert into grom.rh_tipos_afastamento (codigo, nome, afeta_escala, exige_fundamentacao) values ('LIC_SAUDE',   'Licença Saúde',     1,  0);
+if not exists (select 1 from grom.rh_tipos_afastamento where codigo = 'CURSO')
+    insert into grom.rh_tipos_afastamento (codigo, nome, afeta_escala, exige_fundamentacao) values ('CURSO',       'Curso',             1,  1);
+if not exists (select 1 from grom.rh_tipos_afastamento where codigo = 'FOLGA')
+    insert into grom.rh_tipos_afastamento (codigo, nome, afeta_escala, exige_fundamentacao) values ('FOLGA',       'Folga',             1,  1);
+if not exists (select 1 from grom.rh_tipos_afastamento where codigo = 'OUTROS')
+    insert into grom.rh_tipos_afastamento (codigo, nome, afeta_escala, exige_fundamentacao) values ('OUTROS',      'Outros',            1,  1);
 
 -- ---------------------------------------------------------------------------
 -- 4. Afastamentos
 -- ---------------------------------------------------------------------------
-create table if not exists grom.rh_afastamentos (
-    id                  uuid        primary key default gen_random_uuid(),
-    funcionario_id      uuid        not null references grom.rh_funcionarios(id) on delete restrict,
-    tipo_id             uuid        not null references grom.rh_tipos_afastamento(id),
+if not exists (select * from sys.objects where object_id = object_id(N'grom.rh_afastamentos') and type in (N'U'))
+create table grom.rh_afastamentos (
+    id                  uniqueidentifier primary key default NEWID(),
+    funcionario_id      uniqueidentifier not null foreign key references grom.rh_funcionarios(id),
+    tipo_id             uniqueidentifier not null foreign key references grom.rh_tipos_afastamento(id),
 
     data_inicio         date        not null,
     data_fim            date,
     dias_previstos      integer,
-    prorrogado          boolean     not null default false,
+    prorrogado          bit         not null default 0,
 
     -- Para tipos com exige_fundamentacao = true (Curso, Folga, Outros):
     -- fundamentacao é obrigatória e deve ser validada na camada de aplicação.
@@ -146,14 +153,14 @@ create table if not exists grom.rh_afastamentos (
     documento_ref       text,
 
     -- Aprovação
-    aprovado_por        uuid        references grom.app_users(id),
-    aprovado_em         timestamptz,
+    aprovado_por        uniqueidentifier foreign key references grom.app_users(id),
+    aprovado_em         datetime2,
 
     -- Controle
-    created_by          uuid        references grom.app_users(id),
+    created_by          uniqueidentifier foreign key references grom.app_users(id),
     notes               text,
-    created_at          timestamptz not null default now(),
-    updated_at          timestamptz not null default now(),
+    created_at          datetime2 not null default sysutcdatetime(),
+    updated_at          datetime2 not null default sysutcdatetime(),
 
     constraint ck_afas_datas check (
         data_fim is null or data_fim >= data_inicio
@@ -163,15 +170,12 @@ create table if not exists grom.rh_afastamentos (
     )
 );
 
-create index if not exists idx_rh_afas_funcionario
-    on grom.rh_afastamentos (funcionario_id, data_inicio desc);
+create index idx_rh_afas_funcionario on grom.rh_afastamentos (funcionario_id, data_inicio desc);
 
-create index if not exists idx_rh_afas_periodo
-    on grom.rh_afastamentos (data_inicio, data_fim);
+create index idx_rh_afas_periodo on grom.rh_afastamentos (data_inicio, data_fim);
 
-create trigger trg_rh_afastamentos_touch
-    before update on grom.rh_afastamentos
-    for each row execute function grom.touch_updated_at();
+
+-- Trigger deve ser criada em T-SQL se necessário
 
 -- ---------------------------------------------------------------------------
 -- 5. Delegados externos — pool de disponíveis para cobertura da DDM
@@ -181,8 +185,9 @@ create trigger trg_rh_afastamentos_touch
 --    de período aqui — o vínculo dia a dia é feito em
 --    rh_escala_delegado_substituto ao gerar/editar a escala mensal.
 -- ---------------------------------------------------------------------------
-create table if not exists grom.rh_delegados_externos (
-    id                      uuid        primary key default gen_random_uuid(),
+if not exists (select * from sys.objects where object_id = object_id(N'grom.rh_delegados_externos') and type in (N'U'))
+create table grom.rh_delegados_externos (
+    id                      uniqueidentifier primary key default NEWID(),
 
     -- Identificação do delegado externo
     nome                    text        not null,
@@ -190,18 +195,18 @@ create table if not exists grom.rh_delegados_externos (
     orgao_origem            text        not null,
 
     -- Cartório DDM ao qual este delegado está vinculado como opção de cobertura
-    cartorio_id             uuid        not null references grom.cartorios(id) on delete restrict,
+    cartorio_id             uniqueidentifier not null foreign key references grom.cartorios(id),
 
     -- Base legal do credenciamento (portaria, etc.)
     ato_legal               text,
     obs                     text,
 
     -- Pool ativo/inativo (soft-disable sem excluir histórico)
-    is_active               boolean     not null default true,
+    is_active               bit         not null default 1,
 
-    created_by              uuid        references grom.app_users(id),
-    created_at              timestamptz not null default now(),
-    updated_at              timestamptz not null default now()
+    created_by              uniqueidentifier foreign key references grom.app_users(id),
+    created_at              datetime2 not null default sysutcdatetime(),
+    updated_at              datetime2 not null default sysutcdatetime()
 );
 
 create index if not exists idx_rh_deleg_ext_cartorio
@@ -227,25 +232,26 @@ create trigger trg_rh_delegados_externos_touch
 --    (texto gerado pelo sistema a partir do afastamento: "De DD/MM a DD/MM,
 --    [Nome] estará de [Tipo]"). Não há campo de fundamentação na atribuição.
 -- ---------------------------------------------------------------------------
-create table if not exists grom.rh_escala_delegado_substituto (
-    id                      uuid        primary key default gen_random_uuid(),
+if not exists (select * from sys.objects where object_id = object_id(N'grom.rh_escala_delegado_substituto') and type in (N'U'))
+create table grom.rh_escala_delegado_substituto (
+    id                      uniqueidentifier primary key default NEWID(),
 
-    cartorio_id             uuid        not null references grom.cartorios(id) on delete restrict,
+    cartorio_id             uniqueidentifier not null foreign key references grom.cartorios(id),
     data_dia                date        not null,
 
     -- Titular impedido neste dia — DEVE ter cargo DEL (validado por trigger)
-    titular_funcionario_id  uuid        not null references grom.rh_funcionarios(id) on delete restrict,
+    titular_funcionario_id  uniqueidentifier not null foreign key references grom.rh_funcionarios(id),
 
     -- Delegado externo escolhido manualmente pelo operador (do pool do cartório)
-    delegado_externo_id     uuid        not null references grom.rh_delegados_externos(id) on delete restrict,
+    delegado_externo_id     uniqueidentifier not null foreign key references grom.rh_delegados_externos(id),
 
     -- Afastamento que originou o impedimento (opcional — cobre casos como
     -- plantão noturno em outra unidade, sem afastamento formal registrado)
-    afastamento_id          uuid        references grom.rh_afastamentos(id) on delete set null,
+    afastamento_id          uniqueidentifier foreign key references grom.rh_afastamentos(id),
 
-    created_by              uuid        references grom.app_users(id),
-    created_at              timestamptz not null default now(),
-    updated_at              timestamptz not null default now(),
+    created_by              uniqueidentifier foreign key references grom.app_users(id),
+    created_at              datetime2 not null default sysutcdatetime(),
+    updated_at              datetime2 not null default sysutcdatetime(),
 
     -- Um substituto por dia por cartório
     constraint uq_escala_subst_dia unique (cartorio_id, data_dia)

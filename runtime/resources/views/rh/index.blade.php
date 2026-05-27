@@ -6,7 +6,7 @@
     <?php
         $isFuncionariosRoute = request()->routeIs('funcionarios.*');
         $panelRoute = $isFuncionariosRoute ? 'funcionarios.index' : 'rh.index';
-        $panelTitle = $isFuncionariosRoute ? 'FuncionÃƒÆ’Ã‚Â¡rios' : 'RH / Admin';
+        $panelTitle = $isFuncionariosRoute ? 'Funcionários' : 'RH / Admin';
     ?>
 
     <style>
@@ -33,14 +33,14 @@
         <div class="actions">
             <a href="{{ route('rh.afastamentos.relatorio') }}" class="btn secondary">Rel. Afastamentos</a>
             <a href="{{ route('rh.confronto') }}" class="btn secondary">Confronto</a>
-            <a href="{{ route('rh.composicao') }}" class="btn secondary">ComposiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</a>
-            <a href="{{ route('rh.stats') }}" class="btn secondary">EstatÃƒÆ’Ã‚Â­sticas</a>
+            <a href="{{ route('rh.composicao') }}" class="btn secondary">Composição</a>
+            <a href="{{ route('rh.stats') }}" class="btn secondary">Estatísticas</a>
         </div>
     </div>
 
     <div class="cards" style="margin-bottom: 18px;">
         <article class="card">
-            <small>FuncionÃƒÆ’Ã‚Â¡rios</small>
+            <small>Funcionários</small>
             <strong>{{ $summary['funcionarios_total'] }}</strong>
             <span>{{ $summary['funcionarios_ativos'] }} ativos</span>
         </article>
@@ -60,18 +60,18 @@
             <span>{{ $summary['delegados_externos_ativos'] }} ativos</span>
         </article>
         <article class="card">
-            <small>Feriados prÃƒÆ’Ã‚Â³ximos</small>
+            <small>Feriados próximos</small>
             <strong>{{ $summary['feriados_proximos'] }}</strong>
-            <span>{{ $summary['feriados_ativos'] }} no calendÃƒÆ’Ã‚Â¡rio</span>
+            <span>{{ $summary['feriados_ativos'] }} no calendário</span>
         </article>
     </div>
 
-    {{-- SECTION: FUNCIONÃƒÆ’Ã‚ÂRIOS --}}
+    {{-- SECTION: FUNCIONÁRIOS --}}
     <section class="card grom-admin-section" style="margin-bottom:18px;" id="rh-funcionarios">
         <div class="grom-admin-header">
             <div class="grom-admin-title">
                 <button type="button" class="grom-toggle-btn" id="rh-toggle-func" onclick="rhToggle('func')" title="Minimizar / Expandir">&#9650;</button>
-                <h2 style="margin:0;">FuncionÃƒÆ’Ã‚Â¡rios</h2>
+                <h2 style="margin:0;">Funcionários</h2>
                 <span class="grom-mini-note" id="rh-count-func"></span>
             </div>
             @if (auth()->user()->hasPermission('rh.manage'))
@@ -85,7 +85,7 @@
                     <select id="rh_filter_cargo_id" name="cargo_id" style="font-size:0.80rem;">
                         <option value="">Todos os cargos</option>
                         @foreach ($cargos as $cargo)
-                            <option value="{{ $cargo->id }}" @selected(($filters['cargo_id'] ?? null) == $cargo->id)>{{ $cargo->code }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ $cargo->name }}</option>
+                            <option value="{{ $cargo->id }}" @selected(($filters['cargo_id'] ?? null) == $cargo->id)>{{ $cargo->code }} — {{ $cargo->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -113,7 +113,7 @@
                         <th>Escala</th>
                         <th>Status</th>
                         @if (auth()->user()->hasPermission('rh.manage'))
-                            <th style="width:1%;">AÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</th>
+                            <th style="width:1%;">Ações</th>
                         @endif
                     </tr>
                 </thead>
@@ -133,12 +133,12 @@
                                 @endif
                             </td>
                             <td>
-                                {{ $funcionario->cargo?->name ?? 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}<br>
-                                <span class="muted" style="font-size:0.76rem;">{{ $funcionario->sector ?: 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</span>
+                                {{ $funcionario->cargo?->name ?? '—' }}<br>
+                                <span class="muted" style="font-size:0.76rem;">{{ $funcionario->sector ?: '—' }}</span>
                             </td>
                             <td>
                                 <span class="tag {{ $funcionario->concorre_escala ? 'good' : 'warn' }}">
-                                    {{ $funcionario->concorre_escala ? 'Concorre' : 'NÃƒÆ’Ã‚Â£o' }}
+                                    {{ $funcionario->concorre_escala ? 'Concorre' : 'Não' }}
                                 </span>
                             </td>
                             <td>
@@ -161,13 +161,13 @@
                                         </form>
                                         @if ($funcionario->user)
                                             <span class="tag good" style="font-size:0.75rem; padding:2px 8px;">
-                                                Acesso <a href="{{ route('access.users.index') }}" style="color:inherit; text-decoration:none;" title="Ver em Perfis de Acesso">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â€</a>
+                                                Acesso <a href="{{ route('access.users.index') }}" style="color:inherit; text-decoration:none;" title="Ver em Perfis de Acesso">↗</a>
                                             </span>
                                         @elseif ($funcionario->cpf)
                                             <button type="button" class="secondary" style="font-size:0.78rem; padding:2px 8px;"
                                                 onclick="document.getElementById('acesso-func-{{ $funcionario->id }}').showModal()">Criar acesso</button>
                                         @else
-                                            <span class="tag warn" style="font-size:0.75rem; padding:2px 8px;" title="CPF nÃƒÆ’Ã‚Â£o cadastrado">Sem CPF</span>
+                                            <span class="tag warn" style="font-size:0.75rem; padding:2px 8px;" title="CPF não cadastrado">Sem CPF</span>
                                         @endif
                                     </div>
                                 </td>
@@ -183,7 +183,7 @@
         </div>
     </section>
 
-    {{-- DIALOGS: FuncionÃƒÆ’Ã‚Â¡rios (fora da tabela) --}}
+    {{-- DIALOGS: Funcionários (fora da tabela) --}}
     @if (auth()->user()->hasPermission('rh.manage'))
         <dialog id="new-func-dialog" class="grom-modal grom-modal--lg">
             <div class="grom-modal-card">
@@ -195,7 +195,7 @@
                     @csrf
                     <div class="form-grid">
                         <div class="field">
-                            <label>MatrÃƒÆ’Ã‚Â­cula</label>
+                            <label>Matrícula</label>
                             <input name="matricula" type="text" required>
                         </div>
                         <div class="field">
@@ -214,7 +214,7 @@
                             <label>Cargo</label>
                             <select name="cargo_id" required>
                                 @foreach ($cargos as $cargo)
-                                    <option value="{{ $cargo->id }}">{{ $cargo->code }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ $cargo->name }}</option>
+                                    <option value="{{ $cargo->id }}">{{ $cargo->code }} — {{ $cargo->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -239,15 +239,15 @@
                             <input name="birth_date" type="date">
                         </div>
                         <div class="field">
-                            <label>AdmissÃƒÆ’Ã‚Â£o</label>
+                            <label>Admissão</label>
                             <input name="admission_date" type="date" value="{{ now()->toDateString() }}" required>
                         </div>
                         <div class="field">
-                            <label>DesignaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
+                            <label>Designação</label>
                             <input name="designation_date" type="date">
                         </div>
                         <div class="field">
-                            <label>RemoÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
+                            <label>Remoção</label>
                             <input name="removal_date" type="date">
                         </div>
                         <div class="field">
@@ -255,12 +255,12 @@
                             <input name="departure_date" type="date">
                         </div>
                         <div class="field">
-                            <label>Concorre ÃƒÆ’Ã‚Â  escala</label>
+                            <label>Concorre à escala</label>
                             <select name="concorre_escala" required>
                                 <option value="1">Sim</option>
-                                <option value="0" selected>NÃƒÆ’Ã‚Â£o</option>
+                                <option value="0" selected>Não</option>
                             </select>
-                            <small class="muted">Delegados externos nunca concorrem ÃƒÆ’Ã‚Â  escala. SÃƒÆ’Ã‚Â³ policiais civis podem concorrer nos cargos escrivÃƒÆ’Ã‚Â£o, operacional e fechar.</small>
+                            <small class="muted">Delegados externos nunca concorrem à escala. Só policiais civis podem concorrer nos cargos escrivão, operacional e fechar.</small>
                         </div>
                         <div class="field">
                             <label>Status</label>
@@ -273,7 +273,7 @@
                             <label>Delegado Externo?</label>
                             <select name="is_delegado_externo" required>
                                 <option value="1">Sim</option>
-                                <option value="0" selected>NÃƒÆ’Ã‚Â£o</option>
+                                <option value="0" selected>Não</option>
                             </select>
                         </div>
                         <div class="field">
@@ -285,11 +285,11 @@
                             <input name="senha_ipe" type="text">
                         </div>
                         <div class="field full">
-                            <label>ObservaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes Operacionais</label>
+                            <label>Observações Operacionais</label>
                             <textarea name="observacoes_operacionais" rows="2"></textarea>
                         </div>
                         <div class="field full">
-                            <label>ObservaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</label>
+                            <label>Observações</label>
                             <textarea name="notes" rows="2"></textarea>
                         </div>
                         <div class="field full">
@@ -344,7 +344,7 @@
                                 <label>Cargo</label>
                                 <select name="cargo_id" required>
                                     @foreach ($cargos as $c)
-                                        <option value="{{ $c->id }}" @selected($funcionario->cargo_id === $c->id)>{{ $c->code }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ $c->name }}</option>
+                                        <option value="{{ $c->id }}" @selected($funcionario->cargo_id === $c->id)>{{ $c->code }} — {{ $c->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -369,28 +369,28 @@
                                 <input name="birth_date" type="date" value="{{ $funcionario->birth_date?->toDateString() }}">
                             </div>
                             <div class="field">
-                                <label>AdmissÃƒÆ’Ã‚Â£o</label>
+                                <label>Admissão</label>
                                 <input name="admission_date" type="date" value="{{ $funcionario->admission_date?->toDateString() }}" required>
                             </div>
                             <div class="field">
-                                <label>DesignaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
+                                <label>Designação</label>
                                 <input name="designation_date" type="date" value="{{ $funcionario->designation_date?->toDateString() }}">
                             </div>
                             <div class="field">
-                                <label>RemoÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
+                                <label>Remoção</label>
                                 <input name="removal_date" type="date" value="{{ $funcionario->removal_date?->toDateString() }}">
                             </div>
                             <div class="field">
-                                <label>SaÃƒÆ’Ã‚Â­da</label>
+                                <label>Saída</label>
                                 <input name="departure_date" type="date" value="{{ $funcionario->departure_date?->toDateString() }}">
                             </div>
                             <div class="field">
-                                <label>Concorre ÃƒÆ’Ã‚Â  escala</label>
+                                <label>Concorre à escala</label>
                                 <select name="concorre_escala">
                                     <option value="1" @selected($funcionario->concorre_escala && !$funcionario->is_delegado_externo)>Sim</option>
-                                    <option value="0" @selected(!$funcionario->concorre_escala || $funcionario->is_delegado_externo)>NÃƒÆ’Ã‚Â£o</option>
+                                    <option value="0" @selected(!$funcionario->concorre_escala || $funcionario->is_delegado_externo)>Não</option>
                                 </select>
-                                <small class="muted">Delegados externos nunca concorrem ÃƒÆ’Ã‚Â  escala. SÃƒÆ’Ã‚Â³ policiais civis podem concorrer nos cargos escrivÃƒÆ’Ã‚Â£o, operacional e fechar.</small>
+                                <small class="muted">Delegados externos nunca concorrem à escala. Só policiais civis podem concorrer nos cargos escrivão, operacional e fechar.</small>
                             </div>
                             <div class="field">
                                 <label>Status</label>
@@ -403,7 +403,7 @@
                                 <label>Delegado Externo?</label>
                                 <select name="is_delegado_externo" required>
                                     <option value="1" @selected($funcionario->is_delegado_externo)>Sim</option>
-                                    <option value="0" @selected(!$funcionario->is_delegado_externo)>NÃƒÂ£o</option>
+                                    <option value="0" @selected(!$funcionario->is_delegado_externo)>Não</option>
                                 </select>
                             </div>
                             <div class="field">
@@ -415,11 +415,11 @@
                                 <input name="senha_ipe" type="text" value="{{ $funcionario->senha_ipe }}">
                             </div>
                             <div class="field full">
-                                <label>ObservaÃƒÂ§ÃƒÂµes Operacionais</label>
+                                <label>Observações Operacionais</label>
                                 <textarea name="observacoes_operacionais" rows="2">{{ $funcionario->observacoes_operacionais }}</textarea>
                             </div>
                             <div class="field full">
-                                <label>ObservaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</label>
+                                <label>Observações</label>
                                 <textarea name="notes" rows="2">{{ $funcionario->notes }}</textarea>
                             </div>
                             <div class="field full">
@@ -427,7 +427,7 @@
                                     <input type="checkbox" name="create_access" value="1" @checked($funcionario->user !== null)>
                                     Ativar acesso ao sistema
                                 </label>
-                                <small class="muted">Desmarcar inativa o acesso existente; nÃƒÆ’Ã‚Â£o remove histÃƒÆ’Ã‚Â³rico.</small>
+                                <small class="muted">Desmarcar inativa o acesso existente; não remove histórico.</small>
                             </div>
                             <div class="field full">
                                 <label>Perfis de acesso (quando ativado)</label>
@@ -442,14 +442,14 @@
                         </div>
                         <div class="actions" style="margin-top:12px; justify-content:space-between;">
                             <div style="display:flex; gap:6px;">
-                                <button type="submit">Salvar alteraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</button>
+                                <button type="submit">Salvar alterações</button>
                                 <button type="button" class="secondary" onclick="document.getElementById('edit-func-{{ $funcionario->id }}').close()">Cancelar</button>
                             </div>
                             <form method="POST" action="{{ route('rh.funcionarios.destroy', $funcionario) }}" style="display:inline;"
-                                onsubmit="return confirm('Excluir PERMANENTEMENTE {{ addslashes($funcionario->name) }}? Esta aÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o nÃƒÆ’Ã‚Â£o pode ser desfeita.')">
+                                onsubmit="return confirm('Arquivar {{ addslashes($funcionario->name) }}? O cadastro sera inativado e o historico sera preservado.')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" style="color:#b91c1c; border-color:#f87171; font-size:0.82rem; padding:3px 10px;">Excluir servidor</button>
+                                <button type="submit" style="color:#92400e; border-color:#f59e0b; font-size:0.82rem; padding:3px 10px;">Arquivar servidor</button>
                             </form>
                         </div>
                     </form>
@@ -457,20 +457,20 @@
             </dialog>
         @endforeach
 
-        {{-- Dialogs: Criar acesso para funcionÃƒÆ’Ã‚Â¡rios sem usuÃƒÆ’Ã‚Â¡rio --}}
+        {{-- Dialogs: Criar acesso para funcionários sem usuário --}}
         @foreach ($funcionarios as $funcionario)
             @if (!$funcionario->user && $funcionario->cpf)
                 <dialog id="acesso-func-{{ $funcionario->id }}" class="grom-modal grom-modal--md">
                     <div class="grom-modal-card">
                         <div class="grom-modal-head">
                             <div>
-                                <strong>Criar acesso ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ $funcionario->name }}</strong><br>
+                                <strong>Criar acesso — {{ $funcionario->name }}</strong><br>
                                 <span class="grom-mini-note">CPF: {{ preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $funcionario->cpf) }}</span>
                             </div>
-                            <button type="button" class="secondary grom-modal-close" onclick="document.getElementById('acesso-func-{{ $funcionario->id }}').close()">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¢</button>
+                            <button type="button" class="secondary grom-modal-close" onclick="document.getElementById('acesso-func-{{ $funcionario->id }}').close()">✕</button>
                         </div>
                         <p class="muted" style="font-size:0.85rem; margin:0 0 14px;">
-                            O login serÃƒÆ’Ã‚Â¡ feito pelo CPF ({{ $funcionario->cpf }}). O e-mail cadastrado no RH serÃƒÆ’Ã‚Â¡ associado automaticamente.
+                            O login será feito pelo CPF ({{ $funcionario->cpf }}). O e-mail cadastrado no RH será associado automaticamente.
                         </p>
                         <form method="POST" action="{{ route('access.users.from-funcionario', $funcionario) }}" class="grid">
                             @csrf
@@ -487,7 +487,7 @@
                                             <option value="{{ $role->id }}">{{ $role->name }}</option>
                                         @endforeach
                                     </select>
-                                    <small class="muted">Segure Ctrl para selecionar mÃƒÆ’Ã‚Âºltiplos</small>
+                                    <small class="muted">Segure Ctrl para selecionar múltiplos</small>
                                 </div>
                             </div>
                             <div class="actions" style="margin-top:12px;">
@@ -527,17 +527,17 @@
                 <div class="card" style="padding:12px 14px;">
                     <small class="muted" style="display:block; margin-bottom:4px;">Períodos em aberto</small>
                     <strong style="font-size:1.05rem; display:block;">{{ $afastamentosSummary['registros_em_aberto'] }} registro(s)</strong>
-                    <span class="muted" style="font-size:0.78rem;">Dias sÃƒÆ’Ã‚Â³ entram no total quando hÃƒÆ’Ã‚Â¡ inÃƒÆ’Ã‚Â­cio e fim.</span>
+                    <span class="muted" style="font-size:0.78rem;">Dias só entram no total quando há início e fim.</span>
                 </div>
             </div>
             <div class="rh-filter-bar" style="margin-bottom:12px; align-items:center;">
                 <div class="field" style="margin:0; min-width:130px;">
-                    <label style="font-size:0.8rem;">MÃƒÆ’Ã‚Âªs</label>
+                    <label style="font-size:0.8rem;">Mês</label>
                     <select id="afas-mes" onchange="filterAfastamentos()" style="font-size:0.80rem;">
                         <option value="">Todos</option>
                         <option value="1">Janeiro</option>
                         <option value="2">Fevereiro</option>
-                        <option value="3">MarÃƒÆ’Ã‚Â§o</option>
+                        <option value="3">Março</option>
                         <option value="4">Abril</option>
                         <option value="5">Maio</option>
                         <option value="6">Junho</option>
@@ -563,12 +563,12 @@
                     <tr>
                         <th>Servidor</th>
                         <th>Motivo</th>
-                        <th>InÃƒÆ’Ã‚Â­cio</th>
+                        <th>Início</th>
                         <th>Fim</th>
                         <th>Dias</th>
                         <th>Status</th>
                         @if (auth()->user()->hasPermission('rh.manage'))
-                            <th style="width:1%;">AÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</th>
+                            <th style="width:1%;">Ações</th>
                         @endif
                     </tr>
                 </thead>
@@ -581,7 +581,7 @@
                             </td>
                             <td>{{ $afastamento->reason }}</td>
                             <td style="white-space:nowrap;">{{ $afastamento->start_date?->format('d/m/Y') }}</td>
-                            <td style="white-space:nowrap;">{{ $afastamento->end_date?->format('d/m/Y') ?: 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</td>
+                            <td style="white-space:nowrap;">{{ $afastamento->end_date?->format('d/m/Y') ?: '—' }}</td>
                             <td style="white-space:nowrap;">{{ $afastamento->durationInDays() !== null ? $afastamento->durationInDays() . ' dias' : 'Em aberto' }}</td>
                             <td><span class="tag {{ $afastamento->statusTone() }}">{{ $afastamento->statusLabel() }}</span></td>
                             @if (auth()->user()->hasPermission('rh.manage'))
@@ -623,7 +623,7 @@
                             <label>Servidor</label>
                             <select name="funcionario_id" required>
                                 @foreach ($funcionarios as $f)
-                                    <option value="{{ $f->id }}">{{ $f->matricula }} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ $f->short_name ?: $f->name }}</option>
+                                    <option value="{{ $f->id }}">{{ $f->matricula }} — {{ $f->short_name ?: $f->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -632,7 +632,7 @@
                             <input name="reason" type="text" required>
                         </div>
                         <div class="field">
-                            <label>InÃƒÆ’Ã‚Â­cio</label>
+                            <label>Início</label>
                             <input name="start_date" type="date" value="{{ now()->toDateString() }}" required>
                         </div>
                         <div class="field">
@@ -640,10 +640,10 @@
                             <input name="end_date" type="date">
                         </div>
                         <div class="field full" style="margin-top:-4px;">
-                            <span class="muted js-afastamento-counter" style="font-size:0.78rem;">Selecione inÃƒÆ’Ã‚Â­cio e fim para contar os dias.</span>
+                            <span class="muted js-afastamento-counter" style="font-size:0.78rem;">Selecione início e fim para contar os dias.</span>
                         </div>
                         <div class="field full">
-                            <label>ObservaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</label>
+                            <label>Observações</label>
                             <textarea name="notes" rows="2"></textarea>
                         </div>
                     </div>
@@ -659,7 +659,7 @@
             <dialog id="edit-afas-{{ $afastamento->id }}" class="grom-modal grom-modal--md">
                 <div class="grom-modal-card">
                     <div class="grom-modal-head">
-                        <strong>Editar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â {{ $afastamento->funcionario?->short_name ?: $afastamento->funcionario?->name }}</strong>
+                        <strong>Editar — {{ $afastamento->funcionario?->short_name ?: $afastamento->funcionario?->name }}</strong>
                         <button type="button" class="secondary grom-modal-close" onclick="document.getElementById('edit-afas-{{ $afastamento->id }}').close()">x</button>
                     </div>
                     <form method="POST" action="{{ route('rh.afastamentos.update', $afastamento) }}" class="grid js-afastamento-form">
@@ -671,7 +671,7 @@
                                 <input name="reason" type="text" value="{{ $afastamento->reason }}" required>
                             </div>
                             <div class="field">
-                                <label>InÃƒÆ’Ã‚Â­cio</label>
+                                <label>Início</label>
                                 <input name="start_date" type="date" value="{{ $afastamento->start_date?->toDateString() }}" required>
                             </div>
                             <div class="field">
@@ -679,10 +679,10 @@
                                 <input name="end_date" type="date" value="{{ $afastamento->end_date?->toDateString() }}">
                             </div>
                             <div class="field full" style="margin-top:-4px;">
-                                <span class="muted js-afastamento-counter" style="font-size:0.78rem;">Selecione inÃƒÆ’Ã‚Â­cio e fim para contar os dias.</span>
+                                <span class="muted js-afastamento-counter" style="font-size:0.78rem;">Selecione início e fim para contar os dias.</span>
                             </div>
                             <div class="field full">
-                                <label>ObservaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</label>
+                                <label>Observações</label>
                                 <textarea name="notes" rows="2">{{ $afastamento->notes }}</textarea>
                             </div>
                         </div>
@@ -715,7 +715,7 @@
                         <th>Servidores</th>
                         <th>Status</th>
                         @if (auth()->user()->hasPermission('rh.manage'))
-                            <th style="width:1%;">AÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</th>
+                            <th style="width:1%;">Ações</th>
                         @endif
                     </tr>
                 </thead>
@@ -757,7 +757,7 @@
                     @csrf
                     <div class="form-grid">
                         <div class="field">
-                            <label>CÃƒÆ’Ã‚Â³digo</label>
+                            <label>Código</label>
                             <input name="code" type="text" required>
                         </div>
                         <div class="field">
@@ -765,7 +765,7 @@
                             <input name="name" type="text" required>
                         </div>
                         <div class="field full">
-                            <label>DescriÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
+                            <label>Descrição</label>
                             <input name="description" type="text">
                         </div>
                         <div class="field">
@@ -802,11 +802,11 @@
                     <tr>
                         <th>Nome</th>
                         <th>Origem</th>
-                        <th>FunÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</th>
-                        <th>VigÃƒÆ’Ã‚Âªncia</th>
+                        <th>Função</th>
+                        <th>Vigência</th>
                         <th>Status</th>
                         @if (auth()->user()->hasPermission('rh.manage'))
-                            <th style="width:1%;">AÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</th>
+                            <th style="width:1%;">Ações</th>
                         @endif
                     </tr>
                 </thead>
@@ -815,14 +815,14 @@
                         <tr>
                             <td>
                                 {{ $delegadoExterno->name }}<br>
-                                <span class="muted" style="font-size:0.76rem;">{{ $delegadoExterno->email ?: 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' }}</span>
+                                <span class="muted" style="font-size:0.76rem;">{{ $delegadoExterno->email ?: '—' }}</span>
                             </td>
                             <td>{{ $delegadoExterno->origin_unit }}</td>
                             <td>{{ $delegadoExterno->role_title }}</td>
                             <td style="white-space:nowrap;">
                                 {{ $delegadoExterno->start_date?->format('d/m/Y') }}
                                 @if ($delegadoExterno->end_date)
-                                    <br><span class="muted" style="font-size:0.76rem;">atÃƒÆ’Ã‚Â© {{ $delegadoExterno->end_date->format('d/m/Y') }}</span>
+                                    <br><span class="muted" style="font-size:0.76rem;">até {{ $delegadoExterno->end_date->format('d/m/Y') }}</span>
                                 @endif
                             </td>
                             <td><span class="tag {{ $delegadoExterno->statusTone() }}">{{ $delegadoExterno->statusLabel() }}</span></td>
@@ -867,7 +867,7 @@
                     @csrf
                     <div class="form-grid">
                         <div class="field">
-                            <label>CÃƒÆ’Ã‚Â³digo</label>
+                            <label>Código</label>
                             <input name="registration_code" type="text">
                         </div>
                         <div class="field">
@@ -879,7 +879,7 @@
                             <input name="origin_unit" type="text" required>
                         </div>
                         <div class="field">
-                            <label>FunÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
+                            <label>Função</label>
                             <input name="role_title" type="text" required>
                         </div>
                         <div class="field">
@@ -891,7 +891,7 @@
                             <input name="email" type="email">
                         </div>
                         <div class="field">
-                            <label>InÃƒÆ’Ã‚Â­cio</label>
+                            <label>Início</label>
                             <input name="start_date" type="date" value="{{ now()->toDateString() }}" required>
                         </div>
                         <div class="field">
@@ -899,7 +899,7 @@
                             <input name="end_date" type="date">
                         </div>
                         <div class="field full">
-                            <label>ObservaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</label>
+                            <label>Observações</label>
                             <input name="notes" type="text">
                         </div>
                         <div class="field">
@@ -996,7 +996,7 @@
                         <tr>
                             <th>Quando</th>
                             <th>Evento</th>
-                            <th>UsuÃƒÆ’Ã‚Â¡rio</th>
+                            <th>Usuário</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1056,7 +1056,7 @@
                             </select>
                         </div>
                         <div class="field full">
-                            <label>ObservaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</label>
+                            <label>Observações</label>
                             <input name="notes" type="text">
                         </div>
                     </div>
@@ -1070,7 +1070,7 @@
     @endif
 
     <script>
-    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ SeÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes minimizÃƒÆ’Ã‚Â¡veis ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+    // ── Seções minimizáveis ──────────────────────────────────────────────────
     const RH_SECTIONS = ['func', 'afas', 'cargos', 'delegados', 'feriados', 'hist'];
 
     function rhToggle(id) {
@@ -1084,7 +1084,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Restaurar estado das seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
+        // Restaurar estado das seções
         RH_SECTIONS.forEach(function (id) {
             try {
                 var state = localStorage.getItem('rh_section_' + id);
@@ -1101,7 +1101,7 @@
         buildAfasAnoSelect();
         // Popular anos dos feriados
         buildFeriadosAnoSelect();
-        // Aplicar filtro padrÃƒÆ’Ã‚Â£o feriados = ano atual
+        // Aplicar filtro padrão feriados = ano atual
         var anoAtual = String(new Date().getFullYear());
         var selFeriado = document.getElementById('feriados-ano');
         if (selFeriado) {
@@ -1142,7 +1142,7 @@
             .replace(/[\u0300-\u036f]/g, '')
             .toLowerCase();
 
-        return normalized.indexOf('ferias') >= 0 ? 'FÃƒÆ’Ã‚Â©rias' : 'Demais afastamentos';
+        return normalized.indexOf('ferias') >= 0 ? 'Férias' : 'Demais afastamentos';
     }
 
     function updateAfastamentoCounter(form) {
@@ -1156,13 +1156,13 @@
         if (!startInput.value || !endInput.value) {
             counter.textContent = endInput.value
                 ? 'Informe a data inicial para calcular os dias.'
-                : 'Selecione inÃƒÆ’Ã‚Â­cio e fim para contar os dias.';
+                : 'Selecione início e fim para contar os dias.';
             return;
         }
 
         var totalDays = diffInclusiveDays(startInput.value, endInput.value);
         if (totalDays === null) {
-            counter.textContent = 'PerÃƒÆ’Ã‚Â­odo invÃƒÆ’Ã‚Â¡lido para contagem.';
+            counter.textContent = 'Período inválido para contagem.';
             return;
         }
 
@@ -1188,7 +1188,7 @@
         });
     }
 
-    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Afastamentos: filtro por mÃƒÆ’Ã‚Âªs/ano ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+    // ── Afastamentos: filtro por mês/ano ─────────────────────────────────────
     function buildAfasAnoSelect() {
         var rows = document.querySelectorAll('#rh-table-afas tbody tr[data-afas-year]');
         var anos = {};
@@ -1230,7 +1230,7 @@
         filterAfastamentos();
     }
 
-    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Feriados: filtro por ano ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+    // ── Feriados: filtro por ano ──────────────────────────────────────────────
     function buildFeriadosAnoSelect() {
         var rows = document.querySelectorAll('#rh-table-feriados tbody tr[data-feriado-year]');
         var anos = {};

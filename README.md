@@ -98,7 +98,7 @@ Dropdowns fecham automaticamente ao selecionar um item.
 .\executar_piloto_local.cmd
 ```
 
-**EndereÃ§o local fixo para testes:**
+**Endereço local fixo para testes:**
 ```cmd
 .\iniciar_grom_local_fixo.cmd
 .\acessar_grom_local.cmd

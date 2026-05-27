@@ -329,7 +329,7 @@
                 display: none !important;
             }
             .report-body { margin-top: 0 !important; }
-            /* Tabela compacta â€” sem word-break nas colunas */
+            /* Tabela compacta — sem word-break nas colunas */
             table { font-size: 7pt !important; }
             th {
                 background: var(--soft) !important;
@@ -344,7 +344,7 @@
             tbody tr:nth-child(even) td { background: #fbfdff !important; }
             tfoot tr td { background: var(--soft) !important; }
             tfoot tr td strong { font-weight: 700; }
-            /* Rodapé fixo no fim da página física â€” não quebra em 2Âª folha */
+            /* Rodapé fixo no fim da página física — não quebra em 2ª folha */
             .footer {
                 position: fixed !important;
                 bottom: -1mm !important;

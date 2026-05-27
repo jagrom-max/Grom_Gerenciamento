@@ -42,7 +42,7 @@
 
 <div class="section-head">
     <div>
-        <h1>Auditoria â€” Flagrantes sem cartório</h1>
+        <h1>Auditoria — Flagrantes sem cartório</h1>
         <p class="muted" style="margin:6px 0 0;">
             Flagrantes identificados na importação com o campo <em>Cartório do IP</em> vazio ou ausente.
             Atribua o cartório correto ou dispense o registro.
@@ -50,7 +50,7 @@
     </div>
     <div class="actions">
         <a class="btn secondary" href="{{ route('analise.bos.import') }}">Nova importação</a>
-        <a class="btn secondary" href="{{ route('analise.index') }}">â† Painel</a>
+        <a class="btn secondary" href="{{ route('analise.index') }}">← Painel</a>
     </div>
 </div>
 
@@ -98,7 +98,7 @@
         </select>
 
         <select name="ano" style="padding:7px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:0.85rem;">
-            <option value="">â€” Ano â€”</option>
+            <option value="">— Ano —</option>
             @foreach (range(date('Y'), date('Y') - 5) as $ano)
                 <option value="{{ $ano }}" {{ request('ano') == $ano ? 'selected' : '' }}>{{ $ano }}</option>
             @endforeach
@@ -119,15 +119,15 @@
         <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
             <strong style="font-size:0.88rem;">Ação em lote:</strong>
             <select name="acao" id="bulk-acao" required style="padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:0.83rem;">
-                <option value="">â€” Selecione â€”</option>
+                <option value="">— Selecione —</option>
                 <option value="approved">Aprovar (confirmar cartório)</option>
                 <option value="corrected">Corrigir cartório</option>
                 <option value="dismissed">Dispensar todos</option>
             </select>
             <select name="cartorio_id" id="bulk-cartorio" style="padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:0.83rem; display:none;">
-                <option value="">â€” Cartório â€”</option>
+                <option value="">— Cartório —</option>
                 @foreach ($cartorios as $cart)
-                    <option value="{{ $cart->id }}">{{ $cart->number }} â€” {{ $cart->name }}</option>
+                    <option value="{{ $cart->id }}">{{ $cart->number }} — {{ $cart->name }}</option>
                 @endforeach
             </select>
             <input type="text" name="notes" placeholder="Obs. opcional" maxlength="500"
@@ -159,7 +159,7 @@
                     <th style="padding:10px 12px; text-align:left;">Data oc.</th>
                     <th style="padding:10px 12px; text-align:left;">Naturezas</th>
                     <th style="padding:10px 12px; text-align:left;">Lavrado</th>
-                    <th style="padding:10px 12px; text-align:left;">NÂº IP</th>
+                    <th style="padding:10px 12px; text-align:left;">Nº IP</th>
                     <th style="padding:10px 12px; text-align:left;">Cartório planilha</th>
                     <th style="padding:10px 12px; text-align:left;">Status</th>
                     @if ($status !== 'pending')
@@ -181,11 +181,11 @@
                     </td>
                     @endif
                     <td style="padding:8px 12px; font-weight:600; white-space:nowrap;">{{ $p->spj }}</td>
-                    <td style="padding:8px 12px; white-space:nowrap; color:#6b7280;">{{ $p->data_ocorrencia ?? 'â€”' }}</td>
+                    <td style="padding:8px 12px; white-space:nowrap; color:#6b7280;">{{ $p->data_ocorrencia ?? '—' }}</td>
                     <td style="padding:8px 12px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
-                        title="{{ $p->naturezas }}">{{ $p->naturezas ?? 'â€”' }}</td>
-                    <td style="padding:8px 12px; white-space:nowrap;">{{ $p->lavrado ?? 'â€”' }}</td>
-                    <td style="padding:8px 12px; white-space:nowrap;">{{ $p->num_ip ?? 'â€”' }}</td>
+                        title="{{ $p->naturezas }}">{{ $p->naturezas ?? '—' }}</td>
+                    <td style="padding:8px 12px; white-space:nowrap;">{{ $p->lavrado ?? '—' }}</td>
+                    <td style="padding:8px 12px; white-space:nowrap;">{{ $p->num_ip ?? '—' }}</td>
                     <td style="padding:8px 12px; color:#b45309;">
                         {{ $p->cartorio_ip_planilha ? $p->cartorio_ip_planilha : '(vazio)' }}
                     </td>
@@ -195,14 +195,14 @@
 
                     @if ($status !== 'pending')
                     <td style="padding:8px 12px;">
-                        {{ $p->cartorio?->number ? "[{$p->cartorio->number}] {$p->cartorio->name}" : 'â€”' }}
+                        {{ $p->cartorio?->number ? "[{$p->cartorio->number}] {$p->cartorio->name}" : '—' }}
                     </td>
                     <td style="padding:8px 12px; font-size:0.78rem; color:#6b7280;">
-                        {{ $p->reviewer?->name ?? 'â€”' }}<br>
+                        {{ $p->reviewer?->name ?? '—' }}<br>
                         {{ $p->reviewed_at?->format('d/m/Y H:i') ?? '' }}
                     </td>
                     <td style="padding:8px 12px; max-width:160px; overflow:hidden; text-overflow:ellipsis;"
-                        title="{{ $p->notes }}">{{ $p->notes ?? 'â€”' }}</td>
+                        title="{{ $p->notes }}">{{ $p->notes ?? '—' }}</td>
                     @endif
 
                     @if ($status === 'pending')
@@ -216,7 +216,7 @@
 
                             <select name="acao" required onchange="toggleCartorioField(this)"
                                     style="padding:4px 8px; border:1px solid #d1d5db; border-radius:5px; font-size:0.8rem;">
-                                <option value="">â€” ação â€”</option>
+                                <option value="">— ação —</option>
                                 <option value="approved">Aprovar</option>
                                 <option value="corrected">Corrigir cartório</option>
                                 <option value="dismissed">Dispensar</option>
@@ -224,9 +224,9 @@
 
                             <select name="cartorio_id" class="cart-select"
                                     style="display:none; padding:4px 8px; border:1px solid #d1d5db; border-radius:5px; font-size:0.8rem;">
-                                <option value="">â€” cartório â€”</option>
+                                <option value="">— cartório —</option>
                                 @foreach ($cartorios as $cart)
-                                    <option value="{{ $cart->id }}">{{ $cart->number }} â€” {{ $cart->name }}</option>
+                                    <option value="{{ $cart->id }}">{{ $cart->number }} — {{ $cart->name }}</option>
                                 @endforeach
                             </select>
 

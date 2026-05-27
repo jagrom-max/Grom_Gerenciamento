@@ -26,7 +26,7 @@ class AnaliseBoSearchController extends Controller
         if ($hasSearch) {
 
             // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            // BANCO PHP â€” um resultado por BO (agrupa pessoas + naturezas)
+            // BANCO PHP — um resultado por BO (agrupa pessoas + naturezas)
             // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             // Divide a query em palavras para busca por fragmentos (ex: "joao silva" → AND LIKE %joao% AND LIKE %silva%)
             $words = array_values(array_filter(
@@ -57,7 +57,7 @@ class AnaliseBoSearchController extends Controller
                 })()
                 : collect();
 
-            // SPJs Ãºnicos encontrados no PHP (limite 80 BOs)
+            // SPJs únicos encontrados no PHP (limite 80 BOs)
             /** @var Collection $pessoasPorSpjPhp */
             $pessoasPorSpjPhp = $vitPessoas->concat($autPessoas)->groupBy('spj');
             $phpSpjs          = $pessoasPorSpjPhp->keys()->take(80)->values();
@@ -91,7 +91,7 @@ class AnaliseBoSearchController extends Controller
             }
 
             // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            // BANCO LEGADO â€” mesma lÃ³gica
+            // BANCO LEGADO — mesma lógica
             // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
             if ($legacyDb->isAvailable()) {
                 // Fragmentos normalizados para busca no legado (sem acentos, cada palavra separada)
@@ -144,7 +144,7 @@ class AnaliseBoSearchController extends Controller
                 if (! empty($legSpjs)) {
                     $placeholders = implode(',', array_fill(0, count($legSpjs), '?'));
 
-                    // Dados das ocorrÃªncias
+                    // Dados das ocorrências
                     $bosLeg = $legacyDb->fetchAll(
                         "SELECT spj, spj_fmt, data_ocorrencia,
                                 COALESCE(lavrado, '') AS lavrado,
@@ -179,7 +179,7 @@ class AnaliseBoSearchController extends Controller
                     }
 
                     foreach ($legSpjs as $spj) {
-                        // Pula se o SPJ jÃ¡ veio do banco PHP
+                        // Pula se o SPJ já veio do banco PHP
                         if (in_array($spj, array_column($results, 'spj'), true)) {
                             continue;
                         }
@@ -225,7 +225,7 @@ class AnaliseBoSearchController extends Controller
         return view('analise.bos.search', $viewData);
     }
 
-    // â”€â”€â”€ ConstrÃ³i um array padronizado para um BO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─── Constrói um array padronizado para um BO ─────────────────────────
 
     private function buildRow(
         string $spj,
@@ -237,24 +237,24 @@ class AnaliseBoSearchController extends Controller
         bool $atoInfracional,
     ): array {
         // Pessoas encontradas com papel
-        // Quando tipo contÃ©m AUTOR e VÃTIMA ao mesmo tempo (ex: "AUTOR/VITIMA"),
-        // a linha Ã© duplicada: aparece uma vez como VÃ­tima e outra como Autor.
+        // Quando tipo contém AUTOR e VÍTIMA ao mesmo tempo (ex: "AUTOR/VITIMA"),
+        // a linha é duplicada: aparece uma vez como Vítima e outra como Autor.
         $pessoasStr = $pessoas->flatMap(function ($p) {
             $p         = (object) $p;
             $tipoUpper = strtoupper(trim((string) ($p->tipo ?? '')));
             $isAmbo    = str_contains($tipoUpper, 'AUTOR') && (
-                str_contains($tipoUpper, 'VITIMA') || str_contains($tipoUpper, 'VÃTIMA')
+                str_contains($tipoUpper, 'VITIMA') || str_contains($tipoUpper, 'VÍTIMA')
             );
 
             if ($isAmbo) {
                 $tipoStr = ! empty($p->tipo) ? " ({$p->tipo})" : '';
                 return [
-                    "{$p->nome}{$tipoStr} [VÃ­tima]",
+                    "{$p->nome}{$tipoStr} [Vítima]",
                     "{$p->nome} [Autor]",
                 ];
             }
 
-            $label = $p->papel === 'VÃ­tima' ? 'VÃ­tima' : 'Autor';
+            $label = $p->papel === 'Vítima' ? 'Vítima' : 'Autor';
             $tipo  = ! empty($p->tipo) ? " ({$p->tipo})" : '';
             return ["{$p->nome}{$tipo} [{$label}]"];
         })->implode("\n");
@@ -264,9 +264,9 @@ class AnaliseBoSearchController extends Controller
             $p         = (object) $p;
             $tipoUpper = strtoupper(trim((string) ($p->tipo ?? '')));
             if (str_contains($tipoUpper, 'AUTOR') && (
-                str_contains($tipoUpper, 'VITIMA') || str_contains($tipoUpper, 'VÃTIMA')
+                str_contains($tipoUpper, 'VITIMA') || str_contains($tipoUpper, 'VÍTIMA')
             )) {
-                return ['VÃ­tima', 'Autor'];
+                return ['Vítima', 'Autor'];
             }
             return [$p->papel];
         })->unique()->values()->toArray();

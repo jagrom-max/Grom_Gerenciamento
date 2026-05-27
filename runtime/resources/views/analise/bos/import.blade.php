@@ -7,7 +7,7 @@
         <div>
             <h1>Importar planilha de BOs</h1>
             <p class="muted" style="margin: 6px 0 0;">
-                Mesmo formato aceito pelo sistema Python â€” XLSX gerado pelo módulo de Análise de Dados.
+                Mesmo formato aceito pelo sistema Python — XLSX gerado pelo módulo de Análise de Dados.
             </p>
         </div>
     </div>
@@ -62,26 +62,26 @@
                 </tr>
             </thead>
             <tbody>
-                <tr><td>NÂº RDO</td><td>Sim</td></tr>
+                <tr><td>Nº RDO</td><td>Sim</td></tr>
                 <tr><td>Data da Ocorrência</td><td>Sim</td></tr>
                 <tr><td>Lavrado</td><td>Não</td></tr>
                 <tr><td>Flagrante</td><td>Não</td></tr>
                 <tr><td>Ato Infracional</td><td>Não</td></tr>
-                <tr><td>Ãrea do Fato</td><td>Não</td></tr>
+                <tr><td>Área do Fato</td><td>Não</td></tr>
                 <tr><td>MPU</td><td>Não</td></tr>
-                <tr><td>NÂº CNJ MPU</td><td>Não</td></tr>
+                <tr><td>Nº CNJ MPU</td><td>Não</td></tr>
                 <tr><td>BO designado (Cartório)</td><td>Não</td></tr>
-                <tr><td>NÂº IP</td><td>Não</td></tr>
+                <tr><td>Nº IP</td><td>Não</td></tr>
                 <tr><td>Cartório do IP (final)</td><td>Não</td></tr>
-                <tr><td>Natureza 1 â€¦ Natureza 6</td><td>Não</td></tr>
-                <tr><td>Consumo/Tentativa 1 â€¦ 6</td><td>Não</td></tr>
-                <tr><td>Vítima 1 (Nome) â€¦ Vítima 6 (Nome)</td><td>Não</td></tr>
-                <tr><td>Vítima 1 (Tipo) â€¦ Vítima 6 (Tipo)</td><td>Não</td></tr>
-                <tr><td>Autor 1 â€¦ Autor 3</td><td>Não</td></tr>
+                <tr><td>Natureza 1 … Natureza 6</td><td>Não</td></tr>
+                <tr><td>Consumo/Tentativa 1 … 6</td><td>Não</td></tr>
+                <tr><td>Vítima 1 (Nome) … Vítima 6 (Nome)</td><td>Não</td></tr>
+                <tr><td>Vítima 1 (Tipo) … Vítima 6 (Tipo)</td><td>Não</td></tr>
+                <tr><td>Autor 1 … Autor 3</td><td>Não</td></tr>
             </tbody>
         </table>
         <p class="muted" style="margin: 10px 0 0; font-size: 0.85em;">
-            BOs duplicados (mesmo NÂº RDO) serão <strong>atualizados</strong>, não duplicados.
+            BOs duplicados (mesmo Nº RDO) serão <strong>atualizados</strong>, não duplicados.
         </p>
     </section>
 @endsection

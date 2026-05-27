@@ -292,6 +292,68 @@ class RhAccessTest extends TestCase
         ]);
     }
 
+    public function test_admin_cannot_register_duplicate_holiday_date(): void
+    {
+        $this->seed();
+
+        $user = User::query()->firstOrFail();
+        $user->update(['must_change_password' => false]);
+
+        $existingHoliday = RhHoliday::query()->firstOrFail();
+
+        $countBefore = RhHoliday::query()->count();
+
+        $response = $this->from('/rh')->actingAs($user)->post('/rh/feriados', [
+            'holiday_date' => $existingHoliday->holiday_date?->toDateString(),
+            'name' => $existingHoliday->name . ' duplicado',
+            'scope' => $existingHoliday->scope,
+            'notes' => 'Duplicado.',
+            'is_active' => 1,
+        ]);
+
+        $response
+            ->assertRedirect('/rh')
+            ->assertSessionHasErrors(['holiday_date']);
+
+        $this->assertSame($countBefore, RhHoliday::query()->count());
+    }
+
+    public function test_delete_funcionario_route_archives_without_losing_history(): void
+    {
+        $this->seed();
+
+        $user = User::query()->firstOrFail();
+        $user->update(['must_change_password' => false]);
+
+        $funcionario = RhFuncionario::query()->where('is_active', true)->firstOrFail();
+
+        RhAfastamento::query()->create([
+            'funcionario_id' => $funcionario->id,
+            'reason' => 'Ferias regulamentares',
+            'start_date' => '2026-05-05',
+            'end_date' => '2026-05-10',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->delete("/rh/funcionarios/{$funcionario->id}")
+            ->assertRedirect('/rh');
+
+        $funcionario->refresh();
+
+        $this->assertFalse($funcionario->is_active);
+        $this->assertFalse($funcionario->concorre_escala);
+        $this->assertNotNull($funcionario->departure_date);
+        $this->assertDatabaseHas('rh_funcionarios', [
+            'id' => $funcionario->id,
+            'matricula' => $funcionario->matricula,
+        ]);
+        $this->assertDatabaseHas('rh_afastamentos', [
+            'funcionario_id' => $funcionario->id,
+            'reason' => 'Ferias regulamentares',
+        ]);
+    }
+
     public function test_admin_can_register_and_toggle_delegado_externo(): void
     {
         $this->seed();

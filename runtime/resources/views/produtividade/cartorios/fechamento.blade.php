@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Fechamento Mensal â€” ' . $cartorio->name . ' | Grom.Seg')
+@section('title', 'Fechamento Mensal — ' . $cartorio->name . ' | Grom.Seg')
 
 @section('content')
 
@@ -19,7 +19,7 @@
         </p>
     </div>
     <div class="actions">
-        <a class="btn secondary" href="{{ route('produtividade.cartorios.index') }}">â† Cartórios</a>
+        <a class="btn secondary" href="{{ route('produtividade.cartorios.index') }}">← Cartórios</a>
         <a class="btn secondary" href="{{ route('produtividade.stats.index', ['year' => $year, 'month' => $month]) }}">Estatísticas</a>
         <a class="btn secondary" href="{{ route('produtividade.hub') }}">Hub</a>
     </div>
@@ -152,12 +152,12 @@
                         'cartorio' => $cartorio,
                         'year'  => $month === 1 ? $year - 1 : $year,
                         'month' => $month === 1 ? 12 : $month - 1,
-                    ]) }}">â† Mês anterior</a>
+                    ]) }}">← Mês anterior</a>
                     <a class="btn secondary" href="{{ route('produtividade.cartorios.fechamento.create', [
                         'cartorio' => $cartorio,
                         'year'  => $month === 12 ? $year + 1 : $year,
                         'month' => $month === 12 ? 1 : $month + 1,
-                    ]) }}">Mês seguinte â†’</a>
+                    ]) }}">Mês seguinte →</a>
                 </div>
             </div>
         </form>
@@ -215,9 +215,9 @@
                                     {{ substr($label, 0, 3) }}
                                 </a>
                             </td>
-                            <td style="text-align:right; padding:3px 6px;">{{ $row?->ip_instaurados ?? 'â€”' }}</td>
-                            <td style="text-align:right; padding:3px 6px;">{{ $row?->ip_relatados ?? 'â€”' }}</td>
-                            <td style="text-align:right; padding:3px 6px; color:#dc2626;">{{ $row?->flagrantes_total ?? 'â€”' }}</td>
+                            <td style="text-align:right; padding:3px 6px;">{{ $row?->ip_instaurados ?? '—' }}</td>
+                            <td style="text-align:right; padding:3px 6px;">{{ $row?->ip_relatados ?? '—' }}</td>
+                            <td style="text-align:right; padding:3px 6px; color:#dc2626;">{{ $row?->flagrantes_total ?? '—' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

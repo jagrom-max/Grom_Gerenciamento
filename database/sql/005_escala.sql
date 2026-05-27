@@ -1,6 +1,9 @@
 -- =============================================================================
 -- 005_escala.sql
 -- Módulo: Escalas
+-- =============================================================================
+-- 005_escala.sql
+-- Módulo: Escalas
 -- Espelho fiel do sistema Python legado (escala.py / modulo_escalas/).
 --
 -- Tabelas:
@@ -35,33 +38,40 @@
 --    Exceção: PLD não bloqueia funcionário com cargo DEL.
 --    Essa regra é aplicada na camada de aplicação.
 -- ---------------------------------------------------------------------------
-create table if not exists grom.escalas_plantoes_externos (
-    id          uuid        primary key default gen_random_uuid(),
+if not exists (select * from sys.objects where object_id = object_id(N'grom.escalas_plantoes_externos') and type in (N'U'))
+create table grom.escalas_plantoes_externos (
+    id          uniqueidentifier primary key default NEWID(),
     nome        varchar(80) not null,
     sigla       varchar(20) not null,
     regra       varchar(20) not null,
     unidade     varchar(80),
     obs         text,
-    is_active   boolean     not null default true,
-    legacy_id   integer     unique,
-    created_at  timestamptz not null default now(),
-    updated_at  timestamptz not null default now(),
+    is_active   bit         not null default 1,
+    legacy_id   int         unique,
+    created_at  datetime2   not null default sysutcdatetime(),
+    updated_at  datetime2   not null default sysutcdatetime(),
 
     constraint uq_escalas_pe_sigla unique (sigla),
     constraint ck_escalas_pe_regra check (regra in ('MESMO_DIA', 'DIA_SEGUINTE', 'AMBOS'))
 );
 
 -- Seed: tipos do sistema legado (sigla e regra conforme escala_bloqueios.py)
-insert into grom.escalas_plantoes_externos (sigla, nome, regra) values
-    ('CADD',    'Cartório Adicional de Dia',    'MESMO_DIA'),
-    ('CADN',    'Cartório Adicional de Noite',  'AMBOS'),
-    ('DDM24H',  'DDM 24 horas',                 'AMBOS'),
-    ('ESCOLTA', 'Escolta',                       'MESMO_DIA'),
-    ('PLD',     'Plantão de Dia',               'MESMO_DIA'),
-    ('PLN',     'Plantão de Noite',             'AMBOS'),
-    ('RD',      'Regime de Dia',                'MESMO_DIA'),
-    ('RN',      'Regime de Noite',              'DIA_SEGUINTE')
-on conflict (sigla) do nothing;
+if not exists (select 1 from grom.escalas_plantoes_externos where sigla = 'CADD')
+    insert into grom.escalas_plantoes_externos (sigla, nome, regra) values ('CADD',    'Cartório Adicional de Dia',    'MESMO_DIA');
+if not exists (select 1 from grom.escalas_plantoes_externos where sigla = 'CADN')
+    insert into grom.escalas_plantoes_externos (sigla, nome, regra) values ('CADN',    'Cartório Adicional de Noite',  'AMBOS');
+if not exists (select 1 from grom.escalas_plantoes_externos where sigla = 'DDM24H')
+    insert into grom.escalas_plantoes_externos (sigla, nome, regra) values ('DDM24H',  'DDM 24 horas',                 'AMBOS');
+if not exists (select 1 from grom.escalas_plantoes_externos where sigla = 'ESCOLTA')
+    insert into grom.escalas_plantoes_externos (sigla, nome, regra) values ('ESCOLTA', 'Escolta',                       'MESMO_DIA');
+if not exists (select 1 from grom.escalas_plantoes_externos where sigla = 'PLD')
+    insert into grom.escalas_plantoes_externos (sigla, nome, regra) values ('PLD',     'Plantão de Dia',               'MESMO_DIA');
+if not exists (select 1 from grom.escalas_plantoes_externos where sigla = 'PLN')
+    insert into grom.escalas_plantoes_externos (sigla, nome, regra) values ('PLN',     'Plantão de Noite',             'AMBOS');
+if not exists (select 1 from grom.escalas_plantoes_externos where sigla = 'RD')
+    insert into grom.escalas_plantoes_externos (sigla, nome, regra) values ('RD',      'Regime de Dia',                'MESMO_DIA');
+if not exists (select 1 from grom.escalas_plantoes_externos where sigla = 'RN')
+    insert into grom.escalas_plantoes_externos (sigla, nome, regra) values ('RN',      'Regime de Noite',              'DIA_SEGUINTE');
 
 create trigger trg_escalas_plantoes_externos_touch
     before update on grom.escalas_plantoes_externos
@@ -72,24 +82,22 @@ create trigger trg_escalas_plantoes_externos_touch
 --    Registro de quais funcionários realizaram plantão externo em cada data.
 --    O sistema usa esses dados para montar os bloqueios ao gerar a escala.
 --    Inclui plantões do último dia do mês anterior (para cálculo do dia 1).
--- ---------------------------------------------------------------------------
+if not exists (select * from sys.objects where object_id = object_id(N'grom.escalas_plantoes_funcionarios') and type in (N'U'))
 create table if not exists grom.escalas_plantoes_funcionarios (
-    id                  bigserial   primary key,
+    id                  bigint      primary key identity(1,1),
     data                date        not null,
-    funcionario_id      uuid        not null references grom.rh_funcionarios(id) on delete restrict,
-    plantao_externo_id  uuid        not null references grom.escalas_plantoes_externos(id) on delete restrict,
-    legacy_id           integer     unique,
-    created_by          uuid,
-    created_at          timestamptz not null default now(),
+    funcionario_id      uniqueidentifier not null references grom.rh_funcionarios(id),
+    plantao_externo_id  uniqueidentifier not null references grom.escalas_plantoes_externos(id),
+    legacy_id           int         unique,
+    created_by          uniqueidentifier,
+    created_at          datetime2   not null default sysutcdatetime(),
 
     constraint uq_plantao_func_data unique (funcionario_id, plantao_externo_id, data)
 );
 
-create index if not exists idx_plant_func_data
-    on grom.escalas_plantoes_funcionarios (data);
+create index idx_plant_func_data on grom.escalas_plantoes_funcionarios (data);
 
-create index if not exists idx_plant_func_fid
-    on grom.escalas_plantoes_funcionarios (funcionario_id);
+create index idx_plant_func_fid on grom.escalas_plantoes_funcionarios (funcionario_id);
 
 -- ---------------------------------------------------------------------------
 -- 3. Escala mensal — uma linha por dia × versão
@@ -105,8 +113,9 @@ create index if not exists idx_plant_func_fid
 --    Finais de semana: todos os campos de nome ficam NULL/vazio.
 --    Feriados: campo operacional = 'FERIADO' ou 'PONTO FACULTATIVO'.
 -- ---------------------------------------------------------------------------
-create table if not exists grom.escalas_mensal (
-    id              uuid        primary key default gen_random_uuid(),
+if not exists (select * from sys.objects where object_id = object_id(N'grom.escalas_mensal') and type in (N'U'))
+create table grom.escalas_mensal (
+    id              uniqueidentifier primary key default NEWID(),
     data            date        not null,
     mes             smallint    not null,
     ano             smallint    not null,
@@ -121,10 +130,10 @@ create table if not exists grom.escalas_mensal (
 
     -- Auditoria
     legacy_id       integer,
-    created_by      uuid,
-    updated_by      uuid,
-    created_at      timestamptz not null default now(),
-    updated_at      timestamptz not null default now(),
+    created_by      uniqueidentifier,
+    updated_by      uniqueidentifier,
+    created_at      datetime2 not null default sysutcdatetime(),
+    updated_at      datetime2 not null default sysutcdatetime(),
 
     constraint uq_escalas_mensal_data_versao unique (data, versao),
     constraint ck_escalas_mensal_mes check (mes between 1 and 12),
@@ -132,12 +141,10 @@ create table if not exists grom.escalas_mensal (
     constraint ck_escalas_mensal_versao check (versao >= 1)
 );
 
-create index if not exists idx_escalas_mensal_ano_mes_versao
-    on grom.escalas_mensal (ano, mes, versao);
+create index idx_escalas_mensal_ano_mes_versao on grom.escalas_mensal (ano, mes, versao);
 
-create trigger trg_escalas_mensal_touch
-    before update on grom.escalas_mensal
-    for each row execute function grom.touch_updated_at();
+
+-- Trigger deve ser criada em T-SQL se necessário
 
 -- =============================================================================
 -- VIEWS

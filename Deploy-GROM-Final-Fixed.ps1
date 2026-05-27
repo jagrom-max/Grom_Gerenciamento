@@ -5,18 +5,18 @@
 
 .DESCRIPTION
     1. Cria chave SSH RSA 4096 em C:\Users\[user]\.ssh\grom_deploy_rsa
-    2. Injeta a chave pÃºblica na instÃ¢ncia OCI
-    3. Conecta via SSH e executa o script de correÃ§Ã£o Docker
-    4. Executa migraÃ§Ãµes e validaÃ§Ãµes
+    2. Injeta a chave pública na instância OCI
+    3. Conecta via SSH e executa o script de correção Docker
+    4. Executa migrações e validações
 
 .PARAMETER OciCompartmentId
-    ID do compartimento OCI (padrÃ£o: obtido de configuraÃ§Ã£o OCI)
+    ID do compartimento OCI (padrão: obtido de configuração OCI)
 
 .PARAMETER OciInstanceId
-    ID da instÃ¢ncia OCI (padrÃ£o: ocid1.instance.oc1.sa-saopaulo-1.antxeljren3rd7qcj5d5vrfbp2f55cxm6glmhjen63rcsfiqi47ai3wvyjaq)
+    ID da instância OCI (padrão: ocid1.instance.oc1.sa-saopaulo-1.antxeljren3rd7qcj5d5vrfbp2f55cxm6glmhjen63rcsfiqi47ai3wvyjaq)
 
 .PARAMETER VpsIp
-    IP da VPS (padrÃ£o: 163.176.144.245)
+    IP da VPS (padrão: 163.176.144.245)
 #>
 
 param(
@@ -37,25 +37,25 @@ $SshDir = Join-Path $HomeDir ".ssh"
 $PrivateKeyPath = Join-Path $SshDir "grom_deploy_rsa"
 $PublicKeyPath = "$PrivateKeyPath.pub"
 
-# Criar pasta .ssh se nÃ£o existir
+# Criar pasta .ssh se não existir
 if (-not (Test-Path $SshDir)) {
-    Write-Host "Criando diretÃ³rio SSH: $SshDir" -ForegroundColor Yellow
+    Write-Host "Criando diretório SSH: $SshDir" -ForegroundColor Yellow
     New-Item -ItemType Directory -Path $SshDir -Force | Out-Null
 }
 
 # ============================================================================
-# 2. GERAR CHAVE SSH (se nÃ£o existir)
+# 2. GERAR CHAVE SSH (se não existir)
 # ============================================================================
 
 if (Test-Path $PrivateKeyPath) {
-    Write-Host "âœ“ Chave SSH jÃ¡ existe: $PrivateKeyPath" -ForegroundColor Green
+    Write-Host "✓ Chave SSH já existe: $PrivateKeyPath" -ForegroundColor Green
 } else {
     Write-Host ">>> Gerando chave SSH RSA 4096..." -ForegroundColor Cyan
     
     # Usar ssh-keygen do OpenSSH do Windows
     $sshKeygenPath = "C:\Windows\System32\OpenSSH\ssh-keygen.exe"
     if (-not (Test-Path $sshKeygenPath)) {
-        throw "ssh-keygen.exe nÃ£o encontrado. Instale OpenSSH for Windows."
+        throw "ssh-keygen.exe não encontrado. Instale OpenSSH for Windows."
     }
     
     # Gerar chave sem passphrase (para deploy automatizado)
@@ -67,17 +67,17 @@ if (Test-Path $PrivateKeyPath) {
 }
 
 # ============================================================================
-# 3. LER CHAVE PÃšBLICA
+# 3. LER CHAVE PÚBLICA
 # ============================================================================
 
 $publicKeyContent = Get-Content $PublicKeyPath -Raw
-Write-Host "âœ“ Chave pÃºblica lida ($(($publicKeyContent.Length)/1024)KB)" -ForegroundColor Green
+Write-Host "✓ Chave pública lida ($(($publicKeyContent.Length)/1024)KB)" -ForegroundColor Green
 
 # ============================================================================
-# 4. INJETAR CHAVE NA INSTÃ‚NCIA OCI
+# 4. INJETAR CHAVE NA INSTÂNCIA OCI
 # ============================================================================
 
-Write-Host "`n>>> Atualizando metadata da instÃ¢ncia OCI com nova chave SSH..." -ForegroundColor Cyan
+Write-Host "`n>>> Atualizando metadata da instância OCI com nova chave SSH..." -ForegroundColor Cyan
 
 # Construir arquivo de metadata
 $metadataJson = @{
@@ -115,11 +115,11 @@ for ($attempt = 1; $attempt -le 5; $attempt++) {
         $testResult = & $sshPath @sshOpts opc@$VpsIp "echo GROM_SSH_OK" 2>&1 | Select-Object -First 1
         
         if ($testResult -match "GROM_SSH_OK") {
-            Write-Host "âœ“ ConexÃ£o SSH estabelecida com sucesso!" -ForegroundColor Green
+            Write-Host "✓ Conexão SSH estabelecida com sucesso!" -ForegroundColor Green
             break
         }
     } catch {
-        # continuar para prÃ³xima tentativa
+        # continuar para próxima tentativa
     }
     
     if ($attempt -lt 5) {
@@ -133,7 +133,7 @@ for ($attempt = 1; $attempt -le 5; $attempt++) {
 # ============================================================================
 
 Write-Host "`n>>> Executando script de deploy remoto na VPS..." -ForegroundColor Cyan
-Write-Host "  Isso pode levar 15-20 minutos (Docker build + migraÃ§Ãµes)" -ForegroundColor Yellow
+Write-Host "  Isso pode levar 15-20 minutos (Docker build + migrações)" -ForegroundColor Yellow
 
 $remoteScript = @'
 
@@ -208,7 +208,7 @@ for i in {1..60}; do
 done
 
 echo ""
-echo ">>> Executando migraÃ§Ãµes Laravel..."
+echo ">>> Executando migrações Laravel..."
 docker compose --env-file .env.production -f docker-compose.prod.yml exec -T app php artisan migrate --force
 
 echo ""
@@ -241,7 +241,7 @@ echo ""
 & $sshPath @sshOpts opc@$VpsIp "bash -s" <<< $remoteScript
 
 # ============================================================================
-# 7. VALIDAÃ‡ÃƒO FINAL
+# 7. VALIDAÇÃO FINAL
 # ============================================================================
 
 Write-Host "`n>>> Validando deployment..." -ForegroundColor Cyan
@@ -253,7 +253,7 @@ try {
     $response = Invoke-WebRequest -Uri "https://grom.seg.br" -SkipCertificateCheck -TimeoutSec 10 -ErrorAction Stop
     Write-Host "âœ“ HTTPS respondendo (Status: $($response.StatusCode))" -ForegroundColor Green
 } catch {
-    Write-Host "âš  NÃ£o conseguiu acessar HTTPS ainda. Aguarde mais alguns segundos e tente manualmente." -ForegroundColor Yellow
+    Write-Host "⚠ Não conseguiu acessar HTTPS ainda. Aguarde mais alguns segundos e tente manualmente." -ForegroundColor Yellow
 }
 
 # ============================================================================
@@ -262,7 +262,7 @@ try {
 
 Write-Host "`n" -ForegroundColor Cyan
 Write-Host "â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—" -ForegroundColor Green
-Write-Host "â•‘          GROM WEB DEPLOYMENT CONCLUÃDO COM SUCESSO        â•‘" -ForegroundColor Green
+Write-Host "║          GROM WEB DEPLOYMENT CONCLUÍDO COM SUCESSO        ║" -ForegroundColor Green
 Write-Host "â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•" -ForegroundColor Green
 
 Write-Host ""
@@ -271,7 +271,7 @@ Write-Host "  VPS IP           : $VpsIp" -ForegroundColor DarkGray
 Write-Host "  SSH Private Key  : $PrivateKeyPath" -ForegroundColor DarkGray
 Write-Host "  Docker Compose   : /opt/grom/grom_web_php/infra" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "ðŸŒ Acessar AplicaÃ§Ã£o:" -ForegroundColor Cyan
+Write-Host "🌐 Acessar Aplicação:" -ForegroundColor Cyan
 Write-Host "  URL: https://grom.seg.br" -ForegroundColor Yellow
 Write-Host "  Login: admin" -ForegroundColor Yellow
 Write-Host "  Senha: 03031981Gr**" -ForegroundColor Yellow
@@ -280,7 +280,7 @@ Write-Host "ðŸ”‘ Credenciais do Banco:" -ForegroundColor Cyan
 Write-Host "  Database: grom_web" -ForegroundColor DarkGray
 Write-Host "  User: postgres" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "ðŸ“ Comandos Ãšteis:" -ForegroundColor Cyan
+Write-Host "📝 Comandos Úteis:" -ForegroundColor Cyan
 Write-Host "  SSH na VPS:" -ForegroundColor DarkGray
 Write-Host "    ssh -i `"$PrivateKeyPath`" opc@$VpsIp" -ForegroundColor Yellow
 Write-Host ""

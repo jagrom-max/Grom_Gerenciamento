@@ -14,7 +14,7 @@
         </p>
     </div>
     <div class="actions">
-        <a class="btn secondary" href="{{ route('analise.bos.import') }}">â† Nova importação</a>
+        <a class="btn secondary" href="{{ route('analise.bos.import') }}">← Nova importação</a>
         <a class="btn secondary" href="{{ route('analise.index') }}">Painel de análise</a>
         @if ($totalPendentes > 0)
             <a class="btn" style="background:#ef4444; color:#fff;" href="{{ route('analise.bos.auditoria-flagrantes') }}">
